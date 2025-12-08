@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/08/2025 14:45:28
+Generated: 12/08/2025 14:53:58
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -39,7 +39,30 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |   Program.cs
         |   |   
         |   +---bin
-        |   |   \---Debug
+        |   |   +---Debug
+        |   |   |   \---net10.0
+        |   |   |           appsettings.Development.json
+        |   |   |           appsettings.json
+        |   |   |           BlazorApp.deps.json
+        |   |   |           BlazorApp.dll
+        |   |   |           BlazorApp.exe
+        |   |   |           BlazorApp.pdb
+        |   |   |           BlazorApp.runtimeconfig.json
+        |   |   |           BlazorApp.staticwebassets.endpoints.json
+        |   |   |           BlazorApp.staticwebassets.runtime.json
+        |   |   |           ClassLibrary1.dll
+        |   |   |           ClassLibrary1.pdb
+        |   |   |           libman.json
+        |   |   |           OpenTelemetry.Api.dll
+        |   |   |           OpenTelemetry.Api.ProviderBuilderExtensions.dll
+        |   |   |           OpenTelemetry.dll
+        |   |   |           OpenTelemetry.Exporter.Console.dll
+        |   |   |           OpenTelemetry.Exporter.OpenTelemetryProtocol.dll
+        |   |   |           OpenTelemetry.Extensions.Hosting.dll
+        |   |   |           OpenTelemetry.Instrumentation.Process.dll
+        |   |   |           OpenTelemetry.Instrumentation.Runtime.dll
+        |   |   |           
+        |   |   \---Release
         |   |       \---net10.0
         |   |               appsettings.Development.json
         |   |               appsettings.json
@@ -98,7 +121,113 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |   |   project.assets.json
         |   |   |   project.nuget.cache
         |   |   |   
-        |   |   \---Debug
+        |   |   +---Debug
+        |   |   |   \---net10.0
+        |   |   |       |   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+        |   |   |       |   apphost.exe
+        |   |   |       |   BlazorApp.AssemblyInfo.cs
+        |   |   |       |   BlazorApp.AssemblyInfoInputs.cache
+        |   |   |       |   BlazorApp.assets.cache
+        |   |   |       |   BlazorApp.csproj.AssemblyReference.cache
+        |   |   |       |   BlazorApp.csproj.CoreCompileInputs.cache
+        |   |   |       |   BlazorApp.csproj.FileListAbsolute.txt
+        |   |   |       |   BlazorApp.csproj.Up2Date
+        |   |   |       |   BlazorApp.dll
+        |   |   |       |   BlazorApp.GeneratedMSBuildEditorConfig.editorconfig
+        |   |   |       |   BlazorApp.genruntimeconfig.cache
+        |   |   |       |   BlazorApp.GlobalUsings.g.cs
+        |   |   |       |   BlazorApp.MvcApplicationPartsAssemblyInfo.cache
+        |   |   |       |   BlazorApp.pdb
+        |   |   |       |   EmbeddedAttribute.cs
+        |   |   |       |   rbcswa.dswa.cache.json
+        |   |   |       |   rjimswa.dswa.cache.json
+        |   |   |       |   rjsmcshtml.dswa.cache.json
+        |   |   |       |   rjsmrazor.dswa.cache.json
+        |   |   |       |   rpswa.dswa.cache.json
+        |   |   |       |   staticwebassets.build.endpoints.json
+        |   |   |       |   staticwebassets.build.json
+        |   |   |       |   staticwebassets.build.json.cache
+        |   |   |       |   staticwebassets.development.json
+        |   |   |       |   staticwebassets.removed.txt
+        |   |   |       |   swae.build.ex.cache
+        |   |   |       |   ValidatableTypeAttribute.cs
+        |   |   |       |   
+        |   |   |       +---compressed
+        |   |   |       |       03xqw0swdg-{0}-lcd1t2u6c8-lcd1t2u6c8.gz
+        |   |   |       |       0546dfdd6f-{0}-r4e9w2rdcm-r4e9w2rdcm.gz
+        |   |   |       |       08cqgvfzcy-{0}-jj8uyg4cgr-jj8uyg4cgr.gz
+        |   |   |       |       0txged01c1-{0}-j8lzlu28q6-j8lzlu28q6.gz
+        |   |   |       |       1qbqjgk7wr-{0}-pk9g2wxc8p-pk9g2wxc8p.gz
+        |   |   |       |       3til2bm5ay-{0}-pj5nd1wqec-pj5nd1wqec.gz
+        |   |   |       |       5exm1mo63l-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
+        |   |   |       |       5whq523p0y-{0}-kbrnm935zg-kbrnm935zg.gz
+        |   |   |       |       65ii6i50cu-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
+        |   |   |       |       72hk1wsa3c-{0}-nvvlpmu67g-nvvlpmu67g.gz
+        |   |   |       |       7joa6vf0w2-{0}-aexeepp0ev-aexeepp0ev.gz
+        |   |   |       |       8ny1ssfslj-{0}-dxx9fxp4il-dxx9fxp4il.gz
+        |   |   |       |       8v4adbxxmx-{0}-2hrrzqn4qx-2hrrzqn4qx.gz
+        |   |   |       |       9wb38qhjvq-{0}-cosvhxvwiu-cosvhxvwiu.gz
+        |   |   |       |       byvyapvtmi-{0}-iovd86k7lj-iovd86k7lj.gz
+        |   |   |       |       dcz3aqb7og-{0}-tdbxkamptv-tdbxkamptv.gz
+        |   |   |       |       e0tkuniv2q-{0}-ub07r2b239-ub07r2b239.gz
+        |   |   |       |       e2p7e3doxt-{0}-u1n4jc5v46-u1n4jc5v46.gz
+        |   |   |       |       gh25061luz-{0}-493y06b0oq-493y06b0oq.gz
+        |   |   |       |       h56f1aupc7-{0}-6pdc2jztkx-6pdc2jztkx.gz
+        |   |   |       |       hevz5itu9o-{0}-hrwsygsryq-hrwsygsryq.gz
+        |   |   |       |       hh92lrx13d-{0}-khy4lop6wu-khy4lop6wu.gz
+        |   |   |       |       hsa0fwp5ls-{0}-13ja33weya-13ja33weya.gz
+        |   |   |       |       i0oilot2q1-{0}-0j3bgjxly4-0j3bgjxly4.gz
+        |   |   |       |       jfzlrv9cgx-{0}-ausgxo2sd3-ausgxo2sd3.gz
+        |   |   |       |       jt3e1rdii1-{0}-s35ty4nyc5-s35ty4nyc5.gz
+        |   |   |       |       k2mw846ued-{0}-37tfw0ft22-37tfw0ft22.gz
+        |   |   |       |       kay38lw82v-{0}-ft3s53vfgj-ft3s53vfgj.gz
+        |   |   |       |       kdgbnj3stq-{0}-46ein0sx1k-46ein0sx1k.gz
+        |   |   |       |       l2mhd45r4z-{0}-63fj8s7r0e-63fj8s7r0e.gz
+        |   |   |       |       lf383621gq-{0}-c2oey78nd0-c2oey78nd0.gz
+        |   |   |       |       loo7f5x1gx-{0}-jd9uben2k1-jd9uben2k1.gz
+        |   |   |       |       lxae500s9q-{0}-vr1egmr9el-vr1egmr9el.gz
+        |   |   |       |       m5e6rnmcep-{0}-c2jlpeoesf-c2jlpeoesf.gz
+        |   |   |       |       mxp9w50l4b-{0}-h1s4sie4z3-h1s4sie4z3.gz
+        |   |   |       |       n5un2q0rmp-{0}-06098lyss8-06098lyss8.gz
+        |   |   |       |       o0q64zz2g2-{0}-erw9l3u2r3-erw9l3u2r3.gz
+        |   |   |       |       oej83ydp7q-{0}-j5mq2jizvt-j5mq2jizvt.gz
+        |   |   |       |       onq1f5nzz4-{0}-notf2xhcfb-notf2xhcfb.gz
+        |   |   |       |       p45ce5yffh-{0}-khv3u5hwcm-khv3u5hwcm.gz
+        |   |   |       |       pgyksi01id-{0}-v0zj4ognzu-v0zj4ognzu.gz
+        |   |   |       |       rogc4sk0pw-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
+        |   |   |       |       rrzzv9ip5o-{0}-2hrrzqn4qx-2hrrzqn4qx.gz
+        |   |   |       |       sgf5lx3sbn-{0}-b7pk76d08c-b7pk76d08c.gz
+        |   |   |       |       taqldvnaul-{0}-d7shbmvgxk-d7shbmvgxk.gz
+        |   |   |       |       v7vyzcc6qh-{0}-bqjiyaj88i-bqjiyaj88i.gz
+        |   |   |       |       vrc98ic1o2-{0}-6cfz1n2cew-6cfz1n2cew.gz
+        |   |   |       |       xcqk6qv13p-{0}-rzd6atqjts-rzd6atqjts.gz
+        |   |   |       |       xifcgn9ief-{0}-fsbi9cje9m-fsbi9cje9m.gz
+        |   |   |       |       zp2adb4uhm-{0}-y7v9cxd14o-y7v9cxd14o.gz
+        |   |   |       |       
+        |   |   |       +---ref
+        |   |   |       |       BlazorApp.dll
+        |   |   |       |       
+        |   |   |       +---refint
+        |   |   |       |       BlazorApp.dll
+        |   |   |       |       
+        |   |   |       +---scopedcss
+        |   |   |       |   +---bundle
+        |   |   |       |   |       BlazorApp.styles.css
+        |   |   |       |   |       
+        |   |   |       |   +---Components
+        |   |   |       |   |   +---Layout
+        |   |   |       |   |   |       MainLayout.razor.rz.scp.css
+        |   |   |       |   |   |       NavMenu.razor.rz.scp.css
+        |   |   |       |   |   |       ReconnectModal.razor.rz.scp.css
+        |   |   |       |   |   |       
+        |   |   |       |   |   \---Pages
+        |   |   |       |   |           Counter.razor.rz.scp.css
+        |   |   |       |   |           
+        |   |   |       |   \---projectbundle
+        |   |   |       |           BlazorApp.bundle.scp.css
+        |   |   |       |           
+        |   |   |       \---staticwebassets
+        |   |   \---Release
         |   |       \---net10.0
         |   |           |   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
         |   |           |   apphost.exe
@@ -109,13 +238,16 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           |   BlazorApp.csproj.CoreCompileInputs.cache
         |   |           |   BlazorApp.csproj.FileListAbsolute.txt
         |   |           |   BlazorApp.csproj.Up2Date
+        |   |           |   BlazorApp.deps.json
         |   |           |   BlazorApp.dll
         |   |           |   BlazorApp.GeneratedMSBuildEditorConfig.editorconfig
+        |   |           |   BlazorApp.genpublishdeps.cache
         |   |           |   BlazorApp.genruntimeconfig.cache
         |   |           |   BlazorApp.GlobalUsings.g.cs
         |   |           |   BlazorApp.MvcApplicationPartsAssemblyInfo.cache
         |   |           |   BlazorApp.pdb
         |   |           |   EmbeddedAttribute.cs
+        |   |           |   PublishOutputs.b57a2bf078.txt
         |   |           |   rbcswa.dswa.cache.json
         |   |           |   rjimswa.dswa.cache.json
         |   |           |   rjsmcshtml.dswa.cache.json
@@ -125,62 +257,307 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           |   staticwebassets.build.json
         |   |           |   staticwebassets.build.json.cache
         |   |           |   staticwebassets.development.json
+        |   |           |   staticwebassets.publish.endpoints.json
+        |   |           |   staticwebassets.publish.json
+        |   |           |   staticwebassets.references.upToDateCheck.txt
         |   |           |   staticwebassets.removed.txt
+        |   |           |   staticwebassets.upToDateCheck.txt
         |   |           |   swae.build.ex.cache
+        |   |           |   swae.publish.ex.cache
         |   |           |   ValidatableTypeAttribute.cs
         |   |           |   
         |   |           +---compressed
-        |   |           |       03xqw0swdg-{0}-lcd1t2u6c8-lcd1t2u6c8.gz
-        |   |           |       0546dfdd6f-{0}-r4e9w2rdcm-r4e9w2rdcm.gz
-        |   |           |       08cqgvfzcy-{0}-jj8uyg4cgr-jj8uyg4cgr.gz
-        |   |           |       0txged01c1-{0}-j8lzlu28q6-j8lzlu28q6.gz
-        |   |           |       1qbqjgk7wr-{0}-pk9g2wxc8p-pk9g2wxc8p.gz
-        |   |           |       3til2bm5ay-{0}-pj5nd1wqec-pj5nd1wqec.gz
-        |   |           |       5exm1mo63l-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
-        |   |           |       5whq523p0y-{0}-kbrnm935zg-kbrnm935zg.gz
-        |   |           |       65ii6i50cu-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
-        |   |           |       72hk1wsa3c-{0}-nvvlpmu67g-nvvlpmu67g.gz
-        |   |           |       7joa6vf0w2-{0}-aexeepp0ev-aexeepp0ev.gz
-        |   |           |       8ny1ssfslj-{0}-dxx9fxp4il-dxx9fxp4il.gz
-        |   |           |       8v4adbxxmx-{0}-2hrrzqn4qx-2hrrzqn4qx.gz
-        |   |           |       9wb38qhjvq-{0}-cosvhxvwiu-cosvhxvwiu.gz
-        |   |           |       byvyapvtmi-{0}-iovd86k7lj-iovd86k7lj.gz
-        |   |           |       dcz3aqb7og-{0}-tdbxkamptv-tdbxkamptv.gz
-        |   |           |       e0tkuniv2q-{0}-ub07r2b239-ub07r2b239.gz
-        |   |           |       e2p7e3doxt-{0}-u1n4jc5v46-u1n4jc5v46.gz
-        |   |           |       gh25061luz-{0}-493y06b0oq-493y06b0oq.gz
-        |   |           |       h56f1aupc7-{0}-6pdc2jztkx-6pdc2jztkx.gz
-        |   |           |       hevz5itu9o-{0}-hrwsygsryq-hrwsygsryq.gz
-        |   |           |       hh92lrx13d-{0}-khy4lop6wu-khy4lop6wu.gz
-        |   |           |       hsa0fwp5ls-{0}-13ja33weya-13ja33weya.gz
-        |   |           |       i0oilot2q1-{0}-0j3bgjxly4-0j3bgjxly4.gz
-        |   |           |       jfzlrv9cgx-{0}-ausgxo2sd3-ausgxo2sd3.gz
-        |   |           |       jt3e1rdii1-{0}-s35ty4nyc5-s35ty4nyc5.gz
-        |   |           |       k2mw846ued-{0}-37tfw0ft22-37tfw0ft22.gz
-        |   |           |       kay38lw82v-{0}-ft3s53vfgj-ft3s53vfgj.gz
-        |   |           |       kdgbnj3stq-{0}-46ein0sx1k-46ein0sx1k.gz
-        |   |           |       l2mhd45r4z-{0}-63fj8s7r0e-63fj8s7r0e.gz
-        |   |           |       lf383621gq-{0}-c2oey78nd0-c2oey78nd0.gz
-        |   |           |       loo7f5x1gx-{0}-jd9uben2k1-jd9uben2k1.gz
-        |   |           |       lxae500s9q-{0}-vr1egmr9el-vr1egmr9el.gz
-        |   |           |       m5e6rnmcep-{0}-c2jlpeoesf-c2jlpeoesf.gz
-        |   |           |       mxp9w50l4b-{0}-h1s4sie4z3-h1s4sie4z3.gz
-        |   |           |       n5un2q0rmp-{0}-06098lyss8-06098lyss8.gz
-        |   |           |       o0q64zz2g2-{0}-erw9l3u2r3-erw9l3u2r3.gz
-        |   |           |       oej83ydp7q-{0}-j5mq2jizvt-j5mq2jizvt.gz
-        |   |           |       onq1f5nzz4-{0}-notf2xhcfb-notf2xhcfb.gz
-        |   |           |       p45ce5yffh-{0}-khv3u5hwcm-khv3u5hwcm.gz
-        |   |           |       pgyksi01id-{0}-v0zj4ognzu-v0zj4ognzu.gz
-        |   |           |       rogc4sk0pw-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
-        |   |           |       rrzzv9ip5o-{0}-2hrrzqn4qx-2hrrzqn4qx.gz
-        |   |           |       sgf5lx3sbn-{0}-b7pk76d08c-b7pk76d08c.gz
-        |   |           |       taqldvnaul-{0}-d7shbmvgxk-d7shbmvgxk.gz
-        |   |           |       v7vyzcc6qh-{0}-bqjiyaj88i-bqjiyaj88i.gz
-        |   |           |       vrc98ic1o2-{0}-6cfz1n2cew-6cfz1n2cew.gz
-        |   |           |       xcqk6qv13p-{0}-rzd6atqjts-rzd6atqjts.gz
-        |   |           |       xifcgn9ief-{0}-fsbi9cje9m-fsbi9cje9m.gz
-        |   |           |       zp2adb4uhm-{0}-y7v9cxd14o-y7v9cxd14o.gz
-        |   |           |       
+        |   |           |   |   03xqw0swdg-{0}-lcd1t2u6c8-lcd1t2u6c8.gz
+        |   |           |   |   0546dfdd6f-{0}-r4e9w2rdcm-r4e9w2rdcm.gz
+        |   |           |   |   08cqgvfzcy-{0}-jj8uyg4cgr-jj8uyg4cgr.gz
+        |   |           |   |   0txged01c1-{0}-j8lzlu28q6-j8lzlu28q6.gz
+        |   |           |   |   1qbqjgk7wr-{0}-pk9g2wxc8p-pk9g2wxc8p.gz
+        |   |           |   |   3til2bm5ay-{0}-pj5nd1wqec-pj5nd1wqec.gz
+        |   |           |   |   5exm1mo63l-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
+        |   |           |   |   5whq523p0y-{0}-kbrnm935zg-kbrnm935zg.gz
+        |   |           |   |   65ii6i50cu-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
+        |   |           |   |   72hk1wsa3c-{0}-nvvlpmu67g-nvvlpmu67g.gz
+        |   |           |   |   7joa6vf0w2-{0}-aexeepp0ev-aexeepp0ev.gz
+        |   |           |   |   8ny1ssfslj-{0}-dxx9fxp4il-dxx9fxp4il.gz
+        |   |           |   |   8v4adbxxmx-{0}-2hrrzqn4qx-2hrrzqn4qx.gz
+        |   |           |   |   9wb38qhjvq-{0}-cosvhxvwiu-cosvhxvwiu.gz
+        |   |           |   |   byvyapvtmi-{0}-iovd86k7lj-iovd86k7lj.gz
+        |   |           |   |   dcz3aqb7og-{0}-tdbxkamptv-tdbxkamptv.gz
+        |   |           |   |   e0tkuniv2q-{0}-ub07r2b239-ub07r2b239.gz
+        |   |           |   |   e2p7e3doxt-{0}-u1n4jc5v46-u1n4jc5v46.gz
+        |   |           |   |   gh25061luz-{0}-493y06b0oq-493y06b0oq.gz
+        |   |           |   |   h56f1aupc7-{0}-6pdc2jztkx-6pdc2jztkx.gz
+        |   |           |   |   hevz5itu9o-{0}-hrwsygsryq-hrwsygsryq.gz
+        |   |           |   |   hh92lrx13d-{0}-khy4lop6wu-khy4lop6wu.gz
+        |   |           |   |   hsa0fwp5ls-{0}-13ja33weya-13ja33weya.gz
+        |   |           |   |   i0oilot2q1-{0}-0j3bgjxly4-0j3bgjxly4.gz
+        |   |           |   |   jfzlrv9cgx-{0}-ausgxo2sd3-ausgxo2sd3.gz
+        |   |           |   |   jt3e1rdii1-{0}-s35ty4nyc5-s35ty4nyc5.gz
+        |   |           |   |   k2mw846ued-{0}-37tfw0ft22-37tfw0ft22.gz
+        |   |           |   |   kay38lw82v-{0}-ft3s53vfgj-ft3s53vfgj.gz
+        |   |           |   |   kdgbnj3stq-{0}-46ein0sx1k-46ein0sx1k.gz
+        |   |           |   |   l2mhd45r4z-{0}-63fj8s7r0e-63fj8s7r0e.gz
+        |   |           |   |   lf383621gq-{0}-c2oey78nd0-c2oey78nd0.gz
+        |   |           |   |   loo7f5x1gx-{0}-jd9uben2k1-jd9uben2k1.gz
+        |   |           |   |   lxae500s9q-{0}-vr1egmr9el-vr1egmr9el.gz
+        |   |           |   |   m5e6rnmcep-{0}-c2jlpeoesf-c2jlpeoesf.gz
+        |   |           |   |   mxp9w50l4b-{0}-h1s4sie4z3-h1s4sie4z3.gz
+        |   |           |   |   n5un2q0rmp-{0}-06098lyss8-06098lyss8.gz
+        |   |           |   |   o0q64zz2g2-{0}-erw9l3u2r3-erw9l3u2r3.gz
+        |   |           |   |   oej83ydp7q-{0}-j5mq2jizvt-j5mq2jizvt.gz
+        |   |           |   |   onq1f5nzz4-{0}-notf2xhcfb-notf2xhcfb.gz
+        |   |           |   |   p45ce5yffh-{0}-khv3u5hwcm-khv3u5hwcm.gz
+        |   |           |   |   pgyksi01id-{0}-v0zj4ognzu-v0zj4ognzu.gz
+        |   |           |   |   rogc4sk0pw-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
+        |   |           |   |   rrzzv9ip5o-{0}-2hrrzqn4qx-2hrrzqn4qx.gz
+        |   |           |   |   sgf5lx3sbn-{0}-b7pk76d08c-b7pk76d08c.gz
+        |   |           |   |   taqldvnaul-{0}-d7shbmvgxk-d7shbmvgxk.gz
+        |   |           |   |   v7vyzcc6qh-{0}-bqjiyaj88i-bqjiyaj88i.gz
+        |   |           |   |   vrc98ic1o2-{0}-6cfz1n2cew-6cfz1n2cew.gz
+        |   |           |   |   xcqk6qv13p-{0}-rzd6atqjts-rzd6atqjts.gz
+        |   |           |   |   xifcgn9ief-{0}-fsbi9cje9m-fsbi9cje9m.gz
+        |   |           |   |   zp2adb4uhm-{0}-y7v9cxd14o-y7v9cxd14o.gz
+        |   |           |   |   
+        |   |           |   \---publish
+        |   |           |           03xqw0swdg-{0}-lcd1t2u6c8-lcd1t2u6c8.br
+        |   |           |           0546dfdd6f-{0}-r4e9w2rdcm-r4e9w2rdcm.br
+        |   |           |           08cqgvfzcy-{0}-jj8uyg4cgr-jj8uyg4cgr.br
+        |   |           |           0txged01c1-{0}-j8lzlu28q6-j8lzlu28q6.br
+        |   |           |           1qbqjgk7wr-{0}-pk9g2wxc8p-pk9g2wxc8p.br
+        |   |           |           3til2bm5ay-{0}-pj5nd1wqec-pj5nd1wqec.br
+        |   |           |           5exm1mo63l-{0}-fvhpjtyr6v-fvhpjtyr6v.br
+        |   |           |           5whq523p0y-{0}-kbrnm935zg-kbrnm935zg.br
+        |   |           |           65ii6i50cu-{0}-ee0r1s7dh0-ee0r1s7dh0.br
+        |   |           |           72hk1wsa3c-{0}-nvvlpmu67g-nvvlpmu67g.br
+        |   |           |           7joa6vf0w2-{0}-aexeepp0ev-aexeepp0ev.br
+        |   |           |           8ny1ssfslj-{0}-dxx9fxp4il-dxx9fxp4il.br
+        |   |           |           8v4adbxxmx-{0}-2hrrzqn4qx-2hrrzqn4qx.br
+        |   |           |           9wb38qhjvq-{0}-cosvhxvwiu-cosvhxvwiu.br
+        |   |           |           byvyapvtmi-{0}-iovd86k7lj-iovd86k7lj.br
+        |   |           |           dcz3aqb7og-{0}-tdbxkamptv-tdbxkamptv.br
+        |   |           |           e0tkuniv2q-{0}-ub07r2b239-ub07r2b239.br
+        |   |           |           e2p7e3doxt-{0}-u1n4jc5v46-u1n4jc5v46.br
+        |   |           |           gh25061luz-{0}-493y06b0oq-493y06b0oq.br
+        |   |           |           h56f1aupc7-{0}-6pdc2jztkx-6pdc2jztkx.br
+        |   |           |           hevz5itu9o-{0}-hrwsygsryq-hrwsygsryq.br
+        |   |           |           hh92lrx13d-{0}-khy4lop6wu-khy4lop6wu.br
+        |   |           |           hsa0fwp5ls-{0}-13ja33weya-13ja33weya.br
+        |   |           |           i0oilot2q1-{0}-0j3bgjxly4-0j3bgjxly4.br
+        |   |           |           jfzlrv9cgx-{0}-ausgxo2sd3-ausgxo2sd3.br
+        |   |           |           jt3e1rdii1-{0}-s35ty4nyc5-s35ty4nyc5.br
+        |   |           |           k2mw846ued-{0}-37tfw0ft22-37tfw0ft22.br
+        |   |           |           kay38lw82v-{0}-ft3s53vfgj-ft3s53vfgj.br
+        |   |           |           kdgbnj3stq-{0}-46ein0sx1k-46ein0sx1k.br
+        |   |           |           l2mhd45r4z-{0}-63fj8s7r0e-63fj8s7r0e.br
+        |   |           |           lf383621gq-{0}-c2oey78nd0-c2oey78nd0.br
+        |   |           |           loo7f5x1gx-{0}-jd9uben2k1-jd9uben2k1.br
+        |   |           |           lxae500s9q-{0}-vr1egmr9el-vr1egmr9el.br
+        |   |           |           m5e6rnmcep-{0}-c2jlpeoesf-c2jlpeoesf.br
+        |   |           |           mxp9w50l4b-{0}-h1s4sie4z3-h1s4sie4z3.br
+        |   |           |           n5un2q0rmp-{0}-06098lyss8-06098lyss8.br
+        |   |           |           o0q64zz2g2-{0}-erw9l3u2r3-erw9l3u2r3.br
+        |   |           |           oej83ydp7q-{0}-j5mq2jizvt-j5mq2jizvt.br
+        |   |           |           onq1f5nzz4-{0}-notf2xhcfb-notf2xhcfb.br
+        |   |           |           p45ce5yffh-{0}-khv3u5hwcm-khv3u5hwcm.br
+        |   |           |           pgyksi01id-{0}-v0zj4ognzu-v0zj4ognzu.br
+        |   |           |           rogc4sk0pw-{0}-k8d9w2qqmf-k8d9w2qqmf.br
+        |   |           |           rrzzv9ip5o-{0}-2hrrzqn4qx-2hrrzqn4qx.br
+        |   |           |           sgf5lx3sbn-{0}-b7pk76d08c-b7pk76d08c.br
+        |   |           |           taqldvnaul-{0}-d7shbmvgxk-d7shbmvgxk.br
+        |   |           |           v7vyzcc6qh-{0}-bqjiyaj88i-bqjiyaj88i.br
+        |   |           |           vrc98ic1o2-{0}-6cfz1n2cew-6cfz1n2cew.br
+        |   |           |           xcqk6qv13p-{0}-rzd6atqjts-rzd6atqjts.br
+        |   |           |           xifcgn9ief-{0}-fsbi9cje9m-fsbi9cje9m.br
+        |   |           |           zp2adb4uhm-{0}-y7v9cxd14o-y7v9cxd14o.br
+        |   |           |           
+        |   |           +---PubTmp
+        |   |           |   |   BlazorApp.Parameters.xml
+        |   |           |   |   BlazorApp.SourceManifest.xml
+        |   |           |   |   
+        |   |           |   \---Out
+        |   |           |       |   appsettings.Development.json
+        |   |           |       |   appsettings.json
+        |   |           |       |   BlazorApp.deps.json
+        |   |           |       |   BlazorApp.dll
+        |   |           |       |   BlazorApp.exe
+        |   |           |       |   BlazorApp.pdb
+        |   |           |       |   BlazorApp.runtimeconfig.json
+        |   |           |       |   BlazorApp.staticwebassets.endpoints.json
+        |   |           |       |   ClassLibrary1.dll
+        |   |           |       |   ClassLibrary1.pdb
+        |   |           |       |   libman.json
+        |   |           |       |   OpenTelemetry.Api.dll
+        |   |           |       |   OpenTelemetry.Api.ProviderBuilderExtensions.dll
+        |   |           |       |   OpenTelemetry.dll
+        |   |           |       |   OpenTelemetry.Exporter.Console.dll
+        |   |           |       |   OpenTelemetry.Exporter.OpenTelemetryProtocol.dll
+        |   |           |       |   OpenTelemetry.Extensions.Hosting.dll
+        |   |           |       |   OpenTelemetry.Instrumentation.Process.dll
+        |   |           |       |   OpenTelemetry.Instrumentation.Runtime.dll
+        |   |           |       |   web.config
+        |   |           |       |   
+        |   |           |       \---wwwroot
+        |   |           |           |   app.css
+        |   |           |           |   app.css.br
+        |   |           |           |   app.css.gz
+        |   |           |           |   BlazorApp.styles.css
+        |   |           |           |   BlazorApp.styles.css.br
+        |   |           |           |   BlazorApp.styles.css.gz
+        |   |           |           |   favicon.png
+        |   |           |           |   
+        |   |           |           +---Components
+        |   |           |           |   \---Layout
+        |   |           |           |           ReconnectModal.razor.js
+        |   |           |           |           ReconnectModal.razor.js.br
+        |   |           |           |           ReconnectModal.razor.js.gz
+        |   |           |           |           
+        |   |           |           +---lib
+        |   |           |           |   \---bootstrap
+        |   |           |           |       \---dist
+        |   |           |           |           +---css
+        |   |           |           |           |       bootstrap-grid.css
+        |   |           |           |           |       bootstrap-grid.css.br
+        |   |           |           |           |       bootstrap-grid.css.gz
+        |   |           |           |           |       bootstrap-grid.css.map
+        |   |           |           |           |       bootstrap-grid.css.map.br
+        |   |           |           |           |       bootstrap-grid.css.map.gz
+        |   |           |           |           |       bootstrap-grid.min.css
+        |   |           |           |           |       bootstrap-grid.min.css.br
+        |   |           |           |           |       bootstrap-grid.min.css.gz
+        |   |           |           |           |       bootstrap-grid.min.css.map
+        |   |           |           |           |       bootstrap-grid.min.css.map.br
+        |   |           |           |           |       bootstrap-grid.min.css.map.gz
+        |   |           |           |           |       bootstrap-grid.rtl.css
+        |   |           |           |           |       bootstrap-grid.rtl.css.br
+        |   |           |           |           |       bootstrap-grid.rtl.css.gz
+        |   |           |           |           |       bootstrap-grid.rtl.css.map
+        |   |           |           |           |       bootstrap-grid.rtl.css.map.br
+        |   |           |           |           |       bootstrap-grid.rtl.css.map.gz
+        |   |           |           |           |       bootstrap-grid.rtl.min.css
+        |   |           |           |           |       bootstrap-grid.rtl.min.css.br
+        |   |           |           |           |       bootstrap-grid.rtl.min.css.gz
+        |   |           |           |           |       bootstrap-grid.rtl.min.css.map
+        |   |           |           |           |       bootstrap-grid.rtl.min.css.map.br
+        |   |           |           |           |       bootstrap-grid.rtl.min.css.map.gz
+        |   |           |           |           |       bootstrap-reboot.css
+        |   |           |           |           |       bootstrap-reboot.css.br
+        |   |           |           |           |       bootstrap-reboot.css.gz
+        |   |           |           |           |       bootstrap-reboot.css.map
+        |   |           |           |           |       bootstrap-reboot.css.map.br
+        |   |           |           |           |       bootstrap-reboot.css.map.gz
+        |   |           |           |           |       bootstrap-reboot.min.css
+        |   |           |           |           |       bootstrap-reboot.min.css.br
+        |   |           |           |           |       bootstrap-reboot.min.css.gz
+        |   |           |           |           |       bootstrap-reboot.min.css.map
+        |   |           |           |           |       bootstrap-reboot.min.css.map.br
+        |   |           |           |           |       bootstrap-reboot.min.css.map.gz
+        |   |           |           |           |       bootstrap-reboot.rtl.css
+        |   |           |           |           |       bootstrap-reboot.rtl.css.br
+        |   |           |           |           |       bootstrap-reboot.rtl.css.gz
+        |   |           |           |           |       bootstrap-reboot.rtl.css.map
+        |   |           |           |           |       bootstrap-reboot.rtl.css.map.br
+        |   |           |           |           |       bootstrap-reboot.rtl.css.map.gz
+        |   |           |           |           |       bootstrap-reboot.rtl.min.css
+        |   |           |           |           |       bootstrap-reboot.rtl.min.css.br
+        |   |           |           |           |       bootstrap-reboot.rtl.min.css.gz
+        |   |           |           |           |       bootstrap-reboot.rtl.min.css.map
+        |   |           |           |           |       bootstrap-reboot.rtl.min.css.map.br
+        |   |           |           |           |       bootstrap-reboot.rtl.min.css.map.gz
+        |   |           |           |           |       bootstrap-utilities.css
+        |   |           |           |           |       bootstrap-utilities.css.br
+        |   |           |           |           |       bootstrap-utilities.css.gz
+        |   |           |           |           |       bootstrap-utilities.css.map
+        |   |           |           |           |       bootstrap-utilities.css.map.br
+        |   |           |           |           |       bootstrap-utilities.css.map.gz
+        |   |           |           |           |       bootstrap-utilities.min.css
+        |   |           |           |           |       bootstrap-utilities.min.css.br
+        |   |           |           |           |       bootstrap-utilities.min.css.gz
+        |   |           |           |           |       bootstrap-utilities.min.css.map
+        |   |           |           |           |       bootstrap-utilities.min.css.map.br
+        |   |           |           |           |       bootstrap-utilities.min.css.map.gz
+        |   |           |           |           |       bootstrap-utilities.rtl.css
+        |   |           |           |           |       bootstrap-utilities.rtl.css.br
+        |   |           |           |           |       bootstrap-utilities.rtl.css.gz
+        |   |           |           |           |       bootstrap-utilities.rtl.css.map
+        |   |           |           |           |       bootstrap-utilities.rtl.css.map.br
+        |   |           |           |           |       bootstrap-utilities.rtl.css.map.gz
+        |   |           |           |           |       bootstrap-utilities.rtl.min.css
+        |   |           |           |           |       bootstrap-utilities.rtl.min.css.br
+        |   |           |           |           |       bootstrap-utilities.rtl.min.css.gz
+        |   |           |           |           |       bootstrap-utilities.rtl.min.css.map
+        |   |           |           |           |       bootstrap-utilities.rtl.min.css.map.br
+        |   |           |           |           |       bootstrap-utilities.rtl.min.css.map.gz
+        |   |           |           |           |       bootstrap.css
+        |   |           |           |           |       bootstrap.css.br
+        |   |           |           |           |       bootstrap.css.gz
+        |   |           |           |           |       bootstrap.css.map
+        |   |           |           |           |       bootstrap.css.map.br
+        |   |           |           |           |       bootstrap.css.map.gz
+        |   |           |           |           |       bootstrap.min.css
+        |   |           |           |           |       bootstrap.min.css.br
+        |   |           |           |           |       bootstrap.min.css.gz
+        |   |           |           |           |       bootstrap.min.css.map
+        |   |           |           |           |       bootstrap.min.css.map.br
+        |   |           |           |           |       bootstrap.min.css.map.gz
+        |   |           |           |           |       bootstrap.rtl.css
+        |   |           |           |           |       bootstrap.rtl.css.br
+        |   |           |           |           |       bootstrap.rtl.css.gz
+        |   |           |           |           |       bootstrap.rtl.css.map
+        |   |           |           |           |       bootstrap.rtl.css.map.br
+        |   |           |           |           |       bootstrap.rtl.css.map.gz
+        |   |           |           |           |       bootstrap.rtl.min.css
+        |   |           |           |           |       bootstrap.rtl.min.css.br
+        |   |           |           |           |       bootstrap.rtl.min.css.gz
+        |   |           |           |           |       bootstrap.rtl.min.css.map
+        |   |           |           |           |       bootstrap.rtl.min.css.map.br
+        |   |           |           |           |       bootstrap.rtl.min.css.map.gz
+        |   |           |           |           |       
+        |   |           |           |           \---js
+        |   |           |           |                   bootstrap.bundle.js
+        |   |           |           |                   bootstrap.bundle.js.br
+        |   |           |           |                   bootstrap.bundle.js.gz
+        |   |           |           |                   bootstrap.bundle.js.map
+        |   |           |           |                   bootstrap.bundle.js.map.br
+        |   |           |           |                   bootstrap.bundle.js.map.gz
+        |   |           |           |                   bootstrap.bundle.min.js
+        |   |           |           |                   bootstrap.bundle.min.js.br
+        |   |           |           |                   bootstrap.bundle.min.js.gz
+        |   |           |           |                   bootstrap.bundle.min.js.map
+        |   |           |           |                   bootstrap.bundle.min.js.map.br
+        |   |           |           |                   bootstrap.bundle.min.js.map.gz
+        |   |           |           |                   bootstrap.esm.js
+        |   |           |           |                   bootstrap.esm.js.br
+        |   |           |           |                   bootstrap.esm.js.gz
+        |   |           |           |                   bootstrap.esm.js.map
+        |   |           |           |                   bootstrap.esm.js.map.br
+        |   |           |           |                   bootstrap.esm.js.map.gz
+        |   |           |           |                   bootstrap.esm.min.js
+        |   |           |           |                   bootstrap.esm.min.js.br
+        |   |           |           |                   bootstrap.esm.min.js.gz
+        |   |           |           |                   bootstrap.esm.min.js.map
+        |   |           |           |                   bootstrap.esm.min.js.map.br
+        |   |           |           |                   bootstrap.esm.min.js.map.gz
+        |   |           |           |                   bootstrap.js
+        |   |           |           |                   bootstrap.js.br
+        |   |           |           |                   bootstrap.js.gz
+        |   |           |           |                   bootstrap.js.map
+        |   |           |           |                   bootstrap.js.map.br
+        |   |           |           |                   bootstrap.js.map.gz
+        |   |           |           |                   bootstrap.min.js
+        |   |           |           |                   bootstrap.min.js.br
+        |   |           |           |                   bootstrap.min.js.gz
+        |   |           |           |                   bootstrap.min.js.map
+        |   |           |           |                   bootstrap.min.js.map.br
+        |   |           |           |                   bootstrap.min.js.map.gz
+        |   |           |           |                   
+        |   |           |           \---_framework
+        |   |           |                   blazor.server.js
+        |   |           |                   blazor.server.js.br
+        |   |           |                   blazor.server.js.gz
+        |   |           |                   blazor.web.js
+        |   |           |                   blazor.web.js.br
+        |   |           |                   blazor.web.js.gz
+        |   |           |                   
         |   |           +---ref
         |   |           |       BlazorApp.dll
         |   |           |       
@@ -278,7 +655,13 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
             |   ServiceCollectionExtensions.cs
             |   
             +---bin
-            |   \---Debug
+            |   +---Debug
+            |   |   \---net10.0
+            |   |           ClassLibrary1.deps.json
+            |   |           ClassLibrary1.dll
+            |   |           ClassLibrary1.pdb
+            |   |           
+            |   \---Release
             |       \---net10.0
             |               ClassLibrary1.deps.json
             |               ClassLibrary1.dll
@@ -291,7 +674,27 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
                 |   project.assets.json
                 |   project.nuget.cache
                 |   
-                \---Debug
+                +---Debug
+                |   \---net10.0
+                |       |   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+                |       |   ClassLibrary1.AssemblyInfo.cs
+                |       |   ClassLibrary1.AssemblyInfoInputs.cache
+                |       |   ClassLibrary1.assets.cache
+                |       |   ClassLibrary1.csproj.AssemblyReference.cache
+                |       |   ClassLibrary1.csproj.CoreCompileInputs.cache
+                |       |   ClassLibrary1.csproj.FileListAbsolute.txt
+                |       |   ClassLibrary1.dll
+                |       |   ClassLibrary1.GeneratedMSBuildEditorConfig.editorconfig
+                |       |   ClassLibrary1.GlobalUsings.g.cs
+                |       |   ClassLibrary1.pdb
+                |       |   
+                |       +---ref
+                |       |       ClassLibrary1.dll
+                |       |       
+                |       \---refint
+                |               ClassLibrary1.dll
+                |               
+                \---Release
                     \---net10.0
                         |   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
                         |   ClassLibrary1.AssemblyInfo.cs
@@ -1002,8 +1405,8 @@ async function retryWhenDocumentBecomesVisible() {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
-SIZE: 9.82 KB
-MODIFIED: 12/08/2025 14:44:37
+SIZE: 9.85 KB
+MODIFIED: 12/08/2025 14:48:07
 ================================================================================
 
 @page "/counter"
@@ -1020,7 +1423,7 @@ MODIFIED: 12/08/2025 14:44:37
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
-<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
     Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
 </button>
 
@@ -62922,7 +63325,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/08/2025 14:45:28
+EXPORT COMPLETED: 12/08/2025 14:54:00
 Total Files Exported: 62
 Output File: .\docs\llm\dump.txt
 ===============================================================================
