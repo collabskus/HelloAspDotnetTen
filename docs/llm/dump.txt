@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/08/2025 17:47:36
+Generated: 12/08/2025 18:40:14
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -56,6 +56,8 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |   \---Pages
         |   |           Counter.razor
         |   |           Counter.razor.css
+        |   |           CountryCompare.razor
+        |   |           CountryCompare.razor.css
         |   |           Error.razor
         |   |           Home.razor
         |   |           NotFound.razor
@@ -63,6 +65,9 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           StateCompare.razor.css
         |   |           Weather.razor
         |   |           
+        |   +---Data
+        |   |       CountryDataRepository.cs
+        |   |       
         |   +---Exporters
         |   |       FileActivityExporter.cs
         |   |       FileExporterExtensions.cs
@@ -71,6 +76,7 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |       FileMetricExporter.cs
         |   |       
         |   +---Models
+        |   |       CountryData.cs
         |   |       StateData.cs
         |   |       
         |   +---obj
@@ -82,6 +88,7 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           site36641-WebDeploy.pubxml.user
         |   |           
         |   +---Services
+        |   |       CountryComparisonService.cs
         |   |       StateComparisonService.cs
         |   |       
         |   \---wwwroot
@@ -412,8 +419,8 @@ main {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor
-SIZE: 1.29 KB
-MODIFIED: 12/08/2025 17:33:13
+SIZE: 1.51 KB
+MODIFIED: 12/08/2025 18:38:32
 ================================================================================
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -440,7 +447,13 @@ MODIFIED: 12/08/2025 17:33:13
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="state-compare">
-                <span class="bi bi-map-fill-nav-menu" aria-hidden="true"></span> State Compare
+                <span class="bi bi-map-fill-nav-menu" aria-hidden="true"></span> US States
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="country-compare">
+                <span class="bi bi-globe-nav-menu" aria-hidden="true"></span> Countries
             </NavLink>
         </div>
 
@@ -1147,6 +1160,358 @@ body {
 
 
 ================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
+SIZE: 8 KB
+MODIFIED: 12/08/2025 18:38:02
+================================================================================
+
+@page "/country-compare"
+@rendermode InteractiveServer
+@using BlazorApp.Models
+@using BlazorApp.Services
+@inject CountryComparisonService ComparisonService
+
+<PageTitle>Country Comparison Game</PageTitle>
+
+<h1>ðŸŒ Country Comparison Game</h1>
+
+<div class="score-display mb-3">
+    <span class="badge bg-primary fs-6 me-2">
+        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
+        @if (ComparisonService.Score.TotalQuestions > 0)
+        {
+            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+        }
+    </span>
+    @if (ComparisonService.Score.CurrentStreak > 1)
+    {
+        <span class="badge bg-warning text-dark fs-6 me-2">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
+    }
+    @if (ComparisonService.Score.BestStreak > 1)
+    {
+        <span class="badge bg-secondary fs-6">Best: @ComparisonService.Score.BestStreak</span>
+    }
+    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
+</div>
+
+@if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
+{
+    <div class="question-section mb-4">
+        <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
+        <p class="text-center text-muted small">
+            @ComparisonService.GetCountryCountForQuestion(_currentQuestion) countries have data for this question
+        </p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card country-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
+                <div class="card-body text-center">
+                    <div class="flag-display mb-2">@_country1.FlagEmoji</div>
+                    <h4 class="card-title">@_country1.Name</h4>
+                    <p class="text-muted small mb-0">@_country1.Continent</p>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal mt-2">@_currentQuestion.GetFormattedValue(_country1)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
+                {
+                    <div class="correct-indicator">âœ“ Correct</div>
+                }
+            </div>
+        </div>
+        
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+            <span class="vs-text">VS</span>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card country-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
+                <div class="card-body text-center">
+                    <div class="flag-display mb-2">@_country2.FlagEmoji</div>
+                    <h4 class="card-title">@_country2.Name</h4>
+                    <p class="text-muted small mb-0">@_country2.Continent</p>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal mt-2">@_currentQuestion.GetFormattedValue(_country2)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
+                {
+                    <div class="correct-indicator">âœ“ Correct</div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    @if (_hasAnswered)
+    {
+        <div class="result-section mt-4 text-center">
+            <div class="alert @(_lastResult!.IsCorrect ? "alert-success" : "alert-danger")">
+                @if (_lastResult.IsCorrect)
+                {
+                    <strong>Correct! ðŸŽ‰</strong>
+                }
+                else
+                {
+                    <strong>Wrong!</strong>
+                    <span>The answer was @_lastResult.CorrectAnswer.Name @_lastResult.CorrectAnswer.FlagEmoji</span>
+                }
+            </div>
+            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question â†’</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-center mt-4 text-muted">Click on a country to make your choice!</p>
+    }
+}
+else if (_noDataAvailable)
+{
+    <div class="alert alert-warning">
+        Not enough countries have data for this question type. Please select a different question.
+    </div>
+}
+
+<div class="mt-5">
+    <h5>Question Type</h5>
+    <div class="question-buttons">
+        @foreach (var q in ComparisonService.AvailableQuestions)
+        {
+            var count = ComparisonService.GetCountryCountForQuestion(q);
+            <button type="button" 
+                    class="btn btn-sm mb-1 me-1 @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetQuestion(q)"
+                    disabled="@(count < 2)">
+                @GetShortQuestionName(q.Id)
+                <span class="badge bg-light text-dark ms-1">@count</span>
+            </button>
+        }
+        <button type="button" 
+                class="btn btn-sm mb-1 @(_randomMode ? "btn-warning" : "btn-outline-warning")"
+                @onclick="ToggleRandomMode">
+            ðŸŽ² Random
+        </button>
+    </div>
+</div>
+
+<div class="mt-4">
+    <details>
+        <summary class="text-muted">Game Stats</summary>
+        <p class="small text-muted mt-2">
+            Total countries in database: @ComparisonService.Countries.Count<br/>
+            Questions available: @ComparisonService.AvailableQuestions.Count
+        </p>
+    </details>
+</div>
+
+@code {
+    private CountryData? _country1;
+    private CountryData? _country2;
+    private CountryComparisonQuestion? _currentQuestion;
+    private CountryComparisonResult? _lastResult;
+    private bool _hasAnswered;
+    private bool _randomMode = true;
+    private bool _noDataAvailable;
+
+    protected override void OnInitialized()
+    {
+        StartNewRound();
+    }
+
+    private void StartNewRound()
+    {
+        _noDataAvailable = false;
+        
+        if (_randomMode)
+        {
+            _currentQuestion = ComparisonService.GetRandomViableQuestion();
+        }
+        else
+        {
+            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+        }
+        
+        var pair = ComparisonService.GetRandomCountryPair(_currentQuestion);
+        if (pair is null)
+        {
+            _noDataAvailable = true;
+            return;
+        }
+        
+        (_country1, _country2) = pair.Value;
+        _hasAnswered = false;
+        _lastResult = null;
+    }
+
+    private void SelectCountry(CountryData selected)
+    {
+        if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null) 
+            return;
+        
+        _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selected);
+        _hasAnswered = true;
+    }
+
+    private void NextRound() => StartNewRound();
+
+    private void ResetGame()
+    {
+        ComparisonService.Score.Reset();
+        StartNewRound();
+    }
+
+    private void SetQuestion(CountryComparisonQuestion question)
+    {
+        _randomMode = false;
+        _currentQuestion = question;
+        StartNewRound();
+    }
+
+    private void ToggleRandomMode()
+    {
+        _randomMode = true;
+        StartNewRound();
+    }
+
+    private string GetCardClass(CountryData country)
+    {
+        if (!_hasAnswered) return "clickable";
+        if (_lastResult is null) return "";
+        
+        if (country == _lastResult.CorrectAnswer)
+            return "correct-answer";
+        if (country == _lastResult.UserChoice && !_lastResult.IsCorrect)
+            return "wrong-answer";
+        return "";
+    }
+    
+    private string GetShortQuestionName(string id) => id switch
+    {
+        "population" => "Population",
+        "area" => "Area",
+        "gdp" => "GDP",
+        "gdp_per_capita" => "GDP/capita",
+        "gni_ppp" => "GNI PPP",
+        "density" => "Density",
+        "literacy" => "Literacy",
+        "hdi" => "HDI",
+        "life_expectancy" => "Life Exp.",
+        _ => id
+    };
+}
+
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
+SIZE: 1.71 KB
+MODIFIED: 12/08/2025 18:38:20
+================================================================================
+
+.country-card {
+    cursor: default;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 220px;
+}
+
+.country-card.clickable {
+    cursor: pointer;
+}
+
+.country-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+.country-card.correct-answer {
+    border: 3px solid #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.country-card.wrong-answer {
+    border: 3px solid #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.flag-display {
+    font-size: 4rem;
+    line-height: 1;
+}
+
+.vs-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.correct-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #198754;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.stat-reveal {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.score-display {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.question-section h3 {
+    color: #212529;
+    font-weight: 600;
+}
+
+.result-section .alert {
+    font-size: 1.1rem;
+}
+
+.question-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.question-buttons .btn {
+    font-size: 0.85rem;
+}
+
+details summary {
+    cursor: pointer;
+}
+
+details summary:hover {
+    color: #0d6efd;
+}
+
+
+
+================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Error.razor
 SIZE: 1.19 KB
 MODIFIED: 12/08/2025 11:14:15
@@ -1631,6 +1996,146 @@ MODIFIED: 12/08/2025 11:14:16
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
+
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Data\CountryDataRepository.cs
+SIZE: 32.92 KB
+MODIFIED: 12/08/2025 18:33:45
+================================================================================
+
+using BlazorApp.Models;
+
+namespace BlazorApp.Data;
+
+/// <summary>
+/// Repository containing data for all countries (Part 1: A-L).
+/// Data sources: World Bank, UN, IMF, UNDP (2023/2024 estimates)
+/// </summary>
+public static partial class CountryDataRepository
+{
+    public static IEnumerable<CountryData> GetCountriesAtoL()
+    {
+        return new CountryData[]
+        {
+            // === A ===
+            new() { Name = "Afghanistan", IsoCode2 = "AF", IsoCode3 = "AFG", FlagEmoji = "ðŸ‡¦ðŸ‡«", Continent = "Asia", AreaSquareKm = 652230, Population = 42240000, GdpMillionsUsd = 14580, GdpPerCapitaUsd = 345, PopulationDensity = 64.8, LiteracyRate = 37.3, Hdi = 0.462, LifeExpectancy = 62.0 },
+            new() { Name = "Albania", IsoCode2 = "AL", IsoCode3 = "ALB", FlagEmoji = "ðŸ‡¦ðŸ‡±", Continent = "Europe", AreaSquareKm = 28748, Population = 2750000, GdpMillionsUsd = 22978, GdpPerCapitaUsd = 8358, GniPerCapitaPpp = 17620, PopulationDensity = 95.7, LiteracyRate = 98.4, Hdi = 0.789, LifeExpectancy = 76.5 },
+            new() { Name = "Algeria", IsoCode2 = "DZ", IsoCode3 = "DZA", FlagEmoji = "ðŸ‡©ðŸ‡¿", Continent = "Africa", AreaSquareKm = 2381741, Population = 45400000, GdpMillionsUsd = 239900, GdpPerCapitaUsd = 5284, GniPerCapitaPpp = 13310, PopulationDensity = 19.1, LiteracyRate = 81.4, Hdi = 0.745, LifeExpectancy = 76.4 },
+            new() { Name = "Andorra", IsoCode2 = "AD", IsoCode3 = "AND", FlagEmoji = "ðŸ‡¦ðŸ‡©", Continent = "Europe", AreaSquareKm = 468, Population = 80000, GdpMillionsUsd = 3352, GdpPerCapitaUsd = 41900, PopulationDensity = 170.9, LiteracyRate = 100.0, Hdi = 0.884, LifeExpectancy = 83.0 },
+            new() { Name = "Angola", IsoCode2 = "AO", IsoCode3 = "AGO", FlagEmoji = "ðŸ‡¦ðŸ‡´", Continent = "Africa", AreaSquareKm = 1246700, Population = 36000000, GdpMillionsUsd = 92124, GdpPerCapitaUsd = 2560, GniPerCapitaPpp = 7250, PopulationDensity = 28.9, LiteracyRate = 72.0, Hdi = 0.595, LifeExpectancy = 62.0 },
+            new() { Name = "Antigua and Barbuda", IsoCode2 = "AG", IsoCode3 = "ATG", FlagEmoji = "ðŸ‡¦ðŸ‡¬", Continent = "North America", AreaSquareKm = 443, Population = 94000, GdpMillionsUsd = 1868, GdpPerCapitaUsd = 19872, GniPerCapitaPpp = 23490, PopulationDensity = 212.2, LiteracyRate = 99.0, Hdi = 0.820, LifeExpectancy = 78.0 },
+            new() { Name = "Argentina", IsoCode2 = "AR", IsoCode3 = "ARG", FlagEmoji = "ðŸ‡¦ðŸ‡·", Continent = "South America", AreaSquareKm = 2780400, Population = 46300000, GdpMillionsUsd = 641131, GdpPerCapitaUsd = 13846, GniPerCapitaPpp = 26390, PopulationDensity = 16.7, LiteracyRate = 99.0, Hdi = 0.849, LifeExpectancy = 76.6 },
+            new() { Name = "Armenia", IsoCode2 = "AM", IsoCode3 = "ARM", FlagEmoji = "ðŸ‡¦ðŸ‡²", Continent = "Asia", AreaSquareKm = 29743, Population = 2780000, GdpMillionsUsd = 24212, GdpPerCapitaUsd = 8712, GniPerCapitaPpp = 18480, PopulationDensity = 93.5, LiteracyRate = 99.8, Hdi = 0.786, LifeExpectancy = 72.0 },
+            new() { Name = "Australia", IsoCode2 = "AU", IsoCode3 = "AUS", FlagEmoji = "ðŸ‡¦ðŸ‡º", Continent = "Oceania", AreaSquareKm = 7692024, Population = 26500000, GdpMillionsUsd = 1687713, GdpPerCapitaUsd = 63688, GniPerCapitaPpp = 59170, PopulationDensity = 3.4, LiteracyRate = 99.0, Hdi = 0.946, LifeExpectancy = 84.5 },
+            new() { Name = "Austria", IsoCode2 = "AT", IsoCode3 = "AUT", FlagEmoji = "ðŸ‡¦ðŸ‡¹", Continent = "Europe", AreaSquareKm = 83871, Population = 9100000, GdpMillionsUsd = 515199, GdpPerCapitaUsd = 56593, GniPerCapitaPpp = 66640, PopulationDensity = 108.5, LiteracyRate = 99.0, Hdi = 0.926, LifeExpectancy = 82.0 },
+            new() { Name = "Azerbaijan", IsoCode2 = "AZ", IsoCode3 = "AZE", FlagEmoji = "ðŸ‡¦ðŸ‡¿", Continent = "Asia", AreaSquareKm = 86600, Population = 10200000, GdpMillionsUsd = 72356, GdpPerCapitaUsd = 7094, GniPerCapitaPpp = 17090, PopulationDensity = 117.8, LiteracyRate = 99.8, Hdi = 0.760, LifeExpectancy = 69.4 },
+            // === B ===
+            new() { Name = "Bahamas", IsoCode2 = "BS", IsoCode3 = "BHS", FlagEmoji = "ðŸ‡§ðŸ‡¸", Continent = "North America", AreaSquareKm = 13943, Population = 410000, GdpMillionsUsd = 14004, GdpPerCapitaUsd = 34156, GniPerCapitaPpp = 37250, PopulationDensity = 29.4, LiteracyRate = 95.6, Hdi = 0.820, LifeExpectancy = 71.6 },
+            new() { Name = "Bahrain", IsoCode2 = "BH", IsoCode3 = "BHR", FlagEmoji = "ðŸ‡§ðŸ‡­", Continent = "Asia", AreaSquareKm = 765, Population = 1500000, GdpMillionsUsd = 44169, GdpPerCapitaUsd = 29446, GniPerCapitaPpp = 54810, PopulationDensity = 1960.8, LiteracyRate = 97.5, Hdi = 0.888, LifeExpectancy = 78.8 },
+            new() { Name = "Bangladesh", IsoCode2 = "BD", IsoCode3 = "BGD", FlagEmoji = "ðŸ‡§ðŸ‡©", Continent = "Asia", AreaSquareKm = 147570, Population = 173000000, GdpMillionsUsd = 437415, GdpPerCapitaUsd = 2529, GniPerCapitaPpp = 7130, PopulationDensity = 1172.6, LiteracyRate = 74.9, Hdi = 0.670, LifeExpectancy = 72.4 },
+            new() { Name = "Barbados", IsoCode2 = "BB", IsoCode3 = "BRB", FlagEmoji = "ðŸ‡§ðŸ‡§", Continent = "North America", AreaSquareKm = 430, Population = 282000, GdpMillionsUsd = 6112, GdpPerCapitaUsd = 21674, GniPerCapitaPpp = 17560, PopulationDensity = 655.8, LiteracyRate = 99.6, Hdi = 0.809, LifeExpectancy = 77.6 },
+            new() { Name = "Belarus", IsoCode2 = "BY", IsoCode3 = "BLR", FlagEmoji = "ðŸ‡§ðŸ‡¾", Continent = "Europe", AreaSquareKm = 207600, Population = 9200000, GdpMillionsUsd = 72881, GdpPerCapitaUsd = 7922, GniPerCapitaPpp = 22020, PopulationDensity = 44.3, LiteracyRate = 99.8, Hdi = 0.801, LifeExpectancy = 72.4 },
+            new() { Name = "Belgium", IsoCode2 = "BE", IsoCode3 = "BEL", FlagEmoji = "ðŸ‡§ðŸ‡ª", Continent = "Europe", AreaSquareKm = 30528, Population = 11700000, GdpMillionsUsd = 627511, GdpPerCapitaUsd = 53642, GniPerCapitaPpp = 64030, PopulationDensity = 383.3, LiteracyRate = 99.0, Hdi = 0.942, LifeExpectancy = 82.0 },
+            new() { Name = "Belize", IsoCode2 = "BZ", IsoCode3 = "BLZ", FlagEmoji = "ðŸ‡§ðŸ‡¿", Continent = "North America", AreaSquareKm = 22966, Population = 410000, GdpMillionsUsd = 3218, GdpPerCapitaUsd = 7849, GniPerCapitaPpp = 11220, PopulationDensity = 17.9, LiteracyRate = 82.7, Hdi = 0.700, LifeExpectancy = 70.5 },
+            new() { Name = "Benin", IsoCode2 = "BJ", IsoCode3 = "BEN", FlagEmoji = "ðŸ‡§ðŸ‡¯", Continent = "Africa", AreaSquareKm = 112622, Population = 13700000, GdpMillionsUsd = 19234, GdpPerCapitaUsd = 1404, GniPerCapitaPpp = 4030, PopulationDensity = 121.7, LiteracyRate = 45.8, Hdi = 0.504, LifeExpectancy = 60.0 },
+            new() { Name = "Bhutan", IsoCode2 = "BT", IsoCode3 = "BTN", FlagEmoji = "ðŸ‡§ðŸ‡¹", Continent = "Asia", AreaSquareKm = 38394, Population = 780000, GdpMillionsUsd = 2898, GdpPerCapitaUsd = 3715, GniPerCapitaPpp = 12640, PopulationDensity = 20.3, LiteracyRate = 66.6, Hdi = 0.666, LifeExpectancy = 72.1 },
+            new() { Name = "Bolivia", IsoCode2 = "BO", IsoCode3 = "BOL", FlagEmoji = "ðŸ‡§ðŸ‡´", Continent = "South America", AreaSquareKm = 1098581, Population = 12200000, GdpMillionsUsd = 45464, GdpPerCapitaUsd = 3727, GniPerCapitaPpp = 9040, PopulationDensity = 11.1, LiteracyRate = 94.5, Hdi = 0.698, LifeExpectancy = 63.6 },
+            new() { Name = "Bosnia and Herzegovina", IsoCode2 = "BA", IsoCode3 = "BIH", FlagEmoji = "ðŸ‡§ðŸ‡¦", Continent = "Europe", AreaSquareKm = 51197, Population = 3210000, GdpMillionsUsd = 27034, GdpPerCapitaUsd = 8422, GniPerCapitaPpp = 19270, PopulationDensity = 62.7, LiteracyRate = 98.5, Hdi = 0.779, LifeExpectancy = 75.3 },
+            new() { Name = "Botswana", IsoCode2 = "BW", IsoCode3 = "BWA", FlagEmoji = "ðŸ‡§ðŸ‡¼", Continent = "Africa", AreaSquareKm = 581730, Population = 2600000, GdpMillionsUsd = 19396, GdpPerCapitaUsd = 7460, GniPerCapitaPpp = 18600, PopulationDensity = 4.5, LiteracyRate = 88.9, Hdi = 0.708, LifeExpectancy = 61.1 },
+            new() { Name = "Brazil", IsoCode2 = "BR", IsoCode3 = "BRA", FlagEmoji = "ðŸ‡§ðŸ‡·", Continent = "South America", AreaSquareKm = 8515767, Population = 216400000, GdpMillionsUsd = 2173669, GdpPerCapitaUsd = 10044, GniPerCapitaPpp = 17660, PopulationDensity = 25.4, LiteracyRate = 93.2, Hdi = 0.760, LifeExpectancy = 72.8 },
+            new() { Name = "Brunei", IsoCode2 = "BN", IsoCode3 = "BRN", FlagEmoji = "ðŸ‡§ðŸ‡³", Continent = "Asia", AreaSquareKm = 5765, Population = 450000, GdpMillionsUsd = 15128, GdpPerCapitaUsd = 33618, GniPerCapitaPpp = 71620, PopulationDensity = 78.1, LiteracyRate = 97.2, Hdi = 0.907, LifeExpectancy = 74.6 },
+            new() { Name = "Bulgaria", IsoCode2 = "BG", IsoCode3 = "BGR", FlagEmoji = "ðŸ‡§ðŸ‡¬", Continent = "Europe", AreaSquareKm = 110879, Population = 6500000, GdpMillionsUsd = 100635, GdpPerCapitaUsd = 15483, GniPerCapitaPpp = 29860, PopulationDensity = 58.6, LiteracyRate = 98.4, Hdi = 0.799, LifeExpectancy = 71.8 },
+            new() { Name = "Burkina Faso", IsoCode2 = "BF", IsoCode3 = "BFA", FlagEmoji = "ðŸ‡§ðŸ‡«", Continent = "Africa", AreaSquareKm = 274200, Population = 23000000, GdpMillionsUsd = 20327, GdpPerCapitaUsd = 884, GniPerCapitaPpp = 2310, PopulationDensity = 83.9, LiteracyRate = 34.5, Hdi = 0.438, LifeExpectancy = 59.3 },
+            new() { Name = "Burundi", IsoCode2 = "BI", IsoCode3 = "BDI", FlagEmoji = "ðŸ‡§ðŸ‡®", Continent = "Africa", AreaSquareKm = 27834, Population = 13200000, GdpMillionsUsd = 2779, GdpPerCapitaUsd = 211, GniPerCapitaPpp = 780, PopulationDensity = 474.3, LiteracyRate = 74.7, Hdi = 0.426, LifeExpectancy = 61.7 },
+            // === C ===
+            new() { Name = "Cabo Verde", IsoCode2 = "CV", IsoCode3 = "CPV", FlagEmoji = "ðŸ‡¨ðŸ‡»", Continent = "Africa", AreaSquareKm = 4033, Population = 600000, GdpMillionsUsd = 2290, GdpPerCapitaUsd = 3817, GniPerCapitaPpp = 9420, PopulationDensity = 148.8, LiteracyRate = 90.8, Hdi = 0.662, LifeExpectancy = 74.1 },
+            new() { Name = "Cambodia", IsoCode2 = "KH", IsoCode3 = "KHM", FlagEmoji = "ðŸ‡°ðŸ‡­", Continent = "Asia", AreaSquareKm = 181035, Population = 17000000, GdpMillionsUsd = 31772, GdpPerCapitaUsd = 1869, GniPerCapitaPpp = 5080, PopulationDensity = 93.9, LiteracyRate = 83.9, Hdi = 0.600, LifeExpectancy = 70.0 },
+            new() { Name = "Cameroon", IsoCode2 = "CM", IsoCode3 = "CMR", FlagEmoji = "ðŸ‡¨ðŸ‡²", Continent = "Africa", AreaSquareKm = 475442, Population = 28600000, GdpMillionsUsd = 48455, GdpPerCapitaUsd = 1694, GniPerCapitaPpp = 4220, PopulationDensity = 60.2, LiteracyRate = 77.1, Hdi = 0.587, LifeExpectancy = 61.0 },
+            new() { Name = "Canada", IsoCode2 = "CA", IsoCode3 = "CAN", FlagEmoji = "ðŸ‡¨ðŸ‡¦", Continent = "North America", AreaSquareKm = 9984670, Population = 40100000, GdpMillionsUsd = 2117805, GdpPerCapitaUsd = 52819, GniPerCapitaPpp = 58310, PopulationDensity = 4.0, LiteracyRate = 99.0, Hdi = 0.935, LifeExpectancy = 82.7 },
+            new() { Name = "Central African Republic", IsoCode2 = "CF", IsoCode3 = "CAF", FlagEmoji = "ðŸ‡¨ðŸ‡«", Continent = "Africa", AreaSquareKm = 622984, Population = 5500000, GdpMillionsUsd = 2553, GdpPerCapitaUsd = 464, GniPerCapitaPpp = 1130, PopulationDensity = 8.8, LiteracyRate = 37.5, Hdi = 0.387, LifeExpectancy = 54.0 },
+            new() { Name = "Chad", IsoCode2 = "TD", IsoCode3 = "TCD", FlagEmoji = "ðŸ‡¹ðŸ‡©", Continent = "Africa", AreaSquareKm = 1284000, Population = 18300000, GdpMillionsUsd = 12698, GdpPerCapitaUsd = 694, GniPerCapitaPpp = 1640, PopulationDensity = 14.3, LiteracyRate = 27.3, Hdi = 0.394, LifeExpectancy = 52.5 },
+            new() { Name = "Chile", IsoCode2 = "CL", IsoCode3 = "CHL", FlagEmoji = "ðŸ‡¨ðŸ‡±", Continent = "South America", AreaSquareKm = 756102, Population = 19500000, GdpMillionsUsd = 335533, GdpPerCapitaUsd = 17206, GniPerCapitaPpp = 28510, PopulationDensity = 25.8, LiteracyRate = 97.0, Hdi = 0.860, LifeExpectancy = 78.9 },
+            new() { Name = "China", IsoCode2 = "CN", IsoCode3 = "CHN", FlagEmoji = "ðŸ‡¨ðŸ‡³", Continent = "Asia", AreaSquareKm = 9596960, Population = 1410000000, GdpMillionsUsd = 17794782, GdpPerCapitaUsd = 12614, GniPerCapitaPpp = 23930, PopulationDensity = 146.9, LiteracyRate = 97.3, Hdi = 0.788, LifeExpectancy = 78.6 },
+            new() { Name = "Colombia", IsoCode2 = "CO", IsoCode3 = "COL", FlagEmoji = "ðŸ‡¨ðŸ‡´", Continent = "South America", AreaSquareKm = 1138910, Population = 52000000, GdpMillionsUsd = 363835, GdpPerCapitaUsd = 6997, GniPerCapitaPpp = 18180, PopulationDensity = 45.7, LiteracyRate = 95.6, Hdi = 0.758, LifeExpectancy = 72.8 },
+            new() { Name = "Comoros", IsoCode2 = "KM", IsoCode3 = "COM", FlagEmoji = "ðŸ‡°ðŸ‡²", Continent = "Africa", AreaSquareKm = 2235, Population = 840000, GdpMillionsUsd = 1296, GdpPerCapitaUsd = 1543, GniPerCapitaPpp = 3620, PopulationDensity = 375.8, LiteracyRate = 62.0, Hdi = 0.596, LifeExpectancy = 63.4 },
+            new() { Name = "DR Congo", IsoCode2 = "CD", IsoCode3 = "COD", FlagEmoji = "ðŸ‡¨ðŸ‡©", Continent = "Africa", AreaSquareKm = 2344858, Population = 102300000, GdpMillionsUsd = 66380, GdpPerCapitaUsd = 649, GniPerCapitaPpp = 1430, PopulationDensity = 43.6, LiteracyRate = 80.0, Hdi = 0.479, LifeExpectancy = 60.7 },
+            new() { Name = "Republic of the Congo", IsoCode2 = "CG", IsoCode3 = "COG", FlagEmoji = "ðŸ‡¨ðŸ‡¬", Continent = "Africa", AreaSquareKm = 342000, Population = 6100000, GdpMillionsUsd = 13366, GdpPerCapitaUsd = 2191, GniPerCapitaPpp = 4080, PopulationDensity = 17.8, LiteracyRate = 80.3, Hdi = 0.593, LifeExpectancy = 63.5 },
+            new() { Name = "Costa Rica", IsoCode2 = "CR", IsoCode3 = "CRI", FlagEmoji = "ðŸ‡¨ðŸ‡·", Continent = "North America", AreaSquareKm = 51100, Population = 5200000, GdpMillionsUsd = 85551, GdpPerCapitaUsd = 16452, GniPerCapitaPpp = 24060, PopulationDensity = 101.8, LiteracyRate = 98.0, Hdi = 0.806, LifeExpectancy = 77.0 },
+            new() { Name = "CÃ´te d'Ivoire", IsoCode2 = "CI", IsoCode3 = "CIV", FlagEmoji = "ðŸ‡¨ðŸ‡®", Continent = "Africa", AreaSquareKm = 322463, Population = 28900000, GdpMillionsUsd = 78788, GdpPerCapitaUsd = 2726, GniPerCapitaPpp = 6450, PopulationDensity = 89.6, LiteracyRate = 53.1, Hdi = 0.534, LifeExpectancy = 58.6 },
+            new() { Name = "Croatia", IsoCode2 = "HR", IsoCode3 = "HRV", FlagEmoji = "ðŸ‡­ðŸ‡·", Continent = "Europe", AreaSquareKm = 56594, Population = 3900000, GdpMillionsUsd = 82689, GdpPerCapitaUsd = 21202, GniPerCapitaPpp = 38050, PopulationDensity = 68.9, LiteracyRate = 99.3, Hdi = 0.878, LifeExpectancy = 76.6 },
+            new() { Name = "Cuba", IsoCode2 = "CU", IsoCode3 = "CUB", FlagEmoji = "ðŸ‡¨ðŸ‡º", Continent = "North America", AreaSquareKm = 109884, Population = 11100000, GdpMillionsUsd = 107352, GdpPerCapitaUsd = 9673, PopulationDensity = 101.0, LiteracyRate = 99.7, Hdi = 0.764, LifeExpectancy = 73.7 },
+            new() { Name = "Cyprus", IsoCode2 = "CY", IsoCode3 = "CYP", FlagEmoji = "ðŸ‡¨ðŸ‡¾", Continent = "Europe", AreaSquareKm = 9251, Population = 1260000, GdpMillionsUsd = 32229, GdpPerCapitaUsd = 25578, GniPerCapitaPpp = 49460, PopulationDensity = 136.2, LiteracyRate = 99.1, Hdi = 0.907, LifeExpectancy = 81.2 },
+            new() { Name = "Czech Republic", IsoCode2 = "CZ", IsoCode3 = "CZE", FlagEmoji = "ðŸ‡¨ðŸ‡¿", Continent = "Europe", AreaSquareKm = 78867, Population = 10500000, GdpMillionsUsd = 330483, GdpPerCapitaUsd = 31475, GniPerCapitaPpp = 49600, PopulationDensity = 133.1, LiteracyRate = 99.0, Hdi = 0.895, LifeExpectancy = 77.7 },
+            // === D ===
+            new() { Name = "Denmark", IsoCode2 = "DK", IsoCode3 = "DNK", FlagEmoji = "ðŸ‡©ðŸ‡°", Continent = "Europe", AreaSquareKm = 43094, Population = 5900000, GdpMillionsUsd = 404198, GdpPerCapitaUsd = 68513, GniPerCapitaPpp = 73790, PopulationDensity = 136.9, LiteracyRate = 99.0, Hdi = 0.952, LifeExpectancy = 81.4 },
+            new() { Name = "Djibouti", IsoCode2 = "DJ", IsoCode3 = "DJI", FlagEmoji = "ðŸ‡©ðŸ‡¯", Continent = "Africa", AreaSquareKm = 23200, Population = 1100000, GdpMillionsUsd = 3668, GdpPerCapitaUsd = 3335, GniPerCapitaPpp = 6760, PopulationDensity = 47.4, LiteracyRate = 53.0, Hdi = 0.521, LifeExpectancy = 62.3 },
+            new() { Name = "Dominica", IsoCode2 = "DM", IsoCode3 = "DMA", FlagEmoji = "ðŸ‡©ðŸ‡²", Continent = "North America", AreaSquareKm = 751, Population = 73000, GdpMillionsUsd = 654, GdpPerCapitaUsd = 8959, GniPerCapitaPpp = 14290, PopulationDensity = 97.2, LiteracyRate = 94.0, Hdi = 0.720, LifeExpectancy = 78.0 },
+            new() { Name = "Dominican Republic", IsoCode2 = "DO", IsoCode3 = "DOM", FlagEmoji = "ðŸ‡©ðŸ‡´", Continent = "North America", AreaSquareKm = 48671, Population = 11300000, GdpMillionsUsd = 113641, GdpPerCapitaUsd = 10057, GniPerCapitaPpp = 23500, PopulationDensity = 232.2, LiteracyRate = 95.0, Hdi = 0.766, LifeExpectancy = 72.6 },
+            // === E ===
+            new() { Name = "Ecuador", IsoCode2 = "EC", IsoCode3 = "ECU", FlagEmoji = "ðŸ‡ªðŸ‡¨", Continent = "South America", AreaSquareKm = 283561, Population = 18000000, GdpMillionsUsd = 118845, GdpPerCapitaUsd = 6603, GniPerCapitaPpp = 12930, PopulationDensity = 63.5, LiteracyRate = 94.5, Hdi = 0.765, LifeExpectancy = 74.3 },
+            new() { Name = "Egypt", IsoCode2 = "EG", IsoCode3 = "EGY", FlagEmoji = "ðŸ‡ªðŸ‡¬", Continent = "Africa", AreaSquareKm = 1001450, Population = 105000000, GdpMillionsUsd = 387086, GdpPerCapitaUsd = 3686, GniPerCapitaPpp = 16450, PopulationDensity = 104.9, LiteracyRate = 73.1, Hdi = 0.728, LifeExpectancy = 70.2 },
+            new() { Name = "El Salvador", IsoCode2 = "SV", IsoCode3 = "SLV", FlagEmoji = "ðŸ‡¸ðŸ‡»", Continent = "North America", AreaSquareKm = 21041, Population = 6300000, GdpMillionsUsd = 33001, GdpPerCapitaUsd = 5238, GniPerCapitaPpp = 10330, PopulationDensity = 299.5, LiteracyRate = 89.7, Hdi = 0.674, LifeExpectancy = 70.7 },
+            new() { Name = "Equatorial Guinea", IsoCode2 = "GQ", IsoCode3 = "GNQ", FlagEmoji = "ðŸ‡¬ðŸ‡¶", Continent = "Africa", AreaSquareKm = 28051, Population = 1700000, GdpMillionsUsd = 12269, GdpPerCapitaUsd = 7217, GniPerCapitaPpp = 17270, PopulationDensity = 60.6, LiteracyRate = 95.3, Hdi = 0.596, LifeExpectancy = 60.6 },
+            new() { Name = "Eritrea", IsoCode2 = "ER", IsoCode3 = "ERI", FlagEmoji = "ðŸ‡ªðŸ‡·", Continent = "Africa", AreaSquareKm = 117600, Population = 3700000, GdpMillionsUsd = 2065, GdpPerCapitaUsd = 558, PopulationDensity = 31.5, LiteracyRate = 76.6, Hdi = 0.492, LifeExpectancy = 67.5 },
+            new() { Name = "Estonia", IsoCode2 = "EE", IsoCode3 = "EST", FlagEmoji = "ðŸ‡ªðŸ‡ª", Continent = "Europe", AreaSquareKm = 45228, Population = 1370000, GdpMillionsUsd = 41551, GdpPerCapitaUsd = 30329, GniPerCapitaPpp = 45400, PopulationDensity = 30.3, LiteracyRate = 99.9, Hdi = 0.899, LifeExpectancy = 77.1 },
+            new() { Name = "Eswatini", IsoCode2 = "SZ", IsoCode3 = "SWZ", FlagEmoji = "ðŸ‡¸ðŸ‡¿", Continent = "Africa", AreaSquareKm = 17364, Population = 1200000, GdpMillionsUsd = 4854, GdpPerCapitaUsd = 4045, GniPerCapitaPpp = 9310, PopulationDensity = 69.1, LiteracyRate = 88.4, Hdi = 0.597, LifeExpectancy = 57.1 },
+            new() { Name = "Ethiopia", IsoCode2 = "ET", IsoCode3 = "ETH", FlagEmoji = "ðŸ‡ªðŸ‡¹", Continent = "Africa", AreaSquareKm = 1104300, Population = 126500000, GdpMillionsUsd = 163698, GdpPerCapitaUsd = 1294, GniPerCapitaPpp = 3070, PopulationDensity = 114.6, LiteracyRate = 51.8, Hdi = 0.492, LifeExpectancy = 65.0 },
+            // === F ===
+            new() { Name = "Fiji", IsoCode2 = "FJ", IsoCode3 = "FJI", FlagEmoji = "ðŸ‡«ðŸ‡¯", Continent = "Oceania", AreaSquareKm = 18274, Population = 930000, GdpMillionsUsd = 5314, GdpPerCapitaUsd = 5714, GniPerCapitaPpp = 14570, PopulationDensity = 50.9, LiteracyRate = 99.1, Hdi = 0.729, LifeExpectancy = 67.4 },
+            new() { Name = "Finland", IsoCode2 = "FI", IsoCode3 = "FIN", FlagEmoji = "ðŸ‡«ðŸ‡®", Continent = "Europe", AreaSquareKm = 338145, Population = 5500000, GdpMillionsUsd = 305689, GdpPerCapitaUsd = 55580, GniPerCapitaPpp = 57500, PopulationDensity = 16.3, LiteracyRate = 99.0, Hdi = 0.942, LifeExpectancy = 82.0 },
+            new() { Name = "France", IsoCode2 = "FR", IsoCode3 = "FRA", FlagEmoji = "ðŸ‡«ðŸ‡·", Continent = "Europe", AreaSquareKm = 643801, Population = 68000000, GdpMillionsUsd = 3030901, GdpPerCapitaUsd = 44573, GniPerCapitaPpp = 55080, PopulationDensity = 105.6, LiteracyRate = 99.0, Hdi = 0.910, LifeExpectancy = 82.5 },
+            // === G ===
+            new() { Name = "Gabon", IsoCode2 = "GA", IsoCode3 = "GAB", FlagEmoji = "ðŸ‡¬ðŸ‡¦", Continent = "Africa", AreaSquareKm = 267668, Population = 2400000, GdpMillionsUsd = 19316, GdpPerCapitaUsd = 8048, GniPerCapitaPpp = 17430, PopulationDensity = 9.0, LiteracyRate = 85.0, Hdi = 0.706, LifeExpectancy = 66.5 },
+            new() { Name = "Gambia", IsoCode2 = "GM", IsoCode3 = "GMB", FlagEmoji = "ðŸ‡¬ðŸ‡²", Continent = "Africa", AreaSquareKm = 11295, Population = 2700000, GdpMillionsUsd = 2187, GdpPerCapitaUsd = 810, GniPerCapitaPpp = 2350, PopulationDensity = 239.0, LiteracyRate = 58.1, Hdi = 0.500, LifeExpectancy = 62.6 },
+            new() { Name = "Georgia", IsoCode2 = "GE", IsoCode3 = "GEO", FlagEmoji = "ðŸ‡¬ðŸ‡ª", Continent = "Asia", AreaSquareKm = 69700, Population = 3700000, GdpMillionsUsd = 30536, GdpPerCapitaUsd = 8253, GniPerCapitaPpp = 20590, PopulationDensity = 53.1, LiteracyRate = 99.6, Hdi = 0.814, LifeExpectancy = 71.7 },
+            new() { Name = "Germany", IsoCode2 = "DE", IsoCode3 = "DEU", FlagEmoji = "ðŸ‡©ðŸ‡ª", Continent = "Europe", AreaSquareKm = 357022, Population = 84400000, GdpMillionsUsd = 4430758, GdpPerCapitaUsd = 52485, GniPerCapitaPpp = 64770, PopulationDensity = 236.4, LiteracyRate = 99.0, Hdi = 0.950, LifeExpectancy = 80.6 },
+            new() { Name = "Ghana", IsoCode2 = "GH", IsoCode3 = "GHA", FlagEmoji = "ðŸ‡¬ðŸ‡­", Continent = "Africa", AreaSquareKm = 238533, Population = 34100000, GdpMillionsUsd = 76370, GdpPerCapitaUsd = 2240, GniPerCapitaPpp = 5870, PopulationDensity = 143.0, LiteracyRate = 79.0, Hdi = 0.602, LifeExpectancy = 63.8 },
+            new() { Name = "Greece", IsoCode2 = "GR", IsoCode3 = "GRC", FlagEmoji = "ðŸ‡¬ðŸ‡·", Continent = "Europe", AreaSquareKm = 131957, Population = 10400000, GdpMillionsUsd = 238206, GdpPerCapitaUsd = 22905, GniPerCapitaPpp = 37050, PopulationDensity = 78.8, LiteracyRate = 97.9, Hdi = 0.893, LifeExpectancy = 80.1 },
+            new() { Name = "Grenada", IsoCode2 = "GD", IsoCode3 = "GRD", FlagEmoji = "ðŸ‡¬ðŸ‡©", Continent = "North America", AreaSquareKm = 344, Population = 126000, GdpMillionsUsd = 1326, GdpPerCapitaUsd = 10524, GniPerCapitaPpp = 19640, PopulationDensity = 366.3, LiteracyRate = 98.6, Hdi = 0.795, LifeExpectancy = 74.9 },
+            new() { Name = "Guatemala", IsoCode2 = "GT", IsoCode3 = "GTM", FlagEmoji = "ðŸ‡¬ðŸ‡¹", Continent = "North America", AreaSquareKm = 108889, Population = 17600000, GdpMillionsUsd = 102050, GdpPerCapitaUsd = 5798, GniPerCapitaPpp = 10960, PopulationDensity = 161.6, LiteracyRate = 83.3, Hdi = 0.629, LifeExpectancy = 69.2 },
+            new() { Name = "Guinea", IsoCode2 = "GN", IsoCode3 = "GIN", FlagEmoji = "ðŸ‡¬ðŸ‡³", Continent = "Africa", AreaSquareKm = 245857, Population = 14200000, GdpMillionsUsd = 20310, GdpPerCapitaUsd = 1430, GniPerCapitaPpp = 3100, PopulationDensity = 57.8, LiteracyRate = 45.3, Hdi = 0.465, LifeExpectancy = 58.9 },
+            new() { Name = "Guinea-Bissau", IsoCode2 = "GW", IsoCode3 = "GNB", FlagEmoji = "ðŸ‡¬ðŸ‡¼", Continent = "Africa", AreaSquareKm = 36125, Population = 2100000, GdpMillionsUsd = 1639, GdpPerCapitaUsd = 780, GniPerCapitaPpp = 2050, PopulationDensity = 58.1, LiteracyRate = 52.9, Hdi = 0.483, LifeExpectancy = 60.0 },
+            new() { Name = "Guyana", IsoCode2 = "GY", IsoCode3 = "GUY", FlagEmoji = "ðŸ‡¬ðŸ‡¾", Continent = "South America", AreaSquareKm = 214969, Population = 810000, GdpMillionsUsd = 16322, GdpPerCapitaUsd = 20151, GniPerCapitaPpp = 34220, PopulationDensity = 3.8, LiteracyRate = 88.5, Hdi = 0.742, LifeExpectancy = 65.7 },
+            // === H ===
+            new() { Name = "Haiti", IsoCode2 = "HT", IsoCode3 = "HTI", FlagEmoji = "ðŸ‡­ðŸ‡¹", Continent = "North America", AreaSquareKm = 27750, Population = 11700000, GdpMillionsUsd = 20168, GdpPerCapitaUsd = 1723, GniPerCapitaPpp = 3150, PopulationDensity = 421.6, LiteracyRate = 61.7, Hdi = 0.552, LifeExpectancy = 63.2 },
+            new() { Name = "Honduras", IsoCode2 = "HN", IsoCode3 = "HND", FlagEmoji = "ðŸ‡­ðŸ‡³", Continent = "North America", AreaSquareKm = 112492, Population = 10400000, GdpMillionsUsd = 34401, GdpPerCapitaUsd = 3308, GniPerCapitaPpp = 6650, PopulationDensity = 92.5, LiteracyRate = 88.5, Hdi = 0.624, LifeExpectancy = 70.1 },
+            new() { Name = "Hungary", IsoCode2 = "HU", IsoCode3 = "HUN", FlagEmoji = "ðŸ‡­ðŸ‡º", Continent = "Europe", AreaSquareKm = 93028, Population = 9600000, GdpMillionsUsd = 212389, GdpPerCapitaUsd = 22124, GniPerCapitaPpp = 40200, PopulationDensity = 103.2, LiteracyRate = 99.1, Hdi = 0.846, LifeExpectancy = 74.5 },
+            // === I ===
+            new() { Name = "Iceland", IsoCode2 = "IS", IsoCode3 = "ISL", FlagEmoji = "ðŸ‡®ðŸ‡¸", Continent = "Europe", AreaSquareKm = 103000, Population = 380000, GdpMillionsUsd = 31020, GdpPerCapitaUsd = 81632, GniPerCapitaPpp = 69050, PopulationDensity = 3.7, LiteracyRate = 99.0, Hdi = 0.972, LifeExpectancy = 83.0 },
+            new() { Name = "India", IsoCode2 = "IN", IsoCode3 = "IND", FlagEmoji = "ðŸ‡®ðŸ‡³", Continent = "Asia", AreaSquareKm = 3287263, Population = 1428600000, GdpMillionsUsd = 3549918, GdpPerCapitaUsd = 2485, GniPerCapitaPpp = 8610, PopulationDensity = 434.6, LiteracyRate = 77.7, Hdi = 0.644, LifeExpectancy = 67.2 },
+            new() { Name = "Indonesia", IsoCode2 = "ID", IsoCode3 = "IDN", FlagEmoji = "ðŸ‡®ðŸ‡©", Continent = "Asia", AreaSquareKm = 1904569, Population = 277500000, GdpMillionsUsd = 1417387, GdpPerCapitaUsd = 5108, GniPerCapitaPpp = 15190, PopulationDensity = 145.7, LiteracyRate = 96.0, Hdi = 0.713, LifeExpectancy = 68.6 },
+            new() { Name = "Iran", IsoCode2 = "IR", IsoCode3 = "IRN", FlagEmoji = "ðŸ‡®ðŸ‡·", Continent = "Asia", AreaSquareKm = 1648195, Population = 89200000, GdpMillionsUsd = 413493, GdpPerCapitaUsd = 4635, GniPerCapitaPpp = 16740, PopulationDensity = 54.1, LiteracyRate = 88.7, Hdi = 0.780, LifeExpectancy = 74.0 },
+            new() { Name = "Iraq", IsoCode2 = "IQ", IsoCode3 = "IRQ", FlagEmoji = "ðŸ‡®ðŸ‡¶", Continent = "Asia", AreaSquareKm = 438317, Population = 44500000, GdpMillionsUsd = 270025, GdpPerCapitaUsd = 6071, GniPerCapitaPpp = 12340, PopulationDensity = 101.5, LiteracyRate = 85.6, Hdi = 0.673, LifeExpectancy = 70.4 },
+            new() { Name = "Ireland", IsoCode2 = "IE", IsoCode3 = "IRL", FlagEmoji = "ðŸ‡®ðŸ‡ª", Continent = "Europe", AreaSquareKm = 70273, Population = 5100000, GdpMillionsUsd = 533682, GdpPerCapitaUsd = 104604, GniPerCapitaPpp = 83140, PopulationDensity = 72.6, LiteracyRate = 99.0, Hdi = 0.950, LifeExpectancy = 82.0 },
+            new() { Name = "Israel", IsoCode2 = "IL", IsoCode3 = "ISR", FlagEmoji = "ðŸ‡®ðŸ‡±", Continent = "Asia", AreaSquareKm = 20770, Population = 9800000, GdpMillionsUsd = 521688, GdpPerCapitaUsd = 53233, GniPerCapitaPpp = 48520, PopulationDensity = 471.8, LiteracyRate = 97.8, Hdi = 0.915, LifeExpectancy = 82.0 },
+            new() { Name = "Italy", IsoCode2 = "IT", IsoCode3 = "ITA", FlagEmoji = "ðŸ‡®ðŸ‡¹", Continent = "Europe", AreaSquareKm = 301340, Population = 58900000, GdpMillionsUsd = 2254851, GdpPerCapitaUsd = 38285, GniPerCapitaPpp = 53470, PopulationDensity = 195.5, LiteracyRate = 99.2, Hdi = 0.906, LifeExpectancy = 83.0 },
+            // === J ===
+            new() { Name = "Jamaica", IsoCode2 = "JM", IsoCode3 = "JAM", FlagEmoji = "ðŸ‡¯ðŸ‡²", Continent = "North America", AreaSquareKm = 10991, Population = 2800000, GdpMillionsUsd = 18777, GdpPerCapitaUsd = 6706, GniPerCapitaPpp = 11600, PopulationDensity = 254.7, LiteracyRate = 88.7, Hdi = 0.706, LifeExpectancy = 70.5 },
+            new() { Name = "Japan", IsoCode2 = "JP", IsoCode3 = "JPN", FlagEmoji = "ðŸ‡¯ðŸ‡µ", Continent = "Asia", AreaSquareKm = 377930, Population = 123300000, GdpMillionsUsd = 4212945, GdpPerCapitaUsd = 34179, GniPerCapitaPpp = 49260, PopulationDensity = 326.3, LiteracyRate = 99.0, Hdi = 0.920, LifeExpectancy = 84.5 },
+            new() { Name = "Jordan", IsoCode2 = "JO", IsoCode3 = "JOR", FlagEmoji = "ðŸ‡¯ðŸ‡´", Continent = "Asia", AreaSquareKm = 89342, Population = 11300000, GdpMillionsUsd = 50024, GdpPerCapitaUsd = 4428, GniPerCapitaPpp = 12120, PopulationDensity = 126.5, LiteracyRate = 98.4, Hdi = 0.736, LifeExpectancy = 74.4 },
+            // === K ===
+            new() { Name = "Kazakhstan", IsoCode2 = "KZ", IsoCode3 = "KAZ", FlagEmoji = "ðŸ‡°ðŸ‡¿", Continent = "Asia", AreaSquareKm = 2724900, Population = 19600000, GdpMillionsUsd = 259292, GdpPerCapitaUsd = 13229, GniPerCapitaPpp = 31180, PopulationDensity = 7.2, LiteracyRate = 99.8, Hdi = 0.802, LifeExpectancy = 69.4 },
+            new() { Name = "Kenya", IsoCode2 = "KE", IsoCode3 = "KEN", FlagEmoji = "ðŸ‡°ðŸ‡ª", Continent = "Africa", AreaSquareKm = 580367, Population = 54000000, GdpMillionsUsd = 107389, GdpPerCapitaUsd = 1989, GniPerCapitaPpp = 5970, PopulationDensity = 93.0, LiteracyRate = 81.5, Hdi = 0.601, LifeExpectancy = 61.4 },
+            new() { Name = "Kiribati", IsoCode2 = "KI", IsoCode3 = "KIR", FlagEmoji = "ðŸ‡°ðŸ‡®", Continent = "Oceania", AreaSquareKm = 811, Population = 130000, GdpMillionsUsd = 248, GdpPerCapitaUsd = 1908, GniPerCapitaPpp = 4520, PopulationDensity = 160.3, Hdi = 0.621, LifeExpectancy = 67.5 },
+            new() { Name = "North Korea", IsoCode2 = "KP", IsoCode3 = "PRK", FlagEmoji = "ðŸ‡°ðŸ‡µ", Continent = "Asia", AreaSquareKm = 120538, Population = 26100000, PopulationDensity = 216.5, LiteracyRate = 100.0, LifeExpectancy = 72.0 },
+            new() { Name = "South Korea", IsoCode2 = "KR", IsoCode3 = "KOR", FlagEmoji = "ðŸ‡°ðŸ‡·", Continent = "Asia", AreaSquareKm = 100210, Population = 51700000, GdpMillionsUsd = 1712791, GdpPerCapitaUsd = 33147, GniPerCapitaPpp = 52940, PopulationDensity = 516.0, LiteracyRate = 99.0, Hdi = 0.929, LifeExpectancy = 83.5 },
+            new() { Name = "Kuwait", IsoCode2 = "KW", IsoCode3 = "KWT", FlagEmoji = "ðŸ‡°ðŸ‡¼", Continent = "Asia", AreaSquareKm = 17818, Population = 4300000, GdpMillionsUsd = 164713, GdpPerCapitaUsd = 38305, GniPerCapitaPpp = 60840, PopulationDensity = 241.3, LiteracyRate = 96.5, Hdi = 0.847, LifeExpectancy = 78.7 },
+            new() { Name = "Kyrgyzstan", IsoCode2 = "KG", IsoCode3 = "KGZ", FlagEmoji = "ðŸ‡°ðŸ‡¬", Continent = "Asia", AreaSquareKm = 199951, Population = 7000000, GdpMillionsUsd = 13991, GdpPerCapitaUsd = 1999, GniPerCapitaPpp = 6360, PopulationDensity = 35.0, LiteracyRate = 99.6, Hdi = 0.701, LifeExpectancy = 69.4 },
+            // === L ===
+            new() { Name = "Laos", IsoCode2 = "LA", IsoCode3 = "LAO", FlagEmoji = "ðŸ‡±ðŸ‡¦", Continent = "Asia", AreaSquareKm = 236800, Population = 7500000, GdpMillionsUsd = 14167, GdpPerCapitaUsd = 1889, GniPerCapitaPpp = 8720, PopulationDensity = 31.7, LiteracyRate = 87.1, Hdi = 0.620, LifeExpectancy = 68.1 },
+            new() { Name = "Latvia", IsoCode2 = "LV", IsoCode3 = "LVA", FlagEmoji = "ðŸ‡±ðŸ‡»", Continent = "Europe", AreaSquareKm = 64589, Population = 1850000, GdpMillionsUsd = 43627, GdpPerCapitaUsd = 23582, GniPerCapitaPpp = 40030, PopulationDensity = 28.6, LiteracyRate = 99.9, Hdi = 0.879, LifeExpectancy = 75.0 },
+            new() { Name = "Lebanon", IsoCode2 = "LB", IsoCode3 = "LBN", FlagEmoji = "ðŸ‡±ðŸ‡§", Continent = "Asia", AreaSquareKm = 10452, Population = 5500000, GdpMillionsUsd = 21782, GdpPerCapitaUsd = 3960, GniPerCapitaPpp = 14950, PopulationDensity = 526.2, LiteracyRate = 95.1, Hdi = 0.723, LifeExpectancy = 75.0 },
+            new() { Name = "Lesotho", IsoCode2 = "LS", IsoCode3 = "LSO", FlagEmoji = "ðŸ‡±ðŸ‡¸", Continent = "Africa", AreaSquareKm = 30355, Population = 2300000, GdpMillionsUsd = 2500, GdpPerCapitaUsd = 1087, GniPerCapitaPpp = 3080, PopulationDensity = 75.8, LiteracyRate = 79.4, Hdi = 0.514, LifeExpectancy = 50.7 },
+            new() { Name = "Liberia", IsoCode2 = "LR", IsoCode3 = "LBR", FlagEmoji = "ðŸ‡±ðŸ‡·", Continent = "Africa", AreaSquareKm = 111369, Population = 5300000, GdpMillionsUsd = 4001, GdpPerCapitaUsd = 755, GniPerCapitaPpp = 1570, PopulationDensity = 47.6, LiteracyRate = 48.3, Hdi = 0.487, LifeExpectancy = 60.7 },
+            new() { Name = "Libya", IsoCode2 = "LY", IsoCode3 = "LBY", FlagEmoji = "ðŸ‡±ðŸ‡¾", Continent = "Africa", AreaSquareKm = 1759540, Population = 6900000, GdpMillionsUsd = 50492, GdpPerCapitaUsd = 7318, GniPerCapitaPpp = 22810, PopulationDensity = 3.9, LiteracyRate = 91.0, Hdi = 0.718, LifeExpectancy = 73.0 },
+            new() { Name = "Liechtenstein", IsoCode2 = "LI", IsoCode3 = "LIE", FlagEmoji = "ðŸ‡±ðŸ‡®", Continent = "Europe", AreaSquareKm = 160, Population = 40000, GdpMillionsUsd = 7365, GdpPerCapitaUsd = 184125, PopulationDensity = 250.0, LiteracyRate = 100.0, Hdi = 0.935, LifeExpectancy = 83.0 },
+            new() { Name = "Lithuania", IsoCode2 = "LT", IsoCode3 = "LTU", FlagEmoji = "ðŸ‡±ðŸ‡¹", Continent = "Europe", AreaSquareKm = 65300, Population = 2860000, GdpMillionsUsd = 78346, GdpPerCapitaUsd = 27394, GniPerCapitaPpp = 45740, PopulationDensity = 43.8, LiteracyRate = 99.8, Hdi = 0.879, LifeExpectancy = 74.0 },
+            new() { Name = "Luxembourg", IsoCode2 = "LU", IsoCode3 = "LUX", FlagEmoji = "ðŸ‡±ðŸ‡º", Continent = "Europe", AreaSquareKm = 2586, Population = 660000, GdpMillionsUsd = 86898, GdpPerCapitaUsd = 131633, GniPerCapitaPpp = 91000, PopulationDensity = 255.2, LiteracyRate = 99.0, Hdi = 0.930, LifeExpectancy = 82.5 },
+        };
+    }
+}
 
 
 
@@ -2674,6 +3179,144 @@ MODIFIED: 12/08/2025 11:17:34
 
 
 ================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\CountryData.cs
+SIZE: 4.25 KB
+MODIFIED: 12/08/2025 18:30:41
+================================================================================
+
+namespace BlazorApp.Models;
+
+/// <summary>
+/// Represents a country with various statistics for comparison games.
+/// Nullable properties indicate data that may not be available for all countries.
+/// </summary>
+public record CountryData
+{
+    public required string Name { get; init; }
+    public required string IsoCode2 { get; init; }
+    public required string IsoCode3 { get; init; }
+    
+    /// <summary>Area in square kilometers</summary>
+    public long? AreaSquareKm { get; init; }
+    
+    /// <summary>Population (2023/2024 estimates)</summary>
+    public long? Population { get; init; }
+    
+    /// <summary>GDP in millions of USD (nominal, 2023)</summary>
+    public long? GdpMillionsUsd { get; init; }
+    
+    /// <summary>GDP per capita in USD (nominal, 2023)</summary>
+    public int? GdpPerCapitaUsd { get; init; }
+    
+    /// <summary>GNI per capita in PPP terms (international dollars, 2023)</summary>
+    public int? GniPerCapitaPpp { get; init; }
+    
+    /// <summary>Population density (people per square km)</summary>
+    public double? PopulationDensity { get; init; }
+    
+    /// <summary>Adult literacy rate (% of population 15+)</summary>
+    public double? LiteracyRate { get; init; }
+    
+    /// <summary>Human Development Index (0-1 scale, 2023)</summary>
+    public double? Hdi { get; init; }
+    
+    /// <summary>Life expectancy at birth (years)</summary>
+    public double? LifeExpectancy { get; init; }
+    
+    /// <summary>Continent/Region</summary>
+    public string? Continent { get; init; }
+    
+    /// <summary>Flag emoji for display</summary>
+    public string? FlagEmoji { get; init; }
+}
+
+/// <summary>
+/// Defines a type of comparison question for countries.
+/// </summary>
+public record CountryComparisonQuestion
+{
+    public required string Id { get; init; }
+    public required string QuestionTemplate { get; init; }
+    public required string PropertyName { get; init; }
+    public required Func<CountryData, double?> GetValue { get; init; }
+    public required string Unit { get; init; }
+    public required string FormatString { get; init; }
+    
+    /// <summary>
+    /// Whether higher values are "better" (for display purposes)
+    /// </summary>
+    public bool HigherIsBetter { get; init; } = true;
+    
+    public string GetFormattedValue(CountryData country)
+    {
+        var value = GetValue(country);
+        return value.HasValue ? string.Format(FormatString, value.Value) : "N/A";
+    }
+    
+    /// <summary>
+    /// Checks if a country has data for this question
+    /// </summary>
+    public bool HasDataFor(CountryData country) => GetValue(country).HasValue;
+}
+
+/// <summary>
+/// Represents the result of a single country comparison round.
+/// </summary>
+public record CountryComparisonResult
+{
+    public required CountryData Country1 { get; init; }
+    public required CountryData Country2 { get; init; }
+    public required CountryComparisonQuestion Question { get; init; }
+    public required CountryData CorrectAnswer { get; init; }
+    public required CountryData UserChoice { get; init; }
+    public bool IsCorrect => CorrectAnswer == UserChoice;
+}
+
+/// <summary>
+/// Tracks the user's score during a country comparison game session.
+/// </summary>
+public class CountryGameScore
+{
+    public int CorrectAnswers { get; private set; }
+    public int TotalQuestions { get; private set; }
+    public List<CountryComparisonResult> History { get; } = [];
+    
+    public double PercentageCorrect => TotalQuestions > 0 
+        ? (double)CorrectAnswers / TotalQuestions * 100 
+        : 0;
+    
+    public int CurrentStreak { get; private set; }
+    public int BestStreak { get; private set; }
+    
+    public void RecordAnswer(CountryComparisonResult result)
+    {
+        TotalQuestions++;
+        if (result.IsCorrect)
+        {
+            CorrectAnswers++;
+            CurrentStreak++;
+            if (CurrentStreak > BestStreak) BestStreak = CurrentStreak;
+        }
+        else
+        {
+            CurrentStreak = 0;
+        }
+        History.Add(result);
+    }
+    
+    public void Reset()
+    {
+        CorrectAnswers = 0;
+        TotalQuestions = 0;
+        CurrentStreak = 0;
+        BestStreak = 0;
+        History.Clear();
+    }
+}
+
+
+
+================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
 SIZE: 3.07 KB
 MODIFIED: 12/08/2025 17:34:36
@@ -2778,8 +3421,8 @@ public class GameScore
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
-SIZE: 5.31 KB
-MODIFIED: 12/08/2025 17:32:06
+SIZE: 5.15 KB
+MODIFIED: 12/08/2025 18:39:05
 ================================================================================
 
 using BlazorApp.Components;
@@ -2854,11 +3497,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddHelloDotnetLibrary(builder.Configuration);
-// Add this line in Program.cs after the existing service registrations
-// (after builder.Services.AddHelloDotnetLibrary(builder.Configuration);)
-
-// Register StateComparisonService as Scoped so each user session maintains their own score
 builder.Services.AddScoped<BlazorApp.Services.StateComparisonService>();
+builder.Services.AddScoped<BlazorApp.Services.CountryComparisonService>();
 
 var app = builder.Build();
 
@@ -2953,6 +3593,342 @@ MODIFIED: 12/08/2025 11:14:16
       }
     }
   }
+
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
+SIZE: 25.58 KB
+MODIFIED: 12/08/2025 18:37:40
+================================================================================
+
+using BlazorApp.Models;
+
+namespace BlazorApp.Services;
+
+/// <summary>
+/// Service that manages country data and comparison game logic.
+/// Only presents countries that have data for the selected question type.
+/// </summary>
+public class CountryComparisonService
+{
+    private readonly List<CountryData> _countries;
+    private readonly List<CountryComparisonQuestion> _questions;
+    private readonly Random _random = new();
+    
+    public CountryGameScore Score { get; } = new();
+    public IReadOnlyList<CountryData> Countries => _countries;
+    public IReadOnlyList<CountryComparisonQuestion> AvailableQuestions => _questions;
+    
+    public CountryComparisonService()
+    {
+        _countries = CountryDataStore.GetAllCountries();
+        _questions = InitializeQuestions();
+    }
+    
+    /// <summary>
+    /// Gets two random countries that both have data for the specified question.
+    /// </summary>
+    public (CountryData Country1, CountryData Country2)? GetRandomCountryPair(CountryComparisonQuestion question)
+    {
+        var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
+        if (eligible.Count < 2) return null;
+        
+        var idx1 = _random.Next(eligible.Count);
+        int idx2;
+        do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
+        return (eligible[idx1], eligible[idx2]);
+    }
+    
+    public CountryComparisonQuestion GetRandomQuestion() => _questions[_random.Next(_questions.Count)];
+    
+    public CountryComparisonQuestion GetRandomViableQuestion()
+    {
+        var viable = _questions.Where(q => _countries.Count(c => q.HasDataFor(c)) >= 2).ToList();
+        return viable[_random.Next(viable.Count)];
+    }
+    
+    public int GetCountryCountForQuestion(CountryComparisonQuestion question) 
+        => _countries.Count(c => question.HasDataFor(c));
+    
+    public CountryData GetCorrectAnswer(CountryData c1, CountryData c2, CountryComparisonQuestion question)
+    {
+        var v1 = question.GetValue(c1) ?? 0;
+        var v2 = question.GetValue(c2) ?? 0;
+        return v1 >= v2 ? c1 : c2;
+    }
+    
+    public CountryComparisonResult CheckAnswer(CountryData c1, CountryData c2, 
+        CountryComparisonQuestion question, CountryData userChoice)
+    {
+        var correct = GetCorrectAnswer(c1, c2, question);
+        var result = new CountryComparisonResult
+        {
+            Country1 = c1, Country2 = c2, Question = question,
+            CorrectAnswer = correct, UserChoice = userChoice
+        };
+        Score.RecordAnswer(result);
+        return result;
+    }
+    
+    private static List<CountryComparisonQuestion> InitializeQuestions() =>
+    [
+        new() { Id = "population", QuestionTemplate = "Which country has a larger population?",
+            PropertyName = nameof(CountryData.Population), GetValue = c => c.Population,
+            Unit = "people", FormatString = "{0:N0}" },
+        new() { Id = "area", QuestionTemplate = "Which country is larger by area?",
+            PropertyName = nameof(CountryData.AreaSquareKm), GetValue = c => c.AreaSquareKm,
+            Unit = "kmÂ²", FormatString = "{0:N0} kmÂ²" },
+        new() { Id = "gdp", QuestionTemplate = "Which country has a higher GDP?",
+            PropertyName = nameof(CountryData.GdpMillionsUsd), GetValue = c => c.GdpMillionsUsd,
+            Unit = "million USD", FormatString = "${0:N0}M" },
+        new() { Id = "gdp_per_capita", QuestionTemplate = "Which country has a higher GDP per capita?",
+            PropertyName = nameof(CountryData.GdpPerCapitaUsd), GetValue = c => c.GdpPerCapitaUsd,
+            Unit = "USD", FormatString = "${0:N0}" },
+        new() { Id = "gni_ppp", QuestionTemplate = "Which country has a higher GNI per capita (PPP)?",
+            PropertyName = nameof(CountryData.GniPerCapitaPpp), GetValue = c => c.GniPerCapitaPpp,
+            Unit = "int'l $", FormatString = "${0:N0}" },
+        new() { Id = "density", QuestionTemplate = "Which country has higher population density?",
+            PropertyName = nameof(CountryData.PopulationDensity), GetValue = c => c.PopulationDensity,
+            Unit = "per kmÂ²", FormatString = "{0:N1}/kmÂ²" },
+        new() { Id = "literacy", QuestionTemplate = "Which country has a higher literacy rate?",
+            PropertyName = nameof(CountryData.LiteracyRate), GetValue = c => c.LiteracyRate,
+            Unit = "%", FormatString = "{0:N1}%" },
+        new() { Id = "hdi", QuestionTemplate = "Which country has a higher Human Development Index?",
+            PropertyName = nameof(CountryData.Hdi), GetValue = c => c.Hdi,
+            Unit = "HDI", FormatString = "{0:N3}" },
+        new() { Id = "life_expectancy", QuestionTemplate = "Which country has higher life expectancy?",
+            PropertyName = nameof(CountryData.LifeExpectancy), GetValue = c => c.LifeExpectancy,
+            Unit = "years", FormatString = "{0:N1} years" }
+    ];
+}
+
+/// <summary>
+/// Static store for all country data. Data from World Bank, UN, IMF, UNDP (2023/2024).
+/// </summary>
+public static class CountryDataStore
+{
+    public static List<CountryData> GetAllCountries() =>
+    [
+        // AFRICA (54 countries)
+        C("Algeria","DZ","ðŸ‡©ðŸ‡¿","Africa",2381741,45400000,239900,5284,13310,19.1,81.4,0.745,76.4),
+        C("Angola","AO","ðŸ‡¦ðŸ‡´","Africa",1246700,36000000,92124,2560,7250,28.9,72.0,0.595,62.0),
+        C("Benin","BJ","ðŸ‡§ðŸ‡¯","Africa",112622,13700000,19234,1404,4030,121.7,45.8,0.504,60.0),
+        C("Botswana","BW","ðŸ‡§ðŸ‡¼","Africa",581730,2600000,19396,7460,18600,4.5,88.9,0.708,61.1),
+        C("Burkina Faso","BF","ðŸ‡§ðŸ‡«","Africa",274200,23000000,20327,884,2310,83.9,34.5,0.438,59.3),
+        C("Burundi","BI","ðŸ‡§ðŸ‡®","Africa",27834,13200000,2779,211,780,474.3,74.7,0.426,61.7),
+        C("Cabo Verde","CV","ðŸ‡¨ðŸ‡»","Africa",4033,600000,2290,3817,9420,148.8,90.8,0.662,74.1),
+        C("Cameroon","CM","ðŸ‡¨ðŸ‡²","Africa",475442,28600000,48455,1694,4220,60.2,77.1,0.587,61.0),
+        C("Central African Republic","CF","ðŸ‡¨ðŸ‡«","Africa",622984,5500000,2553,464,1130,8.8,37.5,0.387,54.0),
+        C("Chad","TD","ðŸ‡¹ðŸ‡©","Africa",1284000,18300000,12698,694,1640,14.3,27.3,0.394,52.5),
+        C("Comoros","KM","ðŸ‡°ðŸ‡²","Africa",2235,840000,1296,1543,3620,375.8,62.0,0.596,63.4),
+        C("DR Congo","CD","ðŸ‡¨ðŸ‡©","Africa",2344858,102300000,66380,649,1430,43.6,80.0,0.479,60.7),
+        C("Republic of the Congo","CG","ðŸ‡¨ðŸ‡¬","Africa",342000,6100000,13366,2191,4080,17.8,80.3,0.593,63.5),
+        C("CÃ´te d'Ivoire","CI","ðŸ‡¨ðŸ‡®","Africa",322463,28900000,78788,2726,6450,89.6,53.1,0.534,58.6),
+        C("Djibouti","DJ","ðŸ‡©ðŸ‡¯","Africa",23200,1100000,3668,3335,6760,47.4,53.0,0.521,62.3),
+        C("Egypt","EG","ðŸ‡ªðŸ‡¬","Africa",1001450,105000000,387086,3686,16450,104.9,73.1,0.728,70.2),
+        C("Equatorial Guinea","GQ","ðŸ‡¬ðŸ‡¶","Africa",28051,1700000,12269,7217,17270,60.6,95.3,0.596,60.6),
+        C("Eritrea","ER","ðŸ‡ªðŸ‡·","Africa",117600,3700000,2065,558,null,31.5,76.6,0.492,67.5),
+        C("Eswatini","SZ","ðŸ‡¸ðŸ‡¿","Africa",17364,1200000,4854,4045,9310,69.1,88.4,0.597,57.1),
+        C("Ethiopia","ET","ðŸ‡ªðŸ‡¹","Africa",1104300,126500000,163698,1294,3070,114.6,51.8,0.492,65.0),
+        C("Gabon","GA","ðŸ‡¬ðŸ‡¦","Africa",267668,2400000,19316,8048,17430,9.0,85.0,0.706,66.5),
+        C("Gambia","GM","ðŸ‡¬ðŸ‡²","Africa",11295,2700000,2187,810,2350,239.0,58.1,0.500,62.6),
+        C("Ghana","GH","ðŸ‡¬ðŸ‡­","Africa",238533,34100000,76370,2240,5870,143.0,79.0,0.602,63.8),
+        C("Guinea","GN","ðŸ‡¬ðŸ‡³","Africa",245857,14200000,20310,1430,3100,57.8,45.3,0.465,58.9),
+        C("Guinea-Bissau","GW","ðŸ‡¬ðŸ‡¼","Africa",36125,2100000,1639,780,2050,58.1,52.9,0.483,60.0),
+        C("Kenya","KE","ðŸ‡°ðŸ‡ª","Africa",580367,54000000,107389,1989,5970,93.0,81.5,0.601,61.4),
+        C("Lesotho","LS","ðŸ‡±ðŸ‡¸","Africa",30355,2300000,2500,1087,3080,75.8,79.4,0.514,50.7),
+        C("Liberia","LR","ðŸ‡±ðŸ‡·","Africa",111369,5300000,4001,755,1570,47.6,48.3,0.487,60.7),
+        C("Libya","LY","ðŸ‡±ðŸ‡¾","Africa",1759540,6900000,50492,7318,22810,3.9,91.0,0.718,73.0),
+        C("Madagascar","MG","ðŸ‡²ðŸ‡¬","Africa",587041,30300000,15103,499,1750,51.6,77.3,0.487,64.5),
+        C("Malawi","MW","ðŸ‡²ðŸ‡¼","Africa",118484,20900000,13164,630,1620,176.4,67.3,0.508,62.9),
+        C("Mali","ML","ðŸ‡²ðŸ‡±","Africa",1240192,23300000,19340,830,2480,18.8,31.0,0.410,58.9),
+        C("Mauritania","MR","ðŸ‡²ðŸ‡·","Africa",1030700,4900000,10082,2058,6580,4.8,67.0,0.540,65.6),
+        C("Mauritius","MU","ðŸ‡²ðŸ‡º","Africa",2040,1270000,14397,11336,28370,622.5,91.3,0.796,74.4),
+        C("Morocco","MA","ðŸ‡²ðŸ‡¦","Africa",446550,37800000,141109,3733,9740,84.6,75.9,0.698,74.0),
+        C("Mozambique","MZ","ðŸ‡²ðŸ‡¿","Africa",801590,33900000,20819,614,1610,42.3,63.4,0.461,59.3),
+        C("Namibia","NA","ðŸ‡³ðŸ‡¦","Africa",825615,2600000,12366,4756,11540,3.1,92.0,0.615,59.3),
+        C("Niger","NE","ðŸ‡³ðŸ‡ª","Africa",1267000,26200000,16819,642,1440,20.7,35.0,0.394,61.6),
+        C("Nigeria","NG","ðŸ‡³ðŸ‡¬","Africa",923768,223800000,472620,2112,5860,242.3,62.0,0.548,52.7),
+        C("Rwanda","RW","ðŸ‡·ðŸ‡¼","Africa",26338,14100000,14634,1038,2950,535.3,73.2,0.548,66.1),
+        C("SÃ£o TomÃ© and PrÃ­ncipe","ST","ðŸ‡¸ðŸ‡¹","Africa",964,230000,603,2622,5190,238.6,93.0,0.618,67.0),
+        C("Senegal","SN","ðŸ‡¸ðŸ‡³","Africa",196722,17900000,31112,1739,4150,91.0,56.3,0.517,68.0),
+        C("Seychelles","SC","ðŸ‡¸ðŸ‡¨","Africa",455,100000,2089,20890,32310,219.8,95.9,0.785,73.4),
+        C("Sierra Leone","SL","ðŸ‡¸ðŸ‡±","Africa",71740,8600000,4192,487,1810,119.9,43.2,0.477,60.1),
+        C("Somalia","SO","ðŸ‡¸ðŸ‡´","Africa",637657,18100000,8128,449,null,28.4,null,null,55.3),
+        C("South Africa","ZA","ðŸ‡¿ðŸ‡¦","Africa",1221037,60400000,399015,6605,16900,49.5,95.0,0.713,62.3),
+        C("South Sudan","SS","ðŸ‡¸ðŸ‡¸","Africa",644329,11400000,4602,404,null,17.7,35.0,0.385,55.0),
+        C("Sudan","SD","ðŸ‡¸ðŸ‡©","Africa",1861484,47900000,51668,1079,4380,25.7,61.0,0.516,65.3),
+        C("Tanzania","TZ","ðŸ‡¹ðŸ‡¿","Africa",947300,65500000,79158,1209,2940,69.2,78.0,0.532,66.2),
+        C("Togo","TG","ðŸ‡¹ðŸ‡¬","Africa",56785,8800000,9140,1039,2450,155.0,66.5,0.539,61.6),
+        C("Tunisia","TN","ðŸ‡¹ðŸ‡³","Africa",163610,12400000,46297,3734,13510,75.8,79.7,0.732,76.7),
+        C("Uganda","UG","ðŸ‡ºðŸ‡¬","Africa",241550,48600000,49272,1013,2620,201.2,79.0,0.550,62.7),
+        C("Zambia","ZM","ðŸ‡¿ðŸ‡²","Africa",752612,20600000,27066,1314,3760,27.4,87.0,0.565,61.2),
+        C("Zimbabwe","ZW","ðŸ‡¿ðŸ‡¼","Africa",390757,16300000,28437,1745,3590,41.7,89.7,0.550,59.3),
+        
+        // ASIA (49 countries)
+        C("Afghanistan","AF","ðŸ‡¦ðŸ‡«","Asia",652230,42240000,14580,345,null,64.8,37.3,0.462,62.0),
+        C("Armenia","AM","ðŸ‡¦ðŸ‡²","Asia",29743,2780000,24212,8712,18480,93.5,99.8,0.786,72.0),
+        C("Azerbaijan","AZ","ðŸ‡¦ðŸ‡¿","Asia",86600,10200000,72356,7094,17090,117.8,99.8,0.760,69.4),
+        C("Bahrain","BH","ðŸ‡§ðŸ‡­","Asia",765,1500000,44169,29446,54810,1960.8,97.5,0.888,78.8),
+        C("Bangladesh","BD","ðŸ‡§ðŸ‡©","Asia",147570,173000000,437415,2529,7130,1172.6,74.9,0.670,72.4),
+        C("Bhutan","BT","ðŸ‡§ðŸ‡¹","Asia",38394,780000,2898,3715,12640,20.3,66.6,0.666,72.1),
+        C("Brunei","BN","ðŸ‡§ðŸ‡³","Asia",5765,450000,15128,33618,71620,78.1,97.2,0.907,74.6),
+        C("Cambodia","KH","ðŸ‡°ðŸ‡­","Asia",181035,17000000,31772,1869,5080,93.9,83.9,0.600,70.0),
+        C("China","CN","ðŸ‡¨ðŸ‡³","Asia",9596960,1410000000,17794782,12614,23930,146.9,97.3,0.788,78.6),
+        C("Georgia","GE","ðŸ‡¬ðŸ‡ª","Asia",69700,3700000,30536,8253,20590,53.1,99.6,0.814,71.7),
+        C("India","IN","ðŸ‡®ðŸ‡³","Asia",3287263,1428600000,3549918,2485,8610,434.6,77.7,0.644,67.2),
+        C("Indonesia","ID","ðŸ‡®ðŸ‡©","Asia",1904569,277500000,1417387,5108,15190,145.7,96.0,0.713,68.6),
+        C("Iran","IR","ðŸ‡®ðŸ‡·","Asia",1648195,89200000,413493,4635,16740,54.1,88.7,0.780,74.0),
+        C("Iraq","IQ","ðŸ‡®ðŸ‡¶","Asia",438317,44500000,270025,6071,12340,101.5,85.6,0.673,70.4),
+        C("Israel","IL","ðŸ‡®ðŸ‡±","Asia",20770,9800000,521688,53233,48520,471.8,97.8,0.915,82.0),
+        C("Japan","JP","ðŸ‡¯ðŸ‡µ","Asia",377930,123300000,4212945,34179,49260,326.3,99.0,0.920,84.5),
+        C("Jordan","JO","ðŸ‡¯ðŸ‡´","Asia",89342,11300000,50024,4428,12120,126.5,98.4,0.736,74.4),
+        C("Kazakhstan","KZ","ðŸ‡°ðŸ‡¿","Asia",2724900,19600000,259292,13229,31180,7.2,99.8,0.802,69.4),
+        C("Kuwait","KW","ðŸ‡°ðŸ‡¼","Asia",17818,4300000,164713,38305,60840,241.3,96.5,0.847,78.7),
+        C("Kyrgyzstan","KG","ðŸ‡°ðŸ‡¬","Asia",199951,7000000,13991,1999,6360,35.0,99.6,0.701,69.4),
+        C("Laos","LA","ðŸ‡±ðŸ‡¦","Asia",236800,7500000,14167,1889,8720,31.7,87.1,0.620,68.1),
+        C("Lebanon","LB","ðŸ‡±ðŸ‡§","Asia",10452,5500000,21782,3960,14950,526.2,95.1,0.723,75.0),
+        C("Malaysia","MY","ðŸ‡²ðŸ‡¾","Asia",330803,34300000,430895,12563,34750,103.7,95.0,0.807,74.9),
+        C("Maldives","MV","ðŸ‡²ðŸ‡»","Asia",300,520000,6547,12590,21270,1733.3,97.7,0.762,79.9),
+        C("Mongolia","MN","ðŸ‡²ðŸ‡³","Asia",1564116,3400000,18100,5324,14520,2.2,99.2,0.739,69.9),
+        C("Myanmar","MM","ðŸ‡²ðŸ‡²","Asia",676578,54800000,64516,1178,null,81.0,89.1,0.585,66.0),
+        C("Nepal","NP","ðŸ‡³ðŸ‡µ","Asia",147516,30900000,40830,1321,4500,209.5,71.0,0.601,68.4),
+        C("North Korea","KP","ðŸ‡°ðŸ‡µ","Asia",120538,26100000,null,null,null,216.5,100.0,null,72.0),
+        C("Oman","OM","ðŸ‡´ðŸ‡²","Asia",309500,4600000,108192,23520,41390,14.9,95.7,0.816,78.2),
+        C("Pakistan","PK","ðŸ‡µðŸ‡°","Asia",881913,240500000,341517,1420,6270,272.7,58.0,0.540,66.1),
+        C("Palestine","PS","ðŸ‡µðŸ‡¸","Asia",6020,5400000,18037,3340,6890,897.0,97.5,0.716,74.0),
+        C("Philippines","PH","ðŸ‡µðŸ‡­","Asia",300000,117300000,435675,3715,10220,391.0,96.3,0.710,69.3),
+        C("Qatar","QA","ðŸ‡¶ðŸ‡¦","Asia",11586,2700000,235500,87222,112410,233.2,93.5,0.875,79.3),
+        C("Saudi Arabia","SA","ðŸ‡¸ðŸ‡¦","Asia",2149690,36400000,1061902,29178,61760,16.9,97.6,0.875,76.9),
+        C("Singapore","SG","ðŸ‡¸ðŸ‡¬","Asia",733,5900000,501428,84988,116500,8046.4,97.5,0.949,84.1),
+        C("South Korea","KR","ðŸ‡°ðŸ‡·","Asia",100210,51700000,1712791,33147,52940,516.0,99.0,0.929,83.5),
+        C("Sri Lanka","LK","ðŸ‡±ðŸ‡°","Asia",65610,21900000,74404,3397,15120,333.8,92.3,0.782,76.4),
+        C("Syria","SY","ðŸ‡¸ðŸ‡¾","Asia",185180,23200000,9000,388,null,125.3,86.4,0.577,73.0),
+        C("Taiwan","TW","ðŸ‡¹ðŸ‡¼","Asia",36193,23900000,790728,33091,null,660.3,99.0,0.926,81.0),
+        C("Tajikistan","TJ","ðŸ‡¹ðŸ‡¯","Asia",143100,10100000,11999,1188,4430,70.6,99.8,0.679,69.4),
+        C("Thailand","TH","ðŸ‡¹ðŸ‡­","Asia",513120,71800000,514947,7172,21030,139.9,94.1,0.803,79.3),
+        C("Timor-Leste","TL","ðŸ‡¹ðŸ‡±","Asia",14874,1400000,3017,2155,4920,94.1,70.5,0.606,67.7),
+        C("Turkey","TR","ðŸ‡¹ðŸ‡·","Asia",783562,85300000,1154600,13534,38170,108.8,96.7,0.855,76.0),
+        C("Turkmenistan","TM","ðŸ‡¹ðŸ‡²","Asia",488100,6500000,82649,12715,18790,13.3,99.7,0.744,68.0),
+        C("UAE","AE","ðŸ‡¦ðŸ‡ª","Asia",83600,9400000,507535,53993,74110,112.4,98.0,0.937,78.7),
+        C("Uzbekistan","UZ","ðŸ‡ºðŸ‡¿","Asia",448978,35300000,90384,2561,10050,78.6,100.0,0.727,70.9),
+        C("Vietnam","VN","ðŸ‡»ðŸ‡³","Asia",331212,100000000,433356,4334,13850,302.0,95.8,0.726,74.0),
+        C("Yemen","YE","ðŸ‡¾ðŸ‡ª","Asia",527968,34400000,21060,612,null,65.2,54.1,0.424,63.4),
+        
+        // EUROPE (44 countries)
+        C("Albania","AL","ðŸ‡¦ðŸ‡±","Europe",28748,2750000,22978,8358,17620,95.7,98.4,0.789,76.5),
+        C("Andorra","AD","ðŸ‡¦ðŸ‡©","Europe",468,80000,3352,41900,null,170.9,100.0,0.884,83.0),
+        C("Austria","AT","ðŸ‡¦ðŸ‡¹","Europe",83871,9100000,515199,56593,66640,108.5,99.0,0.926,82.0),
+        C("Belarus","BY","ðŸ‡§ðŸ‡¾","Europe",207600,9200000,72881,7922,22020,44.3,99.8,0.801,72.4),
+        C("Belgium","BE","ðŸ‡§ðŸ‡ª","Europe",30528,11700000,627511,53642,64030,383.3,99.0,0.942,82.0),
+        C("Bosnia and Herzegovina","BA","ðŸ‡§ðŸ‡¦","Europe",51197,3210000,27034,8422,19270,62.7,98.5,0.779,75.3),
+        C("Bulgaria","BG","ðŸ‡§ðŸ‡¬","Europe",110879,6500000,100635,15483,29860,58.6,98.4,0.799,71.8),
+        C("Croatia","HR","ðŸ‡­ðŸ‡·","Europe",56594,3900000,82689,21202,38050,68.9,99.3,0.878,76.6),
+        C("Cyprus","CY","ðŸ‡¨ðŸ‡¾","Europe",9251,1260000,32229,25578,49460,136.2,99.1,0.907,81.2),
+        C("Czech Republic","CZ","ðŸ‡¨ðŸ‡¿","Europe",78867,10500000,330483,31475,49600,133.1,99.0,0.895,77.7),
+        C("Denmark","DK","ðŸ‡©ðŸ‡°","Europe",43094,5900000,404198,68513,73790,136.9,99.0,0.952,81.4),
+        C("Estonia","EE","ðŸ‡ªðŸ‡ª","Europe",45228,1370000,41551,30329,45400,30.3,99.9,0.899,77.1),
+        C("Finland","FI","ðŸ‡«ðŸ‡®","Europe",338145,5500000,305689,55580,57500,16.3,99.0,0.942,82.0),
+        C("France","FR","ðŸ‡«ðŸ‡·","Europe",643801,68000000,3030901,44573,55080,105.6,99.0,0.910,82.5),
+        C("Germany","DE","ðŸ‡©ðŸ‡ª","Europe",357022,84400000,4430758,52485,64770,236.4,99.0,0.950,80.6),
+        C("Greece","GR","ðŸ‡¬ðŸ‡·","Europe",131957,10400000,238206,22905,37050,78.8,97.9,0.893,80.1),
+        C("Hungary","HU","ðŸ‡­ðŸ‡º","Europe",93028,9600000,212389,22124,40200,103.2,99.1,0.846,74.5),
+        C("Iceland","IS","ðŸ‡®ðŸ‡¸","Europe",103000,380000,31020,81632,69050,3.7,99.0,0.972,83.0),
+        C("Ireland","IE","ðŸ‡®ðŸ‡ª","Europe",70273,5100000,533682,104604,83140,72.6,99.0,0.950,82.0),
+        C("Italy","IT","ðŸ‡®ðŸ‡¹","Europe",301340,58900000,2254851,38285,53470,195.5,99.2,0.906,83.0),
+        C("Latvia","LV","ðŸ‡±ðŸ‡»","Europe",64589,1850000,43627,23582,40030,28.6,99.9,0.879,75.0),
+        C("Liechtenstein","LI","ðŸ‡±ðŸ‡®","Europe",160,40000,7365,184125,null,250.0,100.0,0.935,83.0),
+        C("Lithuania","LT","ðŸ‡±ðŸ‡¹","Europe",65300,2860000,78346,27394,45740,43.8,99.8,0.879,74.0),
+        C("Luxembourg","LU","ðŸ‡±ðŸ‡º","Europe",2586,660000,86898,131633,91000,255.2,99.0,0.930,82.5),
+        C("Malta","MT","ðŸ‡²ðŸ‡¹","Europe",316,520000,20964,40315,52430,1645.6,94.5,0.915,82.5),
+        C("Moldova","MD","ðŸ‡²ðŸ‡©","Europe",33846,2540000,16010,6303,17660,75.0,99.6,0.763,68.8),
+        C("Monaco","MC","ðŸ‡²ðŸ‡¨","Europe",2,40000,8596,214900,null,20000.0,99.0,null,85.9),
+        C("Montenegro","ME","ðŸ‡²ðŸ‡ª","Europe",13812,620000,7405,11944,26610,44.9,98.8,0.844,76.3),
+        C("Netherlands","NL","ðŸ‡³ðŸ‡±","Europe",41850,17700000,1092748,61737,68570,423.0,99.0,0.946,82.0),
+        C("North Macedonia","MK","ðŸ‡²ðŸ‡°","Europe",25713,1840000,14761,8022,19170,71.5,98.4,0.770,73.8),
+        C("Norway","NO","ðŸ‡³ðŸ‡´","Europe",323802,5500000,579267,105321,87440,17.0,99.0,0.966,83.2),
+        C("Poland","PL","ðŸ‡µðŸ‡±","Europe",312696,36800000,811229,22046,42310,117.7,99.8,0.881,76.5),
+        C("Portugal","PT","ðŸ‡µðŸ‡¹","Europe",92212,10400000,287080,27604,41830,112.8,96.1,0.874,81.1),
+        C("Romania","RO","ðŸ‡·ðŸ‡´","Europe",238391,19000000,351003,18474,41700,79.7,99.1,0.827,74.2),
+        C("Russia","RU","ðŸ‡·ðŸ‡º","Europe",17098246,144000000,2021426,14038,38420,8.4,99.7,0.821,69.4),
+        C("San Marino","SM","ðŸ‡¸ðŸ‡²","Europe",61,34000,1855,54559,null,557.4,99.0,null,83.5),
+        C("Serbia","RS","ðŸ‡·ðŸ‡¸","Europe",88361,6660000,75187,11291,23180,75.4,99.5,0.805,74.2),
+        C("Slovakia","SK","ðŸ‡¸ðŸ‡°","Europe",49035,5430000,132793,24456,38620,110.7,99.6,0.855,74.9),
+        C("Slovenia","SI","ðŸ‡¸ðŸ‡®","Europe",20273,2120000,68217,32178,49650,104.6,99.7,0.926,81.0),
+        C("Spain","ES","ðŸ‡ªðŸ‡¸","Europe",505992,47900000,1580694,33000,47450,94.7,98.6,0.911,83.2),
+        C("Sweden","SE","ðŸ‡¸ðŸ‡ª","Europe",450295,10500000,593268,56502,64120,23.3,99.0,0.952,83.0),
+        C("Switzerland","CH","ðŸ‡¨ðŸ‡­","Europe",41284,8800000,884940,100561,84670,213.2,99.0,0.967,84.0),
+        C("Ukraine","UA","ðŸ‡ºðŸ‡¦","Europe",603550,37000000,178757,4832,15560,61.3,99.8,0.734,71.6),
+        C("United Kingdom","GB","ðŸ‡¬ðŸ‡§","Europe",243610,67700000,3158938,46672,55500,277.9,99.0,0.940,80.7),
+        
+        // NORTH AMERICA (23 countries)
+        C("Antigua and Barbuda","AG","ðŸ‡¦ðŸ‡¬","N. America",443,94000,1868,19872,23490,212.2,99.0,0.820,78.0),
+        C("Bahamas","BS","ðŸ‡§ðŸ‡¸","N. America",13943,410000,14004,34156,37250,29.4,95.6,0.820,71.6),
+        C("Barbados","BB","ðŸ‡§ðŸ‡§","N. America",430,282000,6112,21674,17560,655.8,99.6,0.809,77.6),
+        C("Belize","BZ","ðŸ‡§ðŸ‡¿","N. America",22966,410000,3218,7849,11220,17.9,82.7,0.700,70.5),
+        C("Canada","CA","ðŸ‡¨ðŸ‡¦","N. America",9984670,40100000,2117805,52819,58310,4.0,99.0,0.935,82.7),
+        C("Costa Rica","CR","ðŸ‡¨ðŸ‡·","N. America",51100,5200000,85551,16452,24060,101.8,98.0,0.806,77.0),
+        C("Cuba","CU","ðŸ‡¨ðŸ‡º","N. America",109884,11100000,107352,9673,null,101.0,99.7,0.764,73.7),
+        C("Dominica","DM","ðŸ‡©ðŸ‡²","N. America",751,73000,654,8959,14290,97.2,94.0,0.720,78.0),
+        C("Dominican Republic","DO","ðŸ‡©ðŸ‡´","N. America",48671,11300000,113641,10057,23500,232.2,95.0,0.766,72.6),
+        C("El Salvador","SV","ðŸ‡¸ðŸ‡»","N. America",21041,6300000,33001,5238,10330,299.5,89.7,0.674,70.7),
+        C("Grenada","GD","ðŸ‡¬ðŸ‡©","N. America",344,126000,1326,10524,19640,366.3,98.6,0.795,74.9),
+        C("Guatemala","GT","ðŸ‡¬ðŸ‡¹","N. America",108889,17600000,102050,5798,10960,161.6,83.3,0.629,69.2),
+        C("Haiti","HT","ðŸ‡­ðŸ‡¹","N. America",27750,11700000,20168,1723,3150,421.6,61.7,0.552,63.2),
+        C("Honduras","HN","ðŸ‡­ðŸ‡³","N. America",112492,10400000,34401,3308,6650,92.5,88.5,0.624,70.1),
+        C("Jamaica","JM","ðŸ‡¯ðŸ‡²","N. America",10991,2800000,18777,6706,11600,254.7,88.7,0.706,70.5),
+        C("Mexico","MX","ðŸ‡²ðŸ‡½","N. America",1964375,128900000,1811468,14055,22710,65.6,95.2,0.781,75.0),
+        C("Nicaragua","NI","ðŸ‡³ðŸ‡®","N. America",130373,7050000,17829,2529,6850,54.1,82.6,0.667,74.5),
+        C("Panama","PA","ðŸ‡µðŸ‡¦","N. America",75417,4400000,83382,18950,35460,58.3,95.7,0.820,76.2),
+        C("Saint Kitts and Nevis","KN","ðŸ‡°ðŸ‡³","N. America",261,48000,1140,23750,32060,183.9,97.8,0.777,74.0),
+        C("Saint Lucia","LC","ðŸ‡±ðŸ‡¨","N. America",616,180000,2498,13878,18820,292.2,null,0.725,76.2),
+        C("Saint Vincent","VC","ðŸ‡»ðŸ‡¨","N. America",389,100000,1036,10360,17070,257.1,null,0.733,72.0),
+        C("Trinidad and Tobago","TT","ðŸ‡¹ðŸ‡¹","N. America",5130,1530000,28117,18377,28690,298.2,99.0,0.814,73.4),
+        C("United States","US","ðŸ‡ºðŸ‡¸","N. America",9833517,335000000,27360935,81674,80300,34.1,99.0,0.927,77.5),
+        
+        // SOUTH AMERICA (12 countries)
+        C("Argentina","AR","ðŸ‡¦ðŸ‡·","S. America",2780400,46300000,641131,13846,26390,16.7,99.0,0.849,76.6),
+        C("Bolivia","BO","ðŸ‡§ðŸ‡´","S. America",1098581,12200000,45464,3727,9040,11.1,94.5,0.698,63.6),
+        C("Brazil","BR","ðŸ‡§ðŸ‡·","S. America",8515767,216400000,2173669,10044,17660,25.4,93.2,0.760,72.8),
+        C("Chile","CL","ðŸ‡¨ðŸ‡±","S. America",756102,19500000,335533,17206,28510,25.8,97.0,0.860,78.9),
+        C("Colombia","CO","ðŸ‡¨ðŸ‡´","S. America",1138910,52000000,363835,6997,18180,45.7,95.6,0.758,72.8),
+        C("Ecuador","EC","ðŸ‡ªðŸ‡¨","S. America",283561,18000000,118845,6603,12930,63.5,94.5,0.765,74.3),
+        C("Guyana","GY","ðŸ‡¬ðŸ‡¾","S. America",214969,810000,16322,20151,34220,3.8,88.5,0.742,65.7),
+        C("Paraguay","PY","ðŸ‡µðŸ‡¾","S. America",406752,6800000,42956,6317,15030,16.7,94.7,0.717,70.3),
+        C("Peru","PE","ðŸ‡µðŸ‡ª","S. America",1285216,34000000,267603,7869,15310,26.4,94.5,0.762,73.7),
+        C("Suriname","SR","ðŸ‡¸ðŸ‡·","S. America",163820,620000,3621,5840,19240,3.8,94.4,0.695,70.3),
+        C("Uruguay","UY","ðŸ‡ºðŸ‡¾","S. America",176215,3400000,77241,22718,28200,19.3,98.8,0.830,77.7),
+        C("Venezuela","VE","ðŸ‡»ðŸ‡ª","S. America",916445,28400000,92200,3246,null,31.0,97.1,0.691,72.1),
+        
+        // OCEANIA (14 countries)
+        C("Australia","AU","ðŸ‡¦ðŸ‡º","Oceania",7692024,26500000,1687713,63688,59170,3.4,99.0,0.946,84.5),
+        C("Fiji","FJ","ðŸ‡«ðŸ‡¯","Oceania",18274,930000,5314,5714,14570,50.9,99.1,0.729,67.4),
+        C("Kiribati","KI","ðŸ‡°ðŸ‡®","Oceania",811,130000,248,1908,4520,160.3,null,0.621,67.5),
+        C("Marshall Islands","MH","ðŸ‡²ðŸ‡­","Oceania",181,42000,291,6929,6040,232.0,98.3,null,65.0),
+        C("Micronesia","FM","ðŸ‡«ðŸ‡²","Oceania",702,115000,460,4000,4110,163.8,null,0.628,67.9),
+        C("Nauru","NR","ðŸ‡³ðŸ‡·","Oceania",21,13000,151,11615,14020,619.0,99.0,null,63.8),
+        C("New Zealand","NZ","ðŸ‡³ðŸ‡¿","Oceania",270467,5200000,251969,48455,52000,19.2,99.0,0.939,82.5),
+        C("Palau","PW","ðŸ‡µðŸ‡¼","Oceania",459,18000,284,15778,17960,39.2,96.6,null,71.6),
+        C("Papua New Guinea","PG","ðŸ‡µðŸ‡¬","Oceania",462840,10300000,30624,2973,4620,22.3,64.2,0.558,64.5),
+        C("Samoa","WS","ðŸ‡¼ðŸ‡¸","Oceania",2842,220000,861,3914,7420,77.4,99.1,0.707,73.2),
+        C("Solomon Islands","SB","ðŸ‡¸ðŸ‡§","Oceania",28896,720000,1696,2356,2810,24.9,84.1,0.564,70.2),
+        C("Tonga","TO","ðŸ‡¹ðŸ‡´","Oceania",747,107000,512,4785,7530,143.2,99.4,0.745,71.3),
+        C("Tuvalu","TV","ðŸ‡¹ðŸ‡»","Oceania",26,11000,63,5727,7020,423.1,null,null,64.5),
+        C("Vanuatu","VU","ðŸ‡»ðŸ‡º","Oceania",12189,330000,1065,3227,3520,27.1,89.1,0.609,70.5),
+    ];
+
+    // Helper method to create CountryData with compact syntax
+    private static CountryData C(string name, string iso2, string flag, string cont,
+        long? area, long? pop, long? gdp, int? gdpPc, int? gniPpp,
+        double? density, double? literacy, double? hdi, double? lifeExp) => new()
+    {
+        Name = name, IsoCode2 = iso2, IsoCode3 = iso2 + "X", FlagEmoji = flag,
+        Continent = cont, AreaSquareKm = area, Population = pop,
+        GdpMillionsUsd = gdp, GdpPerCapitaUsd = gdpPc, GniPerCapitaPpp = gniPpp,
+        PopulationDensity = density, LiteracyRate = literacy, Hdi = hdi, LifeExpectancy = lifeExp
+    };
+}
 
 
 
@@ -63378,7 +64354,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/08/2025 17:47:37
-Total Files Exported: 66
+EXPORT COMPLETED: 12/08/2025 18:40:14
+Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================
