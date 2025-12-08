@@ -23,11 +23,24 @@
     </p>
 }
 
+@if (historical.Count > 0)
+{
+    <h3>Historical Increments:</h3>
+    <ul>
+        @foreach (var number in historical)
+        {
+            <li>@number</li>
+        }
+    </ul>
+}
+)
+
 @code {
     private int currentCount = 0;
     // A flag to prevent the user from clicking the slow button again while it's already running
     private bool isIncrementing = false;
     private int incrementBy = 0;
+    private List<int> historical = new();
 
     // We are keeping this as a simple private field now, but we will calculate the random number inside the method.
     private const int DelayMilliseconds = 10; // Delay between each step
@@ -43,6 +56,7 @@
         // Generate a new random number between 100 (inclusive) and 1000 (exclusive)
         int targetIncrement = Random.Shared.Next(100, 1000);
         incrementBy = targetIncrement;
+		historical.Add(targetIncrement);
 
         // Set the flag and update the UI to show the button is disabled and a message
         isIncrementing = true;
