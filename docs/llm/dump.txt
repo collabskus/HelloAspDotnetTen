@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/08/2025 12:03:23
+Generated: 12/08/2025 12:05:36
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -12,6 +12,8 @@ Folder PATH listing
 Volume serial number is 9892-5BAD
 C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
 |   export.ps1
+|   LICENSE.txt
+|   README.md
 |   
 +---docs
 |   \---llm
@@ -26,8 +28,6 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   Directory.Build.targets
         |   Directory.Packages.props
         |   HelloAspDotnetTen.slnx
-        |   LICENSE.txt
-        |   README.md
         |   
         +---BlazorApp
         |   |   appsettings.Development.json
@@ -62557,7 +62557,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/08/2025 12:03:23
+EXPORT COMPLETED: 12/08/2025 12:05:37
 Total Files Exported: 61
 Output File: .\docs\llm\dump.txt
 ===============================================================================
