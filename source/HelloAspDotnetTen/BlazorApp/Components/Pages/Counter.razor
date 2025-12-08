@@ -39,7 +39,7 @@
         <tbody>
             @foreach (var toss in historical)
             {
-                <tr style="color: @toss.Color">
+                <tr class="@toss.CssClass">
                     <td>@toss.Value</td>
                     <td>@toss.Status</td>
                     <td>@toss.RunningTotal</td>
@@ -47,6 +47,10 @@
             }
         </tbody>
     </table>
+
+	<p>Wins: @totalWins</p>
+	<p>Losses: @(historical.Count - totalWins)</p>
+    <p>Tosses: @historical.Count</p>
 }
 
 @code {
@@ -56,17 +60,18 @@
     private int incrementBy = 0;
     // Changed historical to use a new custom class to store more information
     private List<TossResult> historical = new();
+	private int totalWins => GetWinCount(historical.Select(t => t.Value).ToList(), WinThreshold);
 
     // The threshold for winning the toss
     private const int WinThreshold = 500;
     private const int DelayMilliseconds = 1; // Delay between each step
 
-    // New class to hold the historical data, including status, color, and running total
     private class TossResult
     {
         public int Value { get; set; }
         public string Status { get; set; } = string.Empty;
-        public string Color { get; set; } = string.Empty;
+        // Change this property from Color to CssClass
+        public string CssClass { get; set; } = string.Empty;
         public int RunningTotal { get; set; }
     }
 
@@ -82,9 +87,10 @@
         int targetIncrement = Random.Shared.Next(100, 1000);
         incrementBy = targetIncrement;
 
-        // Determine the result, color, and running total for the new increment
+        // Determine the result, status, and CSS class
         string status = targetIncrement > WinThreshold ? "You won a toss" : "You lost a toss";
-        string color = targetIncrement > WinThreshold ? "green" : "red";
+        // Set the class name based on the result
+        string cssClass = targetIncrement > WinThreshold ? "win-toss" : "lost-toss";
         int runningTotal = currentCount + targetIncrement;
 
         // Add the new result to the historical list
@@ -92,9 +98,11 @@
         {
             Value = targetIncrement,
             Status = status,
-            Color = color,
+            CssClass = cssClass, // Store the class name
             RunningTotal = runningTotal
         });
+
+
 
         // Set the flag and update the UI to show the button is disabled and a message
         isIncrementing = true;
@@ -116,5 +124,18 @@
         // Reset the flag and update the UI
         isIncrementing = false;
         StateHasChanged();
+    }
+
+    private int GetWinCount(List<int> list, int threshold)
+    {
+		int winCount = 0;
+        foreach (int item in list)
+        {
+            if (item > threshold)
+            {
+				winCount++;
+            }
+        }
+		return winCount;
     }
 }

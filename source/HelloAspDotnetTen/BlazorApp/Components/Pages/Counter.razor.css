@@ -6,12 +6,15 @@
     color: green;
     /* Optional: make it bold for emphasis */
     font-weight: bold;
+    border: 2px dashed green;
 }
 
 .lost-toss {
     color: red;
+    border: 2px dashed red;
 }
 .draw-toss {
     color: orange;
+    border: dashed orange 2px;
 }
 /* You can add more styles as needed */
