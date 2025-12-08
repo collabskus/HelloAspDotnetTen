@@ -598,3 +598,103 @@ full code is in project files in dump text
 
 
 
+Great question! Since you're using **InteractiveServer** render mode, this is actually **server-side code** running on the server via SignalR - so you absolutely CAN add OpenTelemetry instrumentation!
+
+Let me search the project files to see your current setup and give you the best approach.I can see you already have OpenTelemetry set up with tracing, metrics, and logging. Now let me look at how your ClassLibrary1 is instrumented to understand the pattern:I now have all the context I need. You already have a great OTel setup with `ActivitySource` and `Meter` patterns in ClassLibrary1. Here's how to add full instrumentation to your Counter page:Now you need to register the ActivitySource and Meter in `Program.cs`. Add these to your existing OTel configuration:## What You Get
+
+### Traces (Spans)
+Every button click creates a trace with:
+- **`Counter.IncrementCount`** - Simple click span with previous/new values
+- **`Counter.SlowlyIncrement`** - Parent span for the toss operation
+  - **`Counter.GenerateTossValue`** - Child span for RNG
+  - **`Counter.IncrementLoop`** - Child span for the animation loop
+
+### Metrics
+| Metric | Type | Description |
+|--------|------|-------------|
+| `counter.clicks` | Counter | Total simple clicks |
+| `counter.tosses` | Counter | Total slow increment tosses |
+| `counter.wins` | Counter | Winning tosses (with value tag) |
+| `counter.losses` | Counter | Losing tosses (with value tag) |
+| `counter.toss_value` | Histogram | Distribution of 100-900 values |
+| `counter.toss_duration` | Histogram | How long slow increments take |
+| `counter.current_value` | UpDownCounter | Current counter value (gauge-like) |
+
+### Logs
+Structured logs with `ILogger<Counter>` that include:
+- Toss values, win/loss status, durations, final counts
+
+## Why This Works
+
+Since you're using `@rendermode InteractiveServer`, the `@code` block runs **on the server** via SignalR. Every `@onclick` triggers a SignalR message → server-side C# execution → OTel captures everything!
+
+You'll see traces in your console output and in your file exporters at `%LOCALAPPDATA%/HelloAspDotnetTen/telemetry/`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

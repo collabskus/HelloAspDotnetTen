@@ -1,5 +1,8 @@
 ﻿@page "/counter"
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
 @rendermode InteractiveServer
+@inject ILogger<Counter> Logger
 
 <PageTitle>Counter</PageTitle>
 
@@ -54,78 +57,192 @@
 }
 
 @code {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OPENTELEMETRY INSTRUMENTATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // ActivitySource for distributed tracing (spans)
+    private static readonly ActivitySource ActivitySource = new("BlazorApp.Counter", "1.0.0");
+
+    // Meter for metrics
+    private static readonly Meter Meter = new("BlazorApp.Counter", "1.0.0");
+
+    // ── Counters ──────────────────────────────────────────────────────────────
+    private static readonly Counter<long> ClickCounter = Meter.CreateCounter<long>(
+        "counter.clicks",
+        unit: "{clicks}",
+        description: "Total number of simple increment clicks");
+
+    private static readonly Counter<long> TossCounter = Meter.CreateCounter<long>(
+        "counter.tosses",
+        unit: "{tosses}",
+        description: "Total number of slow increment tosses");
+
+    private static readonly Counter<long> WinCounter = Meter.CreateCounter<long>(
+        "counter.wins",
+        unit: "{wins}",
+        description: "Total number of winning tosses (> 500)");
+
+    private static readonly Counter<long> LossCounter = Meter.CreateCounter<long>(
+        "counter.losses",
+        unit: "{losses}",
+        description: "Total number of losing tosses (<= 500)");
+
+    // ── Histograms ────────────────────────────────────────────────────────────
+    private static readonly Histogram<int> TossValueHistogram = Meter.CreateHistogram<int>(
+        "counter.toss_value",
+        unit: "{value}",
+        description: "Distribution of toss values (100-900)");
+
+    private static readonly Histogram<double> TossDurationHistogram = Meter.CreateHistogram<double>(
+        "counter.toss_duration",
+        unit: "ms",
+        description: "Duration of slow increment operations");
+
+    // ── Gauges (via UpDownCounter for current state) ──────────────────────────
+    private static readonly UpDownCounter<int> CurrentCountGauge = Meter.CreateUpDownCounter<int>(
+        "counter.current_value",
+        unit: "{count}",
+        description: "Current counter value");
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // COMPONENT STATE
+    // ═══════════════════════════════════════════════════════════════════════════
+
     private int currentCount = 0;
-    // A flag to prevent the user from clicking the slow button again while it's already running
     private bool isIncrementing = false;
     private int incrementBy = 0;
-    // Changed historical to use a new custom class to store more information
     private List<TossResult> historical = new();
     private int totalWins => GetWinCount(historical.Select(t => t.Value).ToList(), WinThreshold);
 
-    // The threshold for winning the toss
     private const int WinThreshold = 500;
-    private const int DelayMilliseconds = 1; // Delay between each step
+    private const int DelayMilliseconds = 1;
 
     private class TossResult
     {
         public int Value { get; set; }
         public string Status { get; set; } = string.Empty;
-        // Change this property from Color to CssClass
         public string CssClass { get; set; } = string.Empty;
         public int RunningTotal { get; set; }
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EVENT HANDLERS WITH INSTRUMENTATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
     private void IncrementCount()
     {
+        // Start a trace span for this click
+        using var activity = ActivitySource.StartActivity("Counter.IncrementCount");
+
+        var previousCount = currentCount;
         currentCount++;
+
+        // Record metrics
+        ClickCounter.Add(1);
+        CurrentCountGauge.Add(1);
+
+        // Add rich context to the span
+        activity?.SetTag("counter.previous_value", previousCount);
+        activity?.SetTag("counter.new_value", currentCount);
+        activity?.SetTag("counter.increment_type", "simple");
+        activity?.SetStatus(ActivityStatusCode.Ok);
+
+        // Structured logging
+        Logger.LogInformation(
+            "Simple increment: {PreviousValue} → {NewValue}",
+            previousCount, currentCount);
     }
 
     private async Task SlowlyIncrement()
     {
+        // Start a parent span for the entire slow increment operation
+        using var activity = ActivitySource.StartActivity("Counter.SlowlyIncrement");
+        var stopwatch = Stopwatch.StartNew();
+
         int targetIncrement;
 
-        // 1. ENSURE A FAIR TOSS (50/50)
-        // Set the range to be symmetric around the threshold (500).
-        // Generates a number from 100 to 900 (801 possible outcomes).
-        // If the number is exactly 500, we re-roll to ensure equal chances above/below.
-        do
+        // Generate fair toss value (child span)
+        using (var generateActivity = ActivitySource.StartActivity("Counter.GenerateTossValue"))
         {
-            targetIncrement = Random.Shared.Next(100, 901);
-        } while (targetIncrement == WinThreshold); // Re-roll if it's exactly 500
+            do
+            {
+                targetIncrement = Random.Shared.Next(100, 901);
+            } while (targetIncrement == WinThreshold);
+
+            generateActivity?.SetTag("toss.value", targetIncrement);
+            generateActivity?.SetTag("toss.threshold", WinThreshold);
+        }
 
         incrementBy = targetIncrement;
-
-        // Determine the result, status, and CSS class
-        string status = targetIncrement > WinThreshold ? "You won a toss" : "You lost a toss";
-        string cssClass = targetIncrement > WinThreshold ? "win-toss" : "lost-toss";
+        var isWin = targetIncrement > WinThreshold;
+        string status = isWin ? "You won a toss" : "You lost a toss";
+        string cssClass = isWin ? "win-toss" : "lost-toss";
         int runningTotal = currentCount + targetIncrement;
 
-        // Add the new result to the historical list
+        // Record toss metrics
+        TossCounter.Add(1);
+        TossValueHistogram.Record(targetIncrement);
+
+        if (isWin)
+        {
+            WinCounter.Add(1, new KeyValuePair<string, object?>("toss.value", targetIncrement));
+        }
+        else
+        {
+            LossCounter.Add(1, new KeyValuePair<string, object?>("toss.value", targetIncrement));
+        }
+
+        // Add span tags
+        activity?.SetTag("toss.value", targetIncrement);
+        activity?.SetTag("toss.is_win", isWin);
+        activity?.SetTag("toss.status", status);
+        activity?.SetTag("counter.starting_value", currentCount);
+        activity?.SetTag("counter.expected_final", runningTotal);
+
         historical.Add(new TossResult
         {
             Value = targetIncrement,
             Status = status,
-            CssClass = cssClass, // Store the class name
+            CssClass = cssClass,
             RunningTotal = runningTotal
         });
 
-        // Set the flag and update the UI to show the button is disabled and a message
         isIncrementing = true;
         StateHasChanged();
 
-        // 2. USE THE RANDOMLY GENERATED LOCAL VARIABLE
-        for (int i = 0; i < targetIncrement; i++)
+        // Increment loop (child span)
+        using (var loopActivity = ActivitySource.StartActivity("Counter.IncrementLoop"))
         {
-            currentCount++;
+            loopActivity?.SetTag("loop.iterations", targetIncrement);
 
-            // Wait for the specified time (e.g., 1ms)
-            await Task.Delay(DelayMilliseconds);
+            for (int i = 0; i < targetIncrement; i++)
+            {
+                currentCount++;
+                CurrentCountGauge.Add(1);
 
-            // Force Blazor to re-render the component to show the new value of currentCount
-            await InvokeAsync(StateHasChanged);
+                await Task.Delay(DelayMilliseconds);
+                await InvokeAsync(StateHasChanged);
+            }
+
+            loopActivity?.SetTag("loop.completed", true);
         }
 
-        // Reset the flag and update the UI
+        stopwatch.Stop();
+
+        // Record duration
+        TossDurationHistogram.Record(stopwatch.Elapsed.TotalMilliseconds);
+
+        // Final span tags
+        activity?.SetTag("counter.final_value", currentCount);
+        activity?.SetTag("operation.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
+        activity?.SetStatus(ActivityStatusCode.Ok);
+
+        // Structured logging with all context
+        Logger.LogInformation(
+            "Slow increment completed: Value={TossValue}, Win={IsWin}, Duration={DurationMs}ms, FinalCount={FinalCount}",
+            targetIncrement, isWin, stopwatch.Elapsed.TotalMilliseconds, currentCount);
+
         isIncrementing = false;
         StateHasChanged();
     }
