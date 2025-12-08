@@ -10,13 +10,13 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 <button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
-    Slow Increment (Random between a hundred and a thousand)
+    Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
 </button>
 
 @if (isIncrementing)
 {
     <p>
-        Incrementing by a random number... (Random between a hundred and a thousand)
+        Incrementing by a random number... (Random between a hundred and nine hundred)
         @if (incrementBy != 0)
         {
             <span>currently, @incrementBy</span>
@@ -48,8 +48,8 @@
         </tbody>
     </table>
 
-	<p>Wins: @totalWins</p>
-	<p>Losses: @(historical.Count - totalWins)</p>
+    <p>Wins: @totalWins</p>
+    <p>Losses: @(historical.Count - totalWins)</p>
     <p>Tosses: @historical.Count</p>
 }
 
@@ -60,7 +60,7 @@
     private int incrementBy = 0;
     // Changed historical to use a new custom class to store more information
     private List<TossResult> historical = new();
-	private int totalWins => GetWinCount(historical.Select(t => t.Value).ToList(), WinThreshold);
+    private int totalWins => GetWinCount(historical.Select(t => t.Value).ToList(), WinThreshold);
 
     // The threshold for winning the toss
     private const int WinThreshold = 500;
@@ -82,14 +82,21 @@
 
     private async Task SlowlyIncrement()
     {
-        // 1. CALCULATE THE RANDOM TARGET HERE
-        // Generate a new random number between 100 (inclusive) and 1000 (exclusive)
-        int targetIncrement = Random.Shared.Next(100, 1000);
+        int targetIncrement;
+
+        // 1. ENSURE A FAIR TOSS (50/50)
+        // Set the range to be symmetric around the threshold (500).
+        // Generates a number from 100 to 900 (801 possible outcomes).
+        // If the number is exactly 500, we re-roll to ensure equal chances above/below.
+        do
+        {
+            targetIncrement = Random.Shared.Next(100, 901);
+        } while (targetIncrement == WinThreshold); // Re-roll if it's exactly 500
+
         incrementBy = targetIncrement;
 
         // Determine the result, status, and CSS class
         string status = targetIncrement > WinThreshold ? "You won a toss" : "You lost a toss";
-        // Set the class name based on the result
         string cssClass = targetIncrement > WinThreshold ? "win-toss" : "lost-toss";
         int runningTotal = currentCount + targetIncrement;
 
@@ -101,8 +108,6 @@
             CssClass = cssClass, // Store the class name
             RunningTotal = runningTotal
         });
-
-
 
         // Set the flag and update the UI to show the button is disabled and a message
         isIncrementing = true;
@@ -117,7 +122,6 @@
             await Task.Delay(DelayMilliseconds);
 
             // Force Blazor to re-render the component to show the new value of currentCount
-            // We use InvokeAsync to ensure StateHasChanged is called on the correct synchronization context
             await InvokeAsync(StateHasChanged);
         }
 
@@ -128,14 +132,14 @@
 
     private int GetWinCount(List<int> list, int threshold)
     {
-		int winCount = 0;
+        int winCount = 0;
         foreach (int item in list)
         {
             if (item > threshold)
             {
-				winCount++;
+                winCount++;
             }
         }
-		return winCount;
+        return winCount;
     }
 }
