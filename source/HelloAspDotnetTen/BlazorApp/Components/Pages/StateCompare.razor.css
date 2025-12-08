@@ -1,0 +1,114 @@
+.state-card {
+    cursor: default;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 280px;
+}
+
+.state-card.clickable {
+    cursor: pointer;
+}
+
+.state-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+.state-card.correct-answer {
+    border: 3px solid #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.state-card.wrong-answer {
+    border: 3px solid #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.state-image-placeholder {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    position: relative;
+}
+
+.state-image {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.state-abbrev-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.vs-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.correct-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #198754;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.stat-reveal {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.score-display {
+    display: flex;
+    align-items: center;
+}
+
+.question-section h3 {
+    color: #212529;
+    font-weight: 600;
+}
+
+.result-section .alert {
+    font-size: 1.1rem;
+}
+
+/* Animation for revealing answers */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-reveal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Button group styling */
+.btn-group {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.btn-group .btn {
+    margin-bottom: 4px;
+}

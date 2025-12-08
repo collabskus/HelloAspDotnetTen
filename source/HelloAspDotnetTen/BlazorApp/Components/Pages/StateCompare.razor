@@ -1,0 +1,194 @@
+@page "/state-compare"
+@rendermode InteractiveServer
+@using BlazorApp.Models
+@using BlazorApp.Services
+@inject StateComparisonService ComparisonService
+
+<PageTitle>State Comparison Game</PageTitle>
+
+<h1>State Comparison Game</h1>
+
+<div class="score-display mb-4">
+    <span class="badge bg-primary fs-6">
+        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
+        @if (ComparisonService.Score.TotalQuestions > 0)
+        {
+            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+        }
+    </span>
+    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset Score</button>
+</div>
+
+@if (_currentQuestion is not null && _state1 is not null && _state2 is not null)
+{
+    <div class="question-section mb-4">
+        <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card state-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
+                <div class="card-body text-center">
+                    <div class="state-image-placeholder mb-3">
+                        <img src="@_state1.ImagePath" alt="@_state1.Name" 
+                             class="img-fluid state-image" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                        <div class="state-abbrev-fallback">@_state1.Abbreviation</div>
+                    </div>
+                    <h4 class="card-title">@_state1.Name</h4>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state1)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _state1)
+                {
+                    <div class="correct-indicator">✓ Correct</div>
+                }
+            </div>
+        </div>
+        
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+            <span class="vs-text">VS</span>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card state-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
+                <div class="card-body text-center">
+                    <div class="state-image-placeholder mb-3">
+                        <img src="@_state2.ImagePath" alt="@_state2.Name" 
+                             class="img-fluid state-image" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                        <div class="state-abbrev-fallback">@_state2.Abbreviation</div>
+                    </div>
+                    <h4 class="card-title">@_state2.Name</h4>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state2)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _state2)
+                {
+                    <div class="correct-indicator">✓ Correct</div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    @if (_hasAnswered)
+    {
+        <div class="result-section mt-4 text-center">
+            <div class="alert @(_lastResult!.IsCorrect ? "alert-success" : "alert-danger")">
+                @if (_lastResult.IsCorrect)
+                {
+                    <strong>Correct!</strong>
+                }
+                else
+                {
+                    <strong>Wrong!</strong>
+                    <span>The answer was @_lastResult.CorrectAnswer.Name.</span>
+                }
+            </div>
+            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-center mt-4 text-muted">Click on a state to make your choice!</p>
+    }
+}
+
+<div class="mt-5">
+    <h5>Question Types</h5>
+    <div class="btn-group" role="group">
+        @foreach (var q in ComparisonService.AvailableQuestions)
+        {
+            <button type="button" 
+                    class="btn @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetQuestion(q)">
+                @q.QuestionTemplate.Replace("Which state ", "").Replace("?", "")
+            </button>
+        }
+        <button type="button" 
+                class="btn @(_randomMode ? "btn-warning" : "btn-outline-warning")"
+                @onclick="ToggleRandomMode">
+            🎲 Random
+        </button>
+    </div>
+</div>
+
+@code {
+    private StateData? _state1;
+    private StateData? _state2;
+    private ComparisonQuestion? _currentQuestion;
+    private ComparisonResult? _lastResult;
+    private bool _hasAnswered;
+    private bool _randomMode = true;
+
+    protected override void OnInitialized()
+    {
+        StartNewRound();
+    }
+
+    private void StartNewRound()
+    {
+        (_state1, _state2) = ComparisonService.GetRandomStatePair();
+        
+        if (_randomMode)
+        {
+            _currentQuestion = ComparisonService.GetRandomQuestion();
+        }
+        else
+        {
+            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+        }
+        
+        _hasAnswered = false;
+        _lastResult = null;
+    }
+
+    private void SelectState(StateData selectedState)
+    {
+        if (_hasAnswered || _currentQuestion is null || _state1 is null || _state2 is null) 
+            return;
+        
+        _lastResult = ComparisonService.CheckAnswer(_state1, _state2, _currentQuestion, selectedState);
+        _hasAnswered = true;
+    }
+
+    private void NextRound()
+    {
+        StartNewRound();
+    }
+
+    private void ResetGame()
+    {
+        ComparisonService.Score.Reset();
+        StartNewRound();
+    }
+
+    private void SetQuestion(ComparisonQuestion question)
+    {
+        _randomMode = false;
+        _currentQuestion = question;
+        StartNewRound();
+    }
+
+    private void ToggleRandomMode()
+    {
+        _randomMode = true;
+        StartNewRound();
+    }
+
+    private string GetCardClass(StateData state)
+    {
+        if (!_hasAnswered) return "clickable";
+        if (_lastResult is null) return "";
+        
+        if (state == _lastResult.CorrectAnswer)
+            return "correct-answer";
+        if (state == _lastResult.UserChoice && !_lastResult.IsCorrect)
+            return "wrong-answer";
+        return "";
+    }
+}
