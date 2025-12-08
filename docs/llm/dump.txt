@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/08/2025 17:21:38
+Generated: 12/08/2025 17:35:30
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -59,6 +59,8 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           Error.razor
         |   |           Home.razor
         |   |           NotFound.razor
+        |   |           StateCompare.razor
+        |   |           StateCompare.razor.css
         |   |           Weather.razor
         |   |           
         |   +---Exporters
@@ -68,6 +70,9 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |       FileLogExporter.cs
         |   |       FileMetricExporter.cs
         |   |       
+        |   +---Models
+        |   |       StateData.cs
+        |   |       
         |   +---obj
         |   +---Properties
         |   |   |   launchSettings.json
@@ -76,6 +81,9 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           site36641-WebDeploy.pubxml
         |   |           site36641-WebDeploy.pubxml.user
         |   |           
+        |   +---Services
+        |   |       StateComparisonService.cs
+        |   |       
         |   \---wwwroot
         |       |   app.css
         |       |   favicon.png
@@ -404,8 +412,8 @@ main {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor
-SIZE: 1.06 KB
-MODIFIED: 12/08/2025 11:14:16
+SIZE: 1.29 KB
+MODIFIED: 12/08/2025 17:33:13
 ================================================================================
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -431,13 +439,18 @@ MODIFIED: 12/08/2025 11:14:16
         </div>
 
         <div class="nav-item px-3">
+            <NavLink class="nav-link" href="state-compare">
+                <span class="bi bi-map-fill-nav-menu" aria-hidden="true"></span> State Compare
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
             <NavLink class="nav-link" href="weather">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
     </nav>
 </div>
-
 
 
 
@@ -1205,6 +1218,332 @@ MODIFIED: 12/08/2025 11:14:15
 
 <h3>Not Found</h3>
 <p>Sorry, the content you are looking for does not exist.</p>
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
+SIZE: 6.59 KB
+MODIFIED: 12/08/2025 17:33:38
+================================================================================
+
+@page "/state-compare"
+@rendermode InteractiveServer
+@using BlazorApp.Models
+@using BlazorApp.Services
+@inject StateComparisonService ComparisonService
+
+<PageTitle>State Comparison Game</PageTitle>
+
+<h1>State Comparison Game</h1>
+
+<div class="score-display mb-4">
+    <span class="badge bg-primary fs-6">
+        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
+        @if (ComparisonService.Score.TotalQuestions > 0)
+        {
+            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+        }
+    </span>
+    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset Score</button>
+</div>
+
+@if (_currentQuestion is not null && _state1 is not null && _state2 is not null)
+{
+    <div class="question-section mb-4">
+        <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card state-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
+                <div class="card-body text-center">
+                    <div class="state-image-placeholder mb-3">
+                        <img src="@_state1.ImagePath" alt="@_state1.Name" 
+                             class="img-fluid state-image" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                        <div class="state-abbrev-fallback">@_state1.Abbreviation</div>
+                    </div>
+                    <h4 class="card-title">@_state1.Name</h4>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state1)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _state1)
+                {
+                    <div class="correct-indicator">âœ“ Correct</div>
+                }
+            </div>
+        </div>
+        
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+            <span class="vs-text">VS</span>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card state-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
+                <div class="card-body text-center">
+                    <div class="state-image-placeholder mb-3">
+                        <img src="@_state2.ImagePath" alt="@_state2.Name" 
+                             class="img-fluid state-image" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                        <div class="state-abbrev-fallback">@_state2.Abbreviation</div>
+                    </div>
+                    <h4 class="card-title">@_state2.Name</h4>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state2)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _state2)
+                {
+                    <div class="correct-indicator">âœ“ Correct</div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    @if (_hasAnswered)
+    {
+        <div class="result-section mt-4 text-center">
+            <div class="alert @(_lastResult!.IsCorrect ? "alert-success" : "alert-danger")">
+                @if (_lastResult.IsCorrect)
+                {
+                    <strong>Correct!</strong>
+                }
+                else
+                {
+                    <strong>Wrong!</strong>
+                    <span>The answer was @_lastResult.CorrectAnswer.Name.</span>
+                }
+            </div>
+            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-center mt-4 text-muted">Click on a state to make your choice!</p>
+    }
+}
+
+<div class="mt-5">
+    <h5>Question Types</h5>
+    <div class="btn-group" role="group">
+        @foreach (var q in ComparisonService.AvailableQuestions)
+        {
+            <button type="button" 
+                    class="btn @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetQuestion(q)">
+                @q.QuestionTemplate.Replace("Which state ", "").Replace("?", "")
+            </button>
+        }
+        <button type="button" 
+                class="btn @(_randomMode ? "btn-warning" : "btn-outline-warning")"
+                @onclick="ToggleRandomMode">
+            ðŸŽ² Random
+        </button>
+    </div>
+</div>
+
+@code {
+    private StateData? _state1;
+    private StateData? _state2;
+    private ComparisonQuestion? _currentQuestion;
+    private ComparisonResult? _lastResult;
+    private bool _hasAnswered;
+    private bool _randomMode = true;
+
+    protected override void OnInitialized()
+    {
+        StartNewRound();
+    }
+
+    private void StartNewRound()
+    {
+        (_state1, _state2) = ComparisonService.GetRandomStatePair();
+        
+        if (_randomMode)
+        {
+            _currentQuestion = ComparisonService.GetRandomQuestion();
+        }
+        else
+        {
+            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+        }
+        
+        _hasAnswered = false;
+        _lastResult = null;
+    }
+
+    private void SelectState(StateData selectedState)
+    {
+        if (_hasAnswered || _currentQuestion is null || _state1 is null || _state2 is null) 
+            return;
+        
+        _lastResult = ComparisonService.CheckAnswer(_state1, _state2, _currentQuestion, selectedState);
+        _hasAnswered = true;
+    }
+
+    private void NextRound()
+    {
+        StartNewRound();
+    }
+
+    private void ResetGame()
+    {
+        ComparisonService.Score.Reset();
+        StartNewRound();
+    }
+
+    private void SetQuestion(ComparisonQuestion question)
+    {
+        _randomMode = false;
+        _currentQuestion = question;
+        StartNewRound();
+    }
+
+    private void ToggleRandomMode()
+    {
+        _randomMode = true;
+        StartNewRound();
+    }
+
+    private string GetCardClass(StateData state)
+    {
+        if (!_hasAnswered) return "clickable";
+        if (_lastResult is null) return "";
+        
+        if (state == _lastResult.CorrectAnswer)
+            return "correct-answer";
+        if (state == _lastResult.UserChoice && !_lastResult.IsCorrect)
+            return "wrong-answer";
+        return "";
+    }
+}
+
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
+SIZE: 2.12 KB
+MODIFIED: 12/08/2025 17:33:10
+================================================================================
+
+.state-card {
+    cursor: default;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 280px;
+}
+
+.state-card.clickable {
+    cursor: pointer;
+}
+
+.state-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+.state-card.correct-answer {
+    border: 3px solid #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.state-card.wrong-answer {
+    border: 3px solid #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.state-image-placeholder {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    position: relative;
+}
+
+.state-image {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.state-abbrev-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.vs-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.correct-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #198754;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.stat-reveal {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.score-display {
+    display: flex;
+    align-items: center;
+}
+
+.question-section h3 {
+    color: #212529;
+    font-weight: 600;
+}
+
+.result-section .alert {
+    font-size: 1.1rem;
+}
+
+/* Animation for revealing answers */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-reveal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Button group styling */
+.btn-group {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.btn-group .btn {
+    margin-bottom: 4px;
+}
+
 
 
 ================================================================================
@@ -2335,9 +2674,112 @@ MODIFIED: 12/08/2025 11:17:34
 
 
 ================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
+SIZE: 3.07 KB
+MODIFIED: 12/08/2025 17:34:36
+================================================================================
+
+namespace BlazorApp.Models;
+
+/// <summary>
+/// Represents a US state with various statistics for comparison games.
+/// Designed to be extensible - add new properties as needed.
+/// </summary>
+public record StateData
+{
+    public required string Name { get; init; }
+    public required string Abbreviation { get; init; }
+    
+    /// <summary>Area in square miles</summary>
+    public required long AreaSquareMiles { get; init; }
+    
+    /// <summary>Population (2023 estimates)</summary>
+    public required long Population { get; init; }
+    
+    /// <summary>Number of representatives in the House</summary>
+    public required int HouseRepresentatives { get; init; }
+    
+    /// <summary>GDP in millions of dollars (2023)</summary>
+    public long? GdpMillions { get; init; }
+    
+    /// <summary>Year admitted to the Union</summary>
+    public int? YearAdmitted { get; init; }
+    
+    /// <summary>Image filename (without path) - e.g., "california.png"</summary>
+    public string? ImageFileName { get; init; }
+    
+    /// <summary>Gets the image path for use in Blazor</summary>
+    public string ImagePath => string.IsNullOrEmpty(ImageFileName) 
+        ? "images/states/placeholder.png" 
+        : $"images/states/{ImageFileName}";
+}
+
+/// <summary>
+/// Defines a type of comparison question that can be asked.
+/// </summary>
+public record ComparisonQuestion
+{
+    public required string Id { get; init; }
+    public required string QuestionTemplate { get; init; }
+    public required string PropertyName { get; init; }
+    public required Func<StateData, long?> GetValue { get; init; }
+    public required string Unit { get; init; }
+    public required string FormatString { get; init; }
+    
+    public string GetFormattedValue(StateData state)
+    {
+        var value = GetValue(state);
+        return value.HasValue ? string.Format(FormatString, value.Value) : "N/A";
+    }
+}
+
+/// <summary>
+/// Represents the result of a single comparison round.
+/// </summary>
+public record ComparisonResult
+{
+    public required StateData State1 { get; init; }
+    public required StateData State2 { get; init; }
+    public required ComparisonQuestion Question { get; init; }
+    public required StateData CorrectAnswer { get; init; }
+    public required StateData UserChoice { get; init; }
+    public bool IsCorrect => CorrectAnswer == UserChoice;
+}
+
+/// <summary>
+/// Tracks the user's score during a game session.
+/// </summary>
+public class GameScore
+{
+    public int CorrectAnswers { get; private set; }
+    public int TotalQuestions { get; private set; }
+    public List<ComparisonResult> History { get; } = [];
+    
+    public double PercentageCorrect => TotalQuestions > 0 
+        ? (double)CorrectAnswers / TotalQuestions * 100 
+        : 0;
+    
+    public void RecordAnswer(ComparisonResult result)
+    {
+        TotalQuestions++;
+        if (result.IsCorrect) CorrectAnswers++;
+        History.Add(result);
+    }
+    
+    public void Reset()
+    {
+        CorrectAnswers = 0;
+        TotalQuestions = 0;
+        History.Clear();
+    }
+}
+
+
+
+================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
-SIZE: 5 KB
-MODIFIED: 12/08/2025 14:43:34
+SIZE: 5.31 KB
+MODIFIED: 12/08/2025 17:32:06
 ================================================================================
 
 using BlazorApp.Components;
@@ -2412,6 +2854,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddHelloDotnetLibrary(builder.Configuration);
+// Add this line in Program.cs after the existing service registrations
+// (after builder.Services.AddHelloDotnetLibrary(builder.Configuration);)
+
+// Register StateComparisonService as Scoped so each user session maintains their own score
+builder.Services.AddScoped<BlazorApp.Services.StateComparisonService>();
 
 var app = builder.Build();
 
@@ -2506,6 +2953,182 @@ MODIFIED: 12/08/2025 11:14:16
       }
     }
   }
+
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
+SIZE: 10.48 KB
+MODIFIED: 12/08/2025 17:34:09
+================================================================================
+
+using BlazorApp.Models;
+
+namespace BlazorApp.Services;
+
+/// <summary>
+/// Service that manages state data and comparison game logic.
+/// Registered as a scoped service to maintain score per user session.
+/// </summary>
+public class StateComparisonService
+{
+    private readonly List<StateData> _states;
+    private readonly List<ComparisonQuestion> _questions;
+    private readonly Random _random = new();
+    
+    public GameScore Score { get; } = new();
+    
+    public IReadOnlyList<StateData> States => _states;
+    public IReadOnlyList<ComparisonQuestion> AvailableQuestions => _questions;
+    
+    public StateComparisonService()
+    {
+        _states = InitializeStates();
+        _questions = InitializeQuestions();
+    }
+    
+    /// <summary>
+    /// Gets two random different states for comparison.
+    /// </summary>
+    public (StateData State1, StateData State2) GetRandomStatePair()
+    {
+        var index1 = _random.Next(_states.Count);
+        int index2;
+        do { index2 = _random.Next(_states.Count); } 
+        while (index2 == index1);
+        
+        return (_states[index1], _states[index2]);
+    }
+    
+    /// <summary>
+    /// Gets a random question from available questions.
+    /// </summary>
+    public ComparisonQuestion GetRandomQuestion()
+    {
+        return _questions[_random.Next(_questions.Count)];
+    }
+    
+    /// <summary>
+    /// Determines which state has the higher value for the given question.
+    /// </summary>
+    public StateData GetCorrectAnswer(StateData state1, StateData state2, ComparisonQuestion question)
+    {
+        var value1 = question.GetValue(state1) ?? 0;
+        var value2 = question.GetValue(state2) ?? 0;
+        return value1 >= value2 ? state1 : state2;
+    }
+    
+    /// <summary>
+    /// Checks the user's answer and records the result.
+    /// </summary>
+    public ComparisonResult CheckAnswer(StateData state1, StateData state2, 
+        ComparisonQuestion question, StateData userChoice)
+    {
+        var correct = GetCorrectAnswer(state1, state2, question);
+        var result = new ComparisonResult
+        {
+            State1 = state1,
+            State2 = state2,
+            Question = question,
+            CorrectAnswer = correct,
+            UserChoice = userChoice
+        };
+        Score.RecordAnswer(result);
+        return result;
+    }
+    
+    private static List<ComparisonQuestion> InitializeQuestions()
+    {
+        return
+        [
+            new ComparisonQuestion
+            {
+                Id = "area",
+                QuestionTemplate = "Which state is bigger by area?",
+                PropertyName = nameof(StateData.AreaSquareMiles),
+                GetValue = s => s.AreaSquareMiles,
+                Unit = "square miles",
+                FormatString = "{0:N0} sq mi"
+            },
+            new ComparisonQuestion
+            {
+                Id = "population",
+                QuestionTemplate = "Which state has a larger population?",
+                PropertyName = nameof(StateData.Population),
+                GetValue = s => s.Population,
+                Unit = "people",
+                FormatString = "{0:N0}"
+            },
+            new ComparisonQuestion
+            {
+                Id = "representatives",
+                QuestionTemplate = "Which state has more representatives in the House?",
+                PropertyName = nameof(StateData.HouseRepresentatives),
+                GetValue = s => s.HouseRepresentatives,
+                Unit = "representatives",
+                FormatString = "{0}"
+            }
+        ];
+    }
+    
+    private static List<StateData> InitializeStates()
+    {
+        // All 50 US states with area (sq mi), population (2023 est), and House reps (2023)
+        return
+        [
+            new() { Name = "Alabama", Abbreviation = "AL", AreaSquareMiles = 52420, Population = 5108468, HouseRepresentatives = 7 },
+            new() { Name = "Alaska", Abbreviation = "AK", AreaSquareMiles = 665384, Population = 733391, HouseRepresentatives = 1 },
+            new() { Name = "Arizona", Abbreviation = "AZ", AreaSquareMiles = 113990, Population = 7431344, HouseRepresentatives = 9 },
+            new() { Name = "Arkansas", Abbreviation = "AR", AreaSquareMiles = 53179, Population = 3067732, HouseRepresentatives = 4 },
+            new() { Name = "California", Abbreviation = "CA", AreaSquareMiles = 163695, Population = 38965193, HouseRepresentatives = 52 },
+            new() { Name = "Colorado", Abbreviation = "CO", AreaSquareMiles = 104094, Population = 5877610, HouseRepresentatives = 8 },
+            new() { Name = "Connecticut", Abbreviation = "CT", AreaSquareMiles = 5543, Population = 3617176, HouseRepresentatives = 5 },
+            new() { Name = "Delaware", Abbreviation = "DE", AreaSquareMiles = 2489, Population = 1031890, HouseRepresentatives = 1 },
+            new() { Name = "Florida", Abbreviation = "FL", AreaSquareMiles = 65758, Population = 22610726, HouseRepresentatives = 28 },
+            new() { Name = "Georgia", Abbreviation = "GA", AreaSquareMiles = 59425, Population = 11029227, HouseRepresentatives = 14 },
+            new() { Name = "Hawaii", Abbreviation = "HI", AreaSquareMiles = 10932, Population = 1435138, HouseRepresentatives = 2 },
+            new() { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1964726, HouseRepresentatives = 2 },
+            new() { Name = "Illinois", Abbreviation = "IL", AreaSquareMiles = 57914, Population = 12549689, HouseRepresentatives = 17 },
+            new() { Name = "Indiana", Abbreviation = "IN", AreaSquareMiles = 36420, Population = 6862199, HouseRepresentatives = 9 },
+            new() { Name = "Iowa", Abbreviation = "IA", AreaSquareMiles = 56273, Population = 3207004, HouseRepresentatives = 4 },
+            new() { Name = "Kansas", Abbreviation = "KS", AreaSquareMiles = 82278, Population = 2940546, HouseRepresentatives = 4 },
+            new() { Name = "Kentucky", Abbreviation = "KY", AreaSquareMiles = 40408, Population = 4526154, HouseRepresentatives = 6 },
+            new() { Name = "Louisiana", Abbreviation = "LA", AreaSquareMiles = 52378, Population = 4573749, HouseRepresentatives = 6 },
+            new() { Name = "Maine", Abbreviation = "ME", AreaSquareMiles = 35380, Population = 1395722, HouseRepresentatives = 2 },
+            new() { Name = "Maryland", Abbreviation = "MD", AreaSquareMiles = 12406, Population = 6180253, HouseRepresentatives = 8 },
+            new() { Name = "Massachusetts", Abbreviation = "MA", AreaSquareMiles = 10554, Population = 7001399, HouseRepresentatives = 9 },
+            new() { Name = "Michigan", Abbreviation = "MI", AreaSquareMiles = 96714, Population = 10037261, HouseRepresentatives = 13 },
+            new() { Name = "Minnesota", Abbreviation = "MN", AreaSquareMiles = 86936, Population = 5737915, HouseRepresentatives = 8 },
+            new() { Name = "Mississippi", Abbreviation = "MS", AreaSquareMiles = 48432, Population = 2939690, HouseRepresentatives = 4 },
+            new() { Name = "Missouri", Abbreviation = "MO", AreaSquareMiles = 69707, Population = 6196156, HouseRepresentatives = 8 },
+            new() { Name = "Montana", Abbreviation = "MT", AreaSquareMiles = 147040, Population = 1132812, HouseRepresentatives = 2 },
+            new() { Name = "Nebraska", Abbreviation = "NE", AreaSquareMiles = 77348, Population = 1978379, HouseRepresentatives = 3 },
+            new() { Name = "Nevada", Abbreviation = "NV", AreaSquareMiles = 110572, Population = 3194176, HouseRepresentatives = 4 },
+            new() { Name = "New Hampshire", Abbreviation = "NH", AreaSquareMiles = 9349, Population = 1402054, HouseRepresentatives = 2 },
+            new() { Name = "New Jersey", Abbreviation = "NJ", AreaSquareMiles = 8723, Population = 9290841, HouseRepresentatives = 12 },
+            new() { Name = "New Mexico", Abbreviation = "NM", AreaSquareMiles = 121590, Population = 2114371, HouseRepresentatives = 3 },
+            new() { Name = "New York", Abbreviation = "NY", AreaSquareMiles = 54555, Population = 19571216, HouseRepresentatives = 26 },
+            new() { Name = "North Carolina", Abbreviation = "NC", AreaSquareMiles = 53819, Population = 10835491, HouseRepresentatives = 14 },
+            new() { Name = "North Dakota", Abbreviation = "ND", AreaSquareMiles = 70698, Population = 783926, HouseRepresentatives = 1 },
+            new() { Name = "Ohio", Abbreviation = "OH", AreaSquareMiles = 44826, Population = 11785935, HouseRepresentatives = 15 },
+            new() { Name = "Oklahoma", Abbreviation = "OK", AreaSquareMiles = 69899, Population = 4053824, HouseRepresentatives = 5 },
+            new() { Name = "Oregon", Abbreviation = "OR", AreaSquareMiles = 98379, Population = 4233358, HouseRepresentatives = 6 },
+            new() { Name = "Pennsylvania", Abbreviation = "PA", AreaSquareMiles = 46054, Population = 12961683, HouseRepresentatives = 17 },
+            new() { Name = "Rhode Island", Abbreviation = "RI", AreaSquareMiles = 1545, Population = 1095962, HouseRepresentatives = 2 },
+            new() { Name = "South Carolina", Abbreviation = "SC", AreaSquareMiles = 32020, Population = 5373555, HouseRepresentatives = 7 },
+            new() { Name = "South Dakota", Abbreviation = "SD", AreaSquareMiles = 77116, Population = 919318, HouseRepresentatives = 1 },
+            new() { Name = "Tennessee", Abbreviation = "TN", AreaSquareMiles = 42144, Population = 7126489, HouseRepresentatives = 9 },
+            new() { Name = "Texas", Abbreviation = "TX", AreaSquareMiles = 268596, Population = 30503301, HouseRepresentatives = 38 },
+            new() { Name = "Utah", Abbreviation = "UT", AreaSquareMiles = 84897, Population = 3417734, HouseRepresentatives = 4 },
+            new() { Name = "Vermont", Abbreviation = "VT", AreaSquareMiles = 9616, Population = 647464, HouseRepresentatives = 1 },
+            new() { Name = "Virginia", Abbreviation = "VA", AreaSquareMiles = 42775, Population = 8683619, HouseRepresentatives = 11 },
+            new() { Name = "Washington", Abbreviation = "WA", AreaSquareMiles = 71298, Population = 7812880, HouseRepresentatives = 10 },
+            new() { Name = "West Virginia", Abbreviation = "WV", AreaSquareMiles = 24230, Population = 1770071, HouseRepresentatives = 2 },
+            new() { Name = "Wisconsin", Abbreviation = "WI", AreaSquareMiles = 65496, Population = 5910955, HouseRepresentatives = 8 },
+            new() { Name = "Wyoming", Abbreviation = "WY", AreaSquareMiles = 97813, Population = 584057, HouseRepresentatives = 1 }
+        ];
+    }
+}
 
 
 
@@ -62755,7 +63378,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/08/2025 17:21:38
-Total Files Exported: 62
+EXPORT COMPLETED: 12/08/2025 17:35:31
+Total Files Exported: 66
 Output File: .\docs\llm\dump.txt
 ===============================================================================
