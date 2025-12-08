@@ -9,11 +9,59 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
+    Slow Increment (Random between a hundred and a thousand)
+</button>
+
+@if (isIncrementing)
+{
+    <p>Incrementing by a random number... (Random between a hundred and a thousand) 
+    @if(incrementBy != 0) 
+    {
+        <span>currently, @incrementBy</span>
+    })
+    </p>
+}
+
 @code {
     private int currentCount = 0;
+    // A flag to prevent the user from clicking the slow button again while it's already running
+    private bool isIncrementing = false;
+    private int incrementBy = 0;
+
+    // We are keeping this as a simple private field now, but we will calculate the random number inside the method.
+    private const int DelayMilliseconds = 10; // Delay between each step
 
     private void IncrementCount()
     {
         currentCount++;
+    }
+
+    private async Task SlowlyIncrement()
+    {
+        // 1. CALCULATE THE RANDOM TARGET HERE
+        // Generate a new random number between 100 (inclusive) and 1000 (exclusive)
+        int targetIncrement = Random.Shared.Next(100, 1000);
+        incrementBy = targetIncrement;
+
+        // Set the flag and update the UI to show the button is disabled and a message
+        isIncrementing = true;
+        StateHasChanged();
+
+        // 2. USE THE RANDOMLY GENERATED LOCAL VARIABLE
+        for (int i = 0; i < targetIncrement; i++)
+        {
+            currentCount++;
+
+            // Wait for the specified time (e.g., 100ms)
+            await Task.Delay(DelayMilliseconds);
+
+            // Force Blazor to re-render the component to show the new value of currentCount
+            await InvokeAsync(StateHasChanged);
+        }
+
+        // Reset the flag and update the UI
+        isIncrementing = false;
+        StateHasChanged();
     }
 }
