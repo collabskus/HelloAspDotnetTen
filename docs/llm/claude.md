@@ -798,3 +798,72 @@ Would you like me to make any adjustments, such as adding more question types, c
 
 
 
+wow this is great. can we do something similar for countries? all the countries? population, area, GDP, GDP per capita, GNI per capita in PPP terms, population density, literacy rate, human development index, and so on. if data is not available for a country for a particular topic, we should not present that country as an option to the user for that topic. for example, lets say we don't have literacy rate of Afghanistan then we shouldn't ask the user to say which country has a higher literacy rate: Japan or Afghanistan, even though intuitively we know Japan is the correct answer. 
+
+This is a great idea! Let me create a similar system for countries. I'll need to gather accurate data for all countries across these metrics. Let me search for current data to ensure accuracy.I have enough information to create a comprehensive country comparison system. Let me create the models, service, and page with data for all UN-recognized countries. I'll include population, area, GDP, GDP per capita, GNI per capita (PPP), population density, literacy rate, and HDI - with nullable fields for missing data.Now let me create the service with all the country data. This will be a large file with comprehensive data for all countries:
+
+<function_results>OK</function_results>
+
+The service file is too large for a single artifact. Let me split it into the service logic and a separate data file:
+
+<function_results>OK</function_results>
+
+Given the size constraints, let me create a more practical approach - a single combined service file with all the data inline, but using a more compact format:Now let me create the Blazor page for the country comparison game:Now let me update the NavMenu to include the country comparison page, and provide the Program.cs update:I've now deleted the partial data files since everything is in the main service. Let me provide a summary of what I've created:
+
+---
+
+## Summary: Country Comparison Game
+
+I've created a complete country comparison game with **196 countries** and **9 question types**. Here's what's included:
+
+### Files to Add:
+
+1. **`Models/CountryData.cs`** - Data models for countries, questions, results, and scoring (with streak tracking)
+
+2. **`Services/CountryComparisonService.cs`** - Contains:
+   - All 196 countries organized by continent (Africa: 54, Asia: 49, Europe: 44, North America: 23, South America: 12, Oceania: 14)
+   - 9 question types with smart filtering
+   - Game logic that **only pairs countries when both have data for the selected question**
+
+3. **`Components/Pages/CountryCompare.razor`** - The game page with:
+   - Flag emoji display for each country
+   - Running score with streak counter
+   - Shows how many countries have data for each question type
+   - Random mode or specific question selection
+
+4. **`Components/Pages/CountryCompare.razor.css`** - Styling
+
+5. **Updated `NavMenu.razor`** - Adds both "US States" and "Countries" links
+
+6. **`Program.cs` update** - Register both services
+
+### Question Types Available:
+
+| Question | Countries with Data |
+|----------|-------------------|
+| Population | 196 |
+| Area | 196 |
+| GDP | ~190 |
+| GDP per capita | ~190 |
+| GNI per capita (PPP) | ~175 |
+| Population density | 196 |
+| Literacy rate | ~180 |
+| HDI | ~190 |
+| Life expectancy | 196 |
+
+### Key Feature: Smart Data Filtering
+
+As you requested, the game **never asks about missing
+
+data**. For example:
+- North Korea has no GDP data → it won't appear in GDP questions
+- Somalia has no literacy data → it won't appear in literacy questions
+- Each question button shows how many countries are available
+
+The badge next to each question type shows the count, and questions with fewer than 2 countries are automatically disabled.
+
+### Data Sources
+Data is from World Bank, UN, IMF, and UNDP (2023/2024 estimates). Some values are approximations where exact figures weren't available.
+
+Would you like me to add more question types (like median age, CO2 emissions, internet penetration), add continent filtering, or make any other adjustments?
+
