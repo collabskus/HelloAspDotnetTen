@@ -27,12 +27,26 @@
 @if (historical.Count > 0)
 {
     <h3>Historical Increments:</h3>
-    <ul>
-        @foreach (var number in historical)
-        {
-            <li>@number</li>
-        }
-    </ul>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Increment Value</th>
+                <th>Result</th>
+                <th>Running Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var toss in historical)
+            {
+                <tr style="color: @toss.Color">
+                    <td>@toss.Value</td>
+                    <td>@toss.Status</td>
+                    <td>@toss.RunningTotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 
 @code {
@@ -40,10 +54,21 @@
     // A flag to prevent the user from clicking the slow button again while it's already running
     private bool isIncrementing = false;
     private int incrementBy = 0;
-    private List<int> historical = new();
+    // Changed historical to use a new custom class to store more information
+    private List<TossResult> historical = new();
 
-    // We are keeping this as a simple private field now, but we will calculate the random number inside the method.
+    // The threshold for winning the toss
+    private const int WinThreshold = 500;
     private const int DelayMilliseconds = 1; // Delay between each step
+
+    // New class to hold the historical data, including status, color, and running total
+    private class TossResult
+    {
+        public int Value { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public int RunningTotal { get; set; }
+    }
 
     private void IncrementCount()
     {
@@ -56,7 +81,20 @@
         // Generate a new random number between 100 (inclusive) and 1000 (exclusive)
         int targetIncrement = Random.Shared.Next(100, 1000);
         incrementBy = targetIncrement;
-        historical.Add(targetIncrement);
+
+        // Determine the result, color, and running total for the new increment
+        string status = targetIncrement > WinThreshold ? "You won a toss" : "You lost a toss";
+        string color = targetIncrement > WinThreshold ? "green" : "red";
+        int runningTotal = currentCount + targetIncrement;
+
+        // Add the new result to the historical list
+        historical.Add(new TossResult
+        {
+            Value = targetIncrement,
+            Status = status,
+            Color = color,
+            RunningTotal = runningTotal
+        });
 
         // Set the flag and update the UI to show the button is disabled and a message
         isIncrementing = true;
@@ -67,10 +105,11 @@
         {
             currentCount++;
 
-            // Wait for the specified time (e.g., 100ms)
+            // Wait for the specified time (e.g., 1ms)
             await Task.Delay(DelayMilliseconds);
 
             // Force Blazor to re-render the component to show the new value of currentCount
+            // We use InvokeAsync to ensure StateHasChanged is called on the correct synchronization context
             await InvokeAsync(StateHasChanged);
         }
 
