@@ -1,0 +1,236 @@
+@page "/country-compare"
+@rendermode InteractiveServer
+@using BlazorApp.Models
+@using BlazorApp.Services
+@inject CountryComparisonService ComparisonService
+
+<PageTitle>Country Comparison Game</PageTitle>
+
+<h1>🌍 Country Comparison Game</h1>
+
+<div class="score-display mb-3">
+    <span class="badge bg-primary fs-6 me-2">
+        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
+        @if (ComparisonService.Score.TotalQuestions > 0)
+        {
+            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+        }
+    </span>
+    @if (ComparisonService.Score.CurrentStreak > 1)
+    {
+        <span class="badge bg-warning text-dark fs-6 me-2">🔥 @ComparisonService.Score.CurrentStreak streak</span>
+    }
+    @if (ComparisonService.Score.BestStreak > 1)
+    {
+        <span class="badge bg-secondary fs-6">Best: @ComparisonService.Score.BestStreak</span>
+    }
+    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
+</div>
+
+@if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
+{
+    <div class="question-section mb-4">
+        <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
+        <p class="text-center text-muted small">
+            @ComparisonService.GetCountryCountForQuestion(_currentQuestion) countries have data for this question
+        </p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card country-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
+                <div class="card-body text-center">
+                    <div class="flag-display mb-2">@_country1.FlagEmoji</div>
+                    <h4 class="card-title">@_country1.Name</h4>
+                    <p class="text-muted small mb-0">@_country1.Continent</p>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal mt-2">@_currentQuestion.GetFormattedValue(_country1)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
+                {
+                    <div class="correct-indicator">✓ Correct</div>
+                }
+            </div>
+        </div>
+        
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+            <span class="vs-text">VS</span>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card country-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
+                <div class="card-body text-center">
+                    <div class="flag-display mb-2">@_country2.FlagEmoji</div>
+                    <h4 class="card-title">@_country2.Name</h4>
+                    <p class="text-muted small mb-0">@_country2.Continent</p>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal mt-2">@_currentQuestion.GetFormattedValue(_country2)</p>
+                    }
+                </div>
+                @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
+                {
+                    <div class="correct-indicator">✓ Correct</div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    @if (_hasAnswered)
+    {
+        <div class="result-section mt-4 text-center">
+            <div class="alert @(_lastResult!.IsCorrect ? "alert-success" : "alert-danger")">
+                @if (_lastResult.IsCorrect)
+                {
+                    <strong>Correct! 🎉</strong>
+                }
+                else
+                {
+                    <strong>Wrong!</strong>
+                    <span>The answer was @_lastResult.CorrectAnswer.Name @_lastResult.CorrectAnswer.FlagEmoji</span>
+                }
+            </div>
+            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question →</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-center mt-4 text-muted">Click on a country to make your choice!</p>
+    }
+}
+else if (_noDataAvailable)
+{
+    <div class="alert alert-warning">
+        Not enough countries have data for this question type. Please select a different question.
+    </div>
+}
+
+<div class="mt-5">
+    <h5>Question Type</h5>
+    <div class="question-buttons">
+        @foreach (var q in ComparisonService.AvailableQuestions)
+        {
+            var count = ComparisonService.GetCountryCountForQuestion(q);
+            <button type="button" 
+                    class="btn btn-sm mb-1 me-1 @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetQuestion(q)"
+                    disabled="@(count < 2)">
+                @GetShortQuestionName(q.Id)
+                <span class="badge bg-light text-dark ms-1">@count</span>
+            </button>
+        }
+        <button type="button" 
+                class="btn btn-sm mb-1 @(_randomMode ? "btn-warning" : "btn-outline-warning")"
+                @onclick="ToggleRandomMode">
+            🎲 Random
+        </button>
+    </div>
+</div>
+
+<div class="mt-4">
+    <details>
+        <summary class="text-muted">Game Stats</summary>
+        <p class="small text-muted mt-2">
+            Total countries in database: @ComparisonService.Countries.Count<br/>
+            Questions available: @ComparisonService.AvailableQuestions.Count
+        </p>
+    </details>
+</div>
+
+@code {
+    private CountryData? _country1;
+    private CountryData? _country2;
+    private CountryComparisonQuestion? _currentQuestion;
+    private CountryComparisonResult? _lastResult;
+    private bool _hasAnswered;
+    private bool _randomMode = true;
+    private bool _noDataAvailable;
+
+    protected override void OnInitialized()
+    {
+        StartNewRound();
+    }
+
+    private void StartNewRound()
+    {
+        _noDataAvailable = false;
+        
+        if (_randomMode)
+        {
+            _currentQuestion = ComparisonService.GetRandomViableQuestion();
+        }
+        else
+        {
+            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+        }
+        
+        var pair = ComparisonService.GetRandomCountryPair(_currentQuestion);
+        if (pair is null)
+        {
+            _noDataAvailable = true;
+            return;
+        }
+        
+        (_country1, _country2) = pair.Value;
+        _hasAnswered = false;
+        _lastResult = null;
+    }
+
+    private void SelectCountry(CountryData selected)
+    {
+        if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null) 
+            return;
+        
+        _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selected);
+        _hasAnswered = true;
+    }
+
+    private void NextRound() => StartNewRound();
+
+    private void ResetGame()
+    {
+        ComparisonService.Score.Reset();
+        StartNewRound();
+    }
+
+    private void SetQuestion(CountryComparisonQuestion question)
+    {
+        _randomMode = false;
+        _currentQuestion = question;
+        StartNewRound();
+    }
+
+    private void ToggleRandomMode()
+    {
+        _randomMode = true;
+        StartNewRound();
+    }
+
+    private string GetCardClass(CountryData country)
+    {
+        if (!_hasAnswered) return "clickable";
+        if (_lastResult is null) return "";
+        
+        if (country == _lastResult.CorrectAnswer)
+            return "correct-answer";
+        if (country == _lastResult.UserChoice && !_lastResult.IsCorrect)
+            return "wrong-answer";
+        return "";
+    }
+    
+    private string GetShortQuestionName(string id) => id switch
+    {
+        "population" => "Population",
+        "area" => "Area",
+        "gdp" => "GDP",
+        "gdp_per_capita" => "GDP/capita",
+        "gni_ppp" => "GNI PPP",
+        "density" => "Density",
+        "literacy" => "Literacy",
+        "hdi" => "HDI",
+        "life_expectancy" => "Life Exp.",
+        _ => id
+    };
+}

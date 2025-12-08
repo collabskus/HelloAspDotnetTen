@@ -1,0 +1,98 @@
+.country-card {
+    cursor: default;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 220px;
+}
+
+.country-card.clickable {
+    cursor: pointer;
+}
+
+.country-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+.country-card.correct-answer {
+    border: 3px solid #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.country-card.wrong-answer {
+    border: 3px solid #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.flag-display {
+    font-size: 4rem;
+    line-height: 1;
+}
+
+.vs-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.correct-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #198754;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.stat-reveal {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.score-display {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.question-section h3 {
+    color: #212529;
+    font-weight: 600;
+}
+
+.result-section .alert {
+    font-size: 1.1rem;
+}
+
+.question-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.question-buttons .btn {
+    font-size: 0.85rem;
+}
+
+details summary {
+    cursor: pointer;
+}
+
+details summary:hover {
+    color: #0d6efd;
+}

@@ -70,11 +70,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddHelloDotnetLibrary(builder.Configuration);
-// Add this line in Program.cs after the existing service registrations
-// (after builder.Services.AddHelloDotnetLibrary(builder.Configuration);)
-
-// Register StateComparisonService as Scoped so each user session maintains their own score
 builder.Services.AddScoped<BlazorApp.Services.StateComparisonService>();
+builder.Services.AddScoped<BlazorApp.Services.CountryComparisonService>();
 
 var app = builder.Build();
 
