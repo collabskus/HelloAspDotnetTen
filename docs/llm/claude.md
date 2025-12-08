@@ -398,3 +398,203 @@ public class FileExporterOptions
 }
 ```
 
+Is there some way we can add otel logs like metrics spans etc for every single click on this counter page? or is this client side stuff that we can't access? 
+```html Counter.razor
+@page "/counter"
+@rendermode InteractiveServer
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
+    Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
+</button>
+
+@if (isIncrementing)
+{
+    <p>
+        Incrementing by a random number... (Random between a hundred and nine hundred)
+        @if (incrementBy != 0)
+        {
+            <span>currently, @incrementBy</span>
+        }
+    </p>
+}
+
+@if (historical.Count > 0)
+{
+    <h3>Historical Increments:</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Increment Value</th>
+                <th>Result</th>
+                <th>Running Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var toss in historical)
+            {
+                <tr class="@toss.CssClass">
+                    <td>@toss.Value</td>
+                    <td>@toss.Status</td>
+                    <td>@toss.RunningTotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Wins: @totalWins</p>
+    <p>Losses: @(historical.Count - totalWins)</p>
+    <p>Tosses: @historical.Count</p>
+}
+
+@code {
+    private int currentCount = 0;
+    // A flag to prevent the user from clicking the slow button again while it's already running
+    private bool isIncrementing = false;
+    private int incrementBy = 0;
+    // Changed historical to use a new custom class to store more information
+    private List<TossResult> historical = new();
+    private int totalWins => GetWinCount(historical.Select(t => t.Value).ToList(), WinThreshold);
+
+    // The threshold for winning the toss
+    private const int WinThreshold = 500;
+    private const int DelayMilliseconds = 1; // Delay between each step
+
+    private class TossResult
+    {
+        public int Value { get; set; }
+        public string Status { get; set; } = string.Empty;
+        // Change this property from Color to CssClass
+        public string CssClass { get; set; } = string.Empty;
+        public int RunningTotal { get; set; }
+    }
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+    private async Task SlowlyIncrement()
+    {
+        int targetIncrement;
+
+        // 1. ENSURE A FAIR TOSS (50/50)
+        // Set the range to be symmetric around the threshold (500).
+        // Generates a number from 100 to 900 (801 possible outcomes).
+        // If the number is exactly 500, we re-roll to ensure equal chances above/below.
+        do
+        {
+            targetIncrement = Random.Shared.Next(100, 901);
+        } while (targetIncrement == WinThreshold); // Re-roll if it's exactly 500
+
+        incrementBy = targetIncrement;
+
+        // Determine the result, status, and CSS class
+        string status = targetIncrement > WinThreshold ? "You won a toss" : "You lost a toss";
+        string cssClass = targetIncrement > WinThreshold ? "win-toss" : "lost-toss";
+        int runningTotal = currentCount + targetIncrement;
+
+        // Add the new result to the historical list
+        historical.Add(new TossResult
+        {
+            Value = targetIncrement,
+            Status = status,
+            CssClass = cssClass, // Store the class name
+            RunningTotal = runningTotal
+        });
+
+        // Set the flag and update the UI to show the button is disabled and a message
+        isIncrementing = true;
+        StateHasChanged();
+
+        // 2. USE THE RANDOMLY GENERATED LOCAL VARIABLE
+        for (int i = 0; i < targetIncrement; i++)
+        {
+            currentCount++;
+
+            // Wait for the specified time (e.g., 1ms)
+            await Task.Delay(DelayMilliseconds);
+
+            // Force Blazor to re-render the component to show the new value of currentCount
+            await InvokeAsync(StateHasChanged);
+        }
+
+        // Reset the flag and update the UI
+        isIncrementing = false;
+        StateHasChanged();
+    }
+
+    private int GetWinCount(List<int> list, int threshold)
+    {
+        int winCount = 0;
+        foreach (int item in list)
+        {
+            if (item > threshold)
+            {
+                winCount++;
+            }
+        }
+        return winCount;
+    }
+}
+```
+full code is in project files in dump text 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
