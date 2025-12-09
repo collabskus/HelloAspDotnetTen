@@ -1,129 +1,3 @@
-Metric Name: dotnet.jit.compiled_methods, Description: The number of times the JIT compiler (re)compiled methods since the process has started., Unit: {method}, Metric Type: LongSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3559368Z, 2025-12-08T16:48:26.4517389Z]
-Value: 1726
-
-Metric Name: dotnet.jit.compilation.time, Description: The number of times the JIT compiler (re)compiled methods since the process has started., Unit: s, Metric Type: DoubleSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3559475Z, 2025-12-08T16:48:26.4517391Z]
-Value: 0.184339
-
-Metric Name: dotnet.monitor.lock_contentions, Description: The number of times there was contention when trying to acquire a monitor lock since the process has started., Unit: {contention}, Metric Type: LongSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3559644Z, 2025-12-08T16:48:26.4517393Z]
-Value: 8
-
-Metric Name: dotnet.thread_pool.thread.count, Description: The number of thread pool threads that currently exist., Unit: {thread}, Metric Type: LongSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3567689Z, 2025-12-08T16:48:26.4517397Z]
-Value: 4
-
-Metric Name: dotnet.thread_pool.work_item.count, Description: The number of work items that the thread pool has completed since the process has started., Unit: {work_item}, Metric Type: LongSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3573657Z, 2025-12-08T16:48:26.4517399Z]
-Value: 16
-
-Metric Name: dotnet.thread_pool.queue.length, Description: The number of work items that are currently queued to be processed by the thread pool., Unit: {work_item}, Metric Type: LongSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3574104Z, 2025-12-08T16:48:26.4517402Z]
-Value: 0
-
-Metric Name: dotnet.timer.count, Description: The number of timer instances that are currently active. An active timer is registered to tick at some point in the future and has not yet been canceled., Unit: {timer}, Metric Type: LongSumNonMonotonic
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3574236Z, 2025-12-08T16:48:26.4517403Z]
-Value: 1
-
-Metric Name: dotnet.assembly.count, Description: The number of .NET assemblies that are currently loaded., Unit: {assembly}, Metric Type: LongSumNonMonotonic
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3574357Z, 2025-12-08T16:48:26.4517405Z]
-Value: 140
-
-Metric Name: dotnet.exceptions, Description: The number of exceptions that have been thrown in managed code., Unit: {exception}, Metric Type: LongSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3574529Z, 2025-12-08T16:48:26.4517409Z] error.type: SocketException
-Value: 2
-
-Metric Name: dotnet.process.cpu.count, Description: The number of processors available to the process., Unit: {cpu}, Metric Type: LongSumNonMonotonic
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3574722Z, 2025-12-08T16:48:26.4517411Z]
-Value: 12
-
-Metric Name: dotnet.process.cpu.time, Description: CPU time used by the process., Unit: s, Metric Type: DoubleSum
-Instrumentation scope (Meter):
-        Name: System.Runtime
-(2025-12-08T16:48:21.3574970Z, 2025-12-08T16:48:26.4517413Z] cpu.mode: user
-Value: 0.3125
-(2025-12-08T16:48:21.3574970Z, 2025-12-08T16:48:26.4517413Z] cpu.mode: system
-Value: 0.09375
-PS C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp>
-PS C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp> Get-Date -Format "yyyy-MM-dd HH:mm:ss";
-2025-12-08 11:49:10
-PS C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; dotnet run
-2025-12-08 11:49:12
-Restore complete (0.5s)
-  ClassLibrary1 net10.0 succeeded (0.2s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
-  BlazorApp net10.0 succeeded (1.0s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
-
-Build succeeded in 1.8s
-2025-12-08 11:49:14
-Using launch settings from C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Properties\launchSettings.json...
-Building...
-[Telemetry] Writing to: C:\Users\kushal\AppData\Local\HelloAspDotnetTen\telemetry
-[Telemetry] Run ID: 20251208_164916
-info: Program[0]
-      Starting HelloAspDotnetTen Blazor Application
-LogRecord.Timestamp:               2025-12-08T16:49:16.4406973Z
-LogRecord.CategoryName:            Program
-LogRecord.Severity:                Info
-LogRecord.SeverityText:            Information
-LogRecord.FormattedMessage:        Starting HelloAspDotnetTen Blazor Application
-LogRecord.Body:                    Starting HelloAspDotnetTen Blazor Application
-LogRecord.Attributes (Key:Value):
-    OriginalFormat (a.k.a Body): Starting HelloAspDotnetTen Blazor Application
-
-Resource associated with LogRecord:
-service.name: BlazorApp
-service.version: 1.0.0
-service.instance.id: 3594b23a-13a1-40b5-8210-5e924514ab55
-telemetry.sdk.name: opentelemetry
-telemetry.sdk.language: dotnet
-telemetry.sdk.version: 1.14.0
-
-info: Program[0]
-      ========================================
-LogRecord.Timestamp:               2025-12-08T16:49:16.4509917Z
-LogRecord.CategoryName:            Program
-LogRecord.Severity:                Info
-LogRecord.SeverityText:            Information
-LogRecord.FormattedMessage:        ========================================
-LogRecord.Body:                    ========================================
-LogRecord.Attributes (Key:Value):
-    OriginalFormat (a.k.a Body): ========================================
-
-Resource associated with LogRecord:
-service.name: BlazorApp
-service.version: 1.0.0
-service.instance.id: 3594b23a-13a1-40b5-8210-5e924514ab55
-telemetry.sdk.name: opentelemetry
-telemetry.sdk.language: dotnet
-telemetry.sdk.version: 1.14.0
-
-info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: http://localhost:5268
-LogRecord.Timestamp:               2025-12-08T16:49:16.6243413Z
-LogRecord.CategoryName:            Microsoft.Hosting.Lifetime
-LogRecord.Severity:                Info
-LogRecord.SeverityText:            Information
 LogRecord.FormattedMessage:        Now listening on: http://localhost:5268
 LogRecord.Body:                    Now listening on: {address}
 LogRecord.Attributes (Key:Value):
@@ -9070,4 +8944,128 @@ warning: in the working copy of 'docs/llm/dump.txt', LF will be replaced by CRLF
 PS C:\Users\kushal\source\repos\HelloAspDotnetTen>
 PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Get-Date -Format "yyyy-MM-dd HH:mm:ss";
 2025-12-08 19:36:11
+PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; .\export.ps1; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git add .; git commit --message "update dump"
+2025-12-08 19:36:23
+Restore complete (0.7s)
+  ClassLibrary1 net10.0 succeeded (0.2s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 failed with 2 error(s) and 1 warning(s) (0.8s)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs(72,15): error CS1061: 'GameScore' does not contain a definition for 'RecordAnswer' and no accessible extension method 'RecordAnswer' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(19,45): error CS1061: 'GameScore' does not contain a definition for 'PercentageCorrect' and no accessible extension method 'PercentageCorrect' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(194,17): warning CS0414: The field 'StateCompare._previousStreak' is assigned but its value is never used
+
+Build failed with 2 error(s) and 1 warning(s) in 1.8s
+2025-12-08 19:36:25
+2025-12-08 19:36:25
+Restore complete (0.4s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 failed with 2 error(s) and 1 warning(s) (0.6s)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs(72,15): error CS1061: 'GameScore' does not contain a definition for 'RecordAnswer' and no accessible extension method 'RecordAnswer' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(19,45): error CS1061: 'GameScore' does not contain a definition for 'PercentageCorrect' and no accessible extension method 'PercentageCorrect' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(194,17): warning CS0414: The field 'StateCompare._previousStreak' is assigned but its value is never used
+
+Build failed with 2 error(s) and 1 warning(s) in 1.6s
+2025-12-08 19:36:27
+2025-12-08 19:36:27
+Restore complete (0.6s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 failed with 2 error(s) and 1 warning(s) (0.6s)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs(72,15): error CS1061: 'GameScore' does not contain a definition for 'RecordAnswer' and no accessible extension method 'RecordAnswer' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(19,45): error CS1061: 'GameScore' does not contain a definition for 'PercentageCorrect' and no accessible extension method 'PercentageCorrect' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(194,17): warning CS0414: The field 'StateCompare._previousStreak' is assigned but its value is never used
+
+Build failed with 2 error(s) and 1 warning(s) in 1.5s
+2025-12-08 19:36:28
+
+Build succeeded in 0.4s
+2025-12-08 19:36:29
+2025-12-08 19:36:29
+Starting project export...
+Project Path: .
+Output File: docs\llm\dump.txt
+Generating directory structure...
+Collecting files...
+Found 71 files to export
+Processing (1/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.Development.json
+Processing (2/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.json
+Processing (3/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\BlazorApp.csproj
+Processing (4/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\_Imports.razor
+Processing (5/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\App.razor
+Processing (6/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor
+Processing (7/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor.css
+Processing (8/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor
+Processing (9/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor.css
+Processing (10/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor
+Processing (11/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.css
+Processing (12/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.js
+Processing (13/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
+Processing (14/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor.css
+Processing (15/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
+Processing (16/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
+Processing (17/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Error.razor
+Processing (18/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor
+Processing (19/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\NotFound.razor
+Processing (20/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
+Processing (21/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
+Processing (22/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Weather.razor
+Processing (23/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Routes.razor
+Processing (24/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Data\CountryDataRepository.cs
+Processing (25/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileActivityExporter.cs
+Processing (26/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterExtensions.cs
+Processing (27/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterOptions.cs
+Processing (28/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileLogExporter.cs
+Processing (29/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileMetricExporter.cs
+Processing (30/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\libman.json
+Processing (31/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\CountryData.cs
+Processing (32/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
+Processing (33/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
+Processing (34/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Properties\launchSettings.json
+Processing (35/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
+Processing (36/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
+Processing (37/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\app.css
+Processing (38/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.css
+Processing (39/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
+Processing (40/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css
+Processing (41/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css
+Processing (42/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
+Processing (43/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
+Processing (44/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css
+Processing (45/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css
+Processing (46/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css
+Processing (47/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css
+Processing (48/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
+Processing (49/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
+Processing (50/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
+Processing (51/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
+Processing (52/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css
+Processing (53/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
+Processing (54/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js
+Processing (55/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
+Processing (56/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js
+Processing (57/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js
+Processing (58/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.js
+Processing (59/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
+Processing (60/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1.cs
+Processing (61/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1Options.cs
+Processing (62/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2.cs
+Processing (63/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2Options.cs
+Processing (64/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1.csproj
+Processing (65/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1Settings.cs
+Processing (66/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass1.cs
+Processing (67/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass2.cs
+Processing (68/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ServiceCollectionExtensions.cs
+Processing (69/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Build.props
+Processing (70/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Packages.props
+Processing (71/71): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\HelloAspDotnetTen.slnx
+
+Export completed successfully!
+Output file: .\docs\llm\dump.txt
+Total files exported: 71
+Output file size: 2.52 MB
+2025-12-08 19:36:30
+warning: in the working copy of 'docs/llm/dump.txt', LF will be replaced by CRLF the next time Git touches it
+[master 7fe3438] update dump
+ 4 files changed, 415 insertions(+), 319 deletions(-)
+PS C:\Users\kushal\source\repos\HelloAspDotnetTen>
+PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Get-Date -Format "yyyy-MM-dd HH:mm:ss";
+2025-12-08 19:39:58
 PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; .\export.ps1; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git add .; git commit --message "update dump"

@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/08/2025 19:36:29
+Generated: 12/08/2025 19:40:18
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -3660,8 +3660,8 @@ public class CountryGameScore
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
-SIZE: 3.18 KB
-MODIFIED: 12/08/2025 19:36:03
+SIZE: 3.52 KB
+MODIFIED: 12/08/2025 19:39:34
 ================================================================================
 
 namespace BlazorApp.Models;
@@ -3736,12 +3736,22 @@ public record ComparisonResult
 /// </summary>
 public class GameScore
 {
-    public int CorrectAnswers { get; set; }
-    public int TotalQuestions { get; set; }
-
-    // Add these properties:
+    public int CorrectAnswers { get; private set; }
+    public int TotalQuestions { get; private set; }
     public int CurrentStreak { get; set; }
     public int BestStreak { get; set; }
+    public List<ComparisonResult> History { get; } = [];
+
+    public double PercentageCorrect => TotalQuestions > 0
+        ? (double)CorrectAnswers / TotalQuestions * 100
+        : 0;
+
+    public void RecordAnswer(ComparisonResult result)
+    {
+        TotalQuestions++;
+        if (result.IsCorrect) CorrectAnswers++;
+        History.Add(result);
+    }
 
     public void Reset()
     {
@@ -64709,7 +64719,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/08/2025 19:36:30
+EXPORT COMPLETED: 12/08/2025 19:40:19
 Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================

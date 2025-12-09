@@ -70,12 +70,22 @@ public record ComparisonResult
 /// </summary>
 public class GameScore
 {
-    public int CorrectAnswers { get; set; }
-    public int TotalQuestions { get; set; }
-
-    // Add these properties:
+    public int CorrectAnswers { get; private set; }
+    public int TotalQuestions { get; private set; }
     public int CurrentStreak { get; set; }
     public int BestStreak { get; set; }
+    public List<ComparisonResult> History { get; } = [];
+
+    public double PercentageCorrect => TotalQuestions > 0
+        ? (double)CorrectAnswers / TotalQuestions * 100
+        : 0;
+
+    public void RecordAnswer(ComparisonResult result)
+    {
+        TotalQuestions++;
+        if (result.IsCorrect) CorrectAnswers++;
+        History.Add(result);
+    }
 
     public void Reset()
     {
