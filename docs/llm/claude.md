@@ -1000,3 +1000,19 @@ You need to add `BlazorApp.StateCompare` to both the tracing sources and metrics
 
 Should we also implement this `best streak` and `current streak` in comparison service? 
 also speaking of comparison service, should we also add open telemetry in those files or just in the razor files? 
+I have updated dump in the project files with the latest code. 
+2025-12-08 19:30:56
+Restore complete (0.6s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 failed with 7 error(s) and 1 warning(s) (0.6s)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(22,34): error CS1061: 'GameScore' does not contain a definition for 'CurrentStreak' and no accessible extension method 'CurrentStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(24,88): error CS1061: 'GameScore' does not contain a definition for 'CurrentStreak' and no accessible extension method 'CurrentStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(26,34): error CS1061: 'GameScore' does not contain a definition for 'BestStreak' and no accessible extension method 'BestStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(28,78): error CS1061: 'GameScore' does not contain a definition for 'BestStreak' and no accessible extension method 'BestStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(242,54): error CS1061: 'GameScore' does not contain a definition for 'CurrentStreak' and no accessible extension method 'CurrentStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(295,50): error CS1061: 'GameScore' does not contain a definition for 'BestStreak' and no accessible extension method 'BestStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(299,57): error CS1061: 'GameScore' does not contain a definition for 'CurrentStreak' and no accessible extension method 'CurrentStreak' accepting a first argument of type 'GameScore' could be found (are you missing a using directive or an assembly reference?)
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor(194,17): warning CS0414: The field 'StateCompare._previousStreak' is assigned but its value is never used
+
+Build failed with 7 error(s) and 1 warning(s) in 1.6s
+2025-12-08 19:30:58
