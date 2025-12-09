@@ -998,3 +998,5 @@ You need to add `BlazorApp.StateCompare` to both the tracing sources and metrics
 
 
 
+Should we also implement this `best streak` and `current streak` in comparison service? 
+also speaking of comparison service, should we also add open telemetry in those files or just in the razor files? 
