@@ -1,8 +1,11 @@
 @page "/country-compare"
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
 @inject CountryComparisonService ComparisonService
+@inject ILogger<CountryCompare> Logger
 
 <PageTitle>Country Comparison Game</PageTitle>
 
@@ -140,6 +143,13 @@ else if (_noDataAvailable)
 </div>
 
 @code {
+
+    // ActivitySource for distributed tracing (spans)
+    private static readonly ActivitySource ActivitySource = new("BlazorApp.CountryCompare", "1.0.0");
+
+    // Meter for metrics
+    private static readonly Meter Meter = new("BlazorApp.CountryCompare", "1.0.0");
+
     private CountryData? _country1;
     private CountryData? _country2;
     private CountryComparisonQuestion? _currentQuestion;
@@ -155,6 +165,8 @@ else if (_noDataAvailable)
 
     private void StartNewRound()
     {
+		Logger.LogInformation("Starting new round. Random mode: {RandomMode}", _randomMode);
+
         _noDataAvailable = false;
         
         if (_randomMode)

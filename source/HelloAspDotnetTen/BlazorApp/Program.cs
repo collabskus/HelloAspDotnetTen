@@ -32,6 +32,7 @@ builder.Services.AddOpenTelemetry()
         tracing
             .AddSource("ClassLibrary1")
             .AddSource("BlazorApp.Counter")  // ← ADD THIS LINE
+            .AddSource("BlazorApp.CountryCompare")  // ← ADD THIS LINE
             // Console exporter for immediate visibility
             .AddConsoleExporter()
             // File exporter for persistent storage
@@ -42,6 +43,7 @@ builder.Services.AddOpenTelemetry()
         metrics
             .AddMeter("ClassLibrary1")
             .AddMeter("BlazorApp.Counter")   // ← ADD THIS LINE
+            .AddMeter("BlazorApp.CountryCompare")   // ← ADD THIS LINE
             .AddRuntimeInstrumentation()
             .AddProcessInstrumentation()
             // Console exporter for immediate visibility
