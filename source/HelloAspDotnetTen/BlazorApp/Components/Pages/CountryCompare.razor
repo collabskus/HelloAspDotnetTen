@@ -30,7 +30,13 @@
     <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
 </div>
 
-@if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
+@if (_noDataAvailable)
+{
+    <div class="alert alert-warning">
+        <strong>No data available</strong> for this question type. Please select a different question.
+    </div>
+}
+else if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
 {
     <div class="question-section mb-4">
         <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
@@ -42,19 +48,19 @@
     <div class="row">
         <div class="col-md-5">
             <div class="card country-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
-                <div class="card-body text-center">
-                    <div class="flag-display mb-2">@_country1.FlagEmoji</div>
-                    <h4 class="card-title">@_country1.Name</h4>
-                    <p class="text-muted small mb-0">@_country1.Continent</p>
-                    @if (_hasAnswered)
-                    {
-                        <p class="stat-reveal mt-2">@_currentQuestion.GetFormattedValue(_country1)</p>
-                    }
-                </div>
                 @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
                 {
-                    <div class="correct-indicator">✓ Correct</div>
+                    <span class="correct-indicator">✓ Correct</span>
                 }
+                <div class="card-body text-center">
+                    <div class="flag-display mb-3">@_country1.FlagEmoji</div>
+                    <h4 class="card-title">@_country1.Name</h4>
+                    <p class="text-muted small mb-2">@_country1.Continent</p>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_country1)</p>
+                    }
+                </div>
             </div>
         </div>
         
@@ -64,38 +70,38 @@
         
         <div class="col-md-5">
             <div class="card country-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
-                <div class="card-body text-center">
-                    <div class="flag-display mb-2">@_country2.FlagEmoji</div>
-                    <h4 class="card-title">@_country2.Name</h4>
-                    <p class="text-muted small mb-0">@_country2.Continent</p>
-                    @if (_hasAnswered)
-                    {
-                        <p class="stat-reveal mt-2">@_currentQuestion.GetFormattedValue(_country2)</p>
-                    }
-                </div>
                 @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
                 {
-                    <div class="correct-indicator">✓ Correct</div>
+                    <span class="correct-indicator">✓ Correct</span>
                 }
+                <div class="card-body text-center">
+                    <div class="flag-display mb-3">@_country2.FlagEmoji</div>
+                    <h4 class="card-title">@_country2.Name</h4>
+                    <p class="text-muted small mb-2">@_country2.Continent</p>
+                    @if (_hasAnswered)
+                    {
+                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_country2)</p>
+                    }
+                </div>
             </div>
         </div>
     </div>
     
-    @if (_hasAnswered)
+    @if (_hasAnswered && _lastResult is not null)
     {
-        <div class="result-section mt-4 text-center">
-            <div class="alert @(_lastResult!.IsCorrect ? "alert-success" : "alert-danger")">
+        <div class="result-section text-center mt-4">
+            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger")">
                 @if (_lastResult.IsCorrect)
                 {
-                    <strong>Correct! 🎉</strong>
+                    <strong>Correct!</strong>
                 }
                 else
                 {
                     <strong>Wrong!</strong>
-                    <span>The answer was @_lastResult.CorrectAnswer.Name @_lastResult.CorrectAnswer.FlagEmoji</span>
+                    <span>The answer was @_lastResult.CorrectAnswer.Name (@_lastResult.CorrectAnswer.FlagEmoji).</span>
                 }
             </div>
-            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question →</button>
+            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question</button>
         </div>
     }
     else
@@ -103,52 +109,95 @@
         <p class="text-center mt-4 text-muted">Click on a country to make your choice!</p>
     }
 }
-else if (_noDataAvailable)
-{
-    <div class="alert alert-warning">
-        Not enough countries have data for this question type. Please select a different question.
-    </div>
-}
 
 <div class="mt-5">
-    <h5>Question Type</h5>
-    <div class="question-buttons">
-        @foreach (var q in ComparisonService.AvailableQuestions)
-        {
-            var count = ComparisonService.GetCountryCountForQuestion(q);
-            <button type="button" 
-                    class="btn btn-sm mb-1 me-1 @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
-                    @onclick="() => SetQuestion(q)"
-                    disabled="@(count < 2)">
-                @GetShortQuestionName(q.Id)
-                <span class="badge bg-light text-dark ms-1">@count</span>
-            </button>
-        }
-        <button type="button" 
-                class="btn btn-sm mb-1 @(_randomMode ? "btn-warning" : "btn-outline-warning")"
-                @onclick="ToggleRandomMode">
-            🎲 Random
-        </button>
-    </div>
-</div>
-
-<div class="mt-4">
     <details>
-        <summary class="text-muted">Game Stats</summary>
-        <p class="small text-muted mt-2">
-            Total countries in database: @ComparisonService.Countries.Count<br/>
-            Questions available: @ComparisonService.AvailableQuestions.Count
-        </p>
+        <summary><h5 class="d-inline">Question Types</h5></summary>
+        <div class="question-buttons mt-2" role="group">
+            @foreach (var q in ComparisonService.AvailableQuestions)
+            {
+                <button type="button" 
+                        class="btn btn-sm @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
+                        @onclick="() => SetQuestion(q)">
+                    @GetShortQuestionName(q.Id)
+                </button>
+            }
+            <button type="button" 
+                    class="btn btn-sm @(_randomMode ? "btn-warning" : "btn-outline-warning")"
+                    @onclick="ToggleRandomMode">
+                🎲 Random
+            </button>
+        </div>
     </details>
 </div>
 
 @code {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OPENTELEMETRY INSTRUMENTATION
+    // ═══════════════════════════════════════════════════════════════════════════
 
     // ActivitySource for distributed tracing (spans)
     private static readonly ActivitySource ActivitySource = new("BlazorApp.CountryCompare", "1.0.0");
 
     // Meter for metrics
     private static readonly Meter Meter = new("BlazorApp.CountryCompare", "1.0.0");
+
+    // ── Counters ──────────────────────────────────────────────────────────────
+    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
+        "countrycompare.rounds",
+        unit: "{rounds}",
+        description: "Total number of comparison rounds started");
+
+    private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
+        "countrycompare.answers",
+        unit: "{answers}",
+        description: "Total number of answers submitted");
+
+    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
+        "countrycompare.correct_answers",
+        unit: "{answers}",
+        description: "Total number of correct answers");
+
+    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
+        "countrycompare.wrong_answers",
+        unit: "{answers}",
+        description: "Total number of wrong answers");
+
+    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
+        "countrycompare.resets",
+        unit: "{resets}",
+        description: "Total number of game resets");
+
+    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
+        "countrycompare.question_type_changes",
+        unit: "{changes}",
+        description: "Number of times question type was changed");
+
+    private static readonly Counter<long> NoDataCounter = Meter.CreateCounter<long>(
+        "countrycompare.no_data_events",
+        unit: "{events}",
+        description: "Number of times no data was available for a question");
+
+    // ── Histograms ────────────────────────────────────────────────────────────
+    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
+        "countrycompare.streak_length",
+        unit: "{streak}",
+        description: "Distribution of streak lengths when broken");
+
+    // ── Gauges (via UpDownCounter for current state) ──────────────────────────
+    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
+        "countrycompare.current_score",
+        unit: "{score}",
+        description: "Current score (correct answers)");
+
+    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
+        "countrycompare.current_streak",
+        unit: "{streak}",
+        description: "Current winning streak");
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // COMPONENT STATE
+    // ═══════════════════════════════════════════════════════════════════════════
 
     private CountryData? _country1;
     private CountryData? _country2;
@@ -160,13 +209,15 @@ else if (_noDataAvailable)
 
     protected override void OnInitialized()
     {
+        using var activity = ActivitySource.StartActivity("CountryCompare.Initialize");
+        Logger.LogInformation("Country Comparison Game initialized");
         StartNewRound();
     }
 
     private void StartNewRound()
     {
-		Logger.LogInformation("Starting new round. Random mode: {RandomMode}", _randomMode);
-
+        using var activity = ActivitySource.StartActivity("CountryCompare.StartNewRound");
+        
         _noDataAvailable = false;
         
         if (_randomMode)
@@ -182,12 +233,33 @@ else if (_noDataAvailable)
         if (pair is null)
         {
             _noDataAvailable = true;
+            NoDataCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion?.Id));
+            
+            activity?.SetTag("error", "no_data_available");
+            activity?.SetTag("question.type", _currentQuestion?.Id);
+            activity?.SetStatus(ActivityStatusCode.Error, "No data available for question");
+            
+            Logger.LogWarning("No data available for question type: {QuestionType}", _currentQuestion?.Id);
             return;
         }
         
         (_country1, _country2) = pair.Value;
         _hasAnswered = false;
         _lastResult = null;
+
+        // Record metrics
+        RoundCounter.Add(1);
+        
+        activity?.SetTag("country1.name", _country1.Name);
+        activity?.SetTag("country1.continent", _country1.Continent);
+        activity?.SetTag("country2.name", _country2.Name);
+        activity?.SetTag("country2.continent", _country2.Continent);
+        activity?.SetTag("question.type", _currentQuestion?.Id);
+        activity?.SetTag("mode", _randomMode ? "random" : "fixed");
+        
+        Logger.LogInformation(
+            "New round started: {Country1} ({Continent1}) vs {Country2} ({Continent2}), Question: {QuestionType}",
+            _country1.Name, _country1.Continent, _country2.Name, _country2.Continent, _currentQuestion?.Id);
     }
 
     private void SelectCountry(CountryData selected)
@@ -195,28 +267,122 @@ else if (_noDataAvailable)
         if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null) 
             return;
         
+        using var activity = ActivitySource.StartActivity("CountryCompare.SelectCountry");
+        activity?.SetTag("selected.country", selected.Name);
+        activity?.SetTag("selected.continent", selected.Continent);
+        
+        var previousStreak = ComparisonService.Score.CurrentStreak;
         _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selected);
         _hasAnswered = true;
+
+        // Record metrics
+        AnswerCounter.Add(1, 
+            new KeyValuePair<string, object?>("question.type", _currentQuestion.Id),
+            new KeyValuePair<string, object?>("continent", selected.Continent ?? "Unknown"));
+        
+        if (_lastResult.IsCorrect)
+        {
+            CorrectAnswerCounter.Add(1, 
+                new KeyValuePair<string, object?>("question.type", _currentQuestion.Id),
+                new KeyValuePair<string, object?>("continent", selected.Continent ?? "Unknown"));
+            CurrentScoreGauge.Add(1);
+            CurrentStreakGauge.Add(1);
+            
+            activity?.SetTag("result", "correct");
+            Logger.LogInformation(
+                "Correct answer! Selected: {Selected}, Question: {QuestionType}, Score: {Score}/{Total}, Streak: {Streak}",
+                selected.Name, _currentQuestion.Id, 
+                ComparisonService.Score.CorrectAnswers, ComparisonService.Score.TotalQuestions,
+                ComparisonService.Score.CurrentStreak);
+        }
+        else
+        {
+            WrongAnswerCounter.Add(1, 
+                new KeyValuePair<string, object?>("question.type", _currentQuestion.Id),
+                new KeyValuePair<string, object?>("continent", selected.Continent ?? "Unknown"));
+            
+            // Record broken streak if it was > 0
+            if (previousStreak > 0)
+            {
+                StreakHistogram.Record(previousStreak);
+                CurrentStreakGauge.Add(-previousStreak); // Reset streak gauge
+            }
+            
+            activity?.SetTag("result", "wrong");
+            activity?.SetTag("correct.answer", _lastResult.CorrectAnswer.Name);
+            activity?.SetTag("streak.broken", previousStreak);
+            
+            Logger.LogInformation(
+                "Wrong answer. Selected: {Selected}, Correct: {Correct}, Question: {QuestionType}, Streak broken: {Streak}",
+                selected.Name, _lastResult.CorrectAnswer.Name, _currentQuestion.Id, previousStreak);
+        }
+        
+        activity?.SetStatus(ActivityStatusCode.Ok);
     }
 
     private void NextRound() => StartNewRound();
 
     private void ResetGame()
     {
+        using var activity = ActivitySource.StartActivity("CountryCompare.ResetGame");
+        
+        var finalScore = ComparisonService.Score.CorrectAnswers;
+        var totalQuestions = ComparisonService.Score.TotalQuestions;
+        var bestStreak = ComparisonService.Score.BestStreak;
+        
+        // Reset gauges to 0
+        CurrentScoreGauge.Add(-finalScore);
+        CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
+        
         ComparisonService.Score.Reset();
+        ResetCounter.Add(1);
+        
+        activity?.SetTag("final.score", finalScore);
+        activity?.SetTag("final.total", totalQuestions);
+        activity?.SetTag("final.best_streak", bestStreak);
+        activity?.SetTag("final.percentage", totalQuestions > 0 ? (double)finalScore / totalQuestions * 100 : 0);
+        
+        Logger.LogInformation(
+            "Game reset. Final score: {Score}/{Total} ({Percentage:F1}%), Best streak: {BestStreak}",
+            finalScore, totalQuestions, 
+            totalQuestions > 0 ? (double)finalScore / totalQuestions * 100 : 0,
+            bestStreak);
+        
         StartNewRound();
     }
 
     private void SetQuestion(CountryComparisonQuestion question)
     {
+        using var activity = ActivitySource.StartActivity("CountryCompare.SetQuestion");
+        
+        var previousQuestion = _currentQuestion?.Id;
         _randomMode = false;
         _currentQuestion = question;
+        
+        QuestionTypeChangeCounter.Add(1, 
+            new KeyValuePair<string, object?>("from", previousQuestion ?? "none"),
+            new KeyValuePair<string, object?>("to", question.Id));
+        
+        activity?.SetTag("previous.question", previousQuestion);
+        activity?.SetTag("new.question", question.Id);
+        activity?.SetTag("countries_with_data", ComparisonService.GetCountryCountForQuestion(question));
+        
+        Logger.LogInformation(
+            "Question type changed from {Previous} to {New} ({CountryCount} countries with data)", 
+            previousQuestion, question.Id, ComparisonService.GetCountryCountForQuestion(question));
+        
         StartNewRound();
     }
 
     private void ToggleRandomMode()
     {
+        using var activity = ActivitySource.StartActivity("CountryCompare.ToggleRandomMode");
+        
         _randomMode = true;
+        
+        activity?.SetTag("mode", "random");
+        Logger.LogInformation("Switched to random question mode");
+        
         StartNewRound();
     }
 

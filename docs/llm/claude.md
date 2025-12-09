@@ -867,3 +867,134 @@ Data is from World Bank, UN, IMF, and UNDP (2023/2024 estimates). Some values ar
 
 Would you like me to add more question types (like median age, CO2 emissions, internet penetration), add continent filtering, or make any other adjustments?
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+We previously implemented open telemetry for counter. 
+Can you please also implement this for state comparison and country comparison? 
+the full code is in dump and I have updated dump in this project in claude. 
+
+
+
+
+
+
+
+Now I have a good understanding of the existing Counter.razor OpenTelemetry implementation and the structure of both StateCompare.razor and CountryCompare.razor. Let me search for the complete Counter.razor code to use as a reference pattern.Now I have a complete picture. I can see:
+
+1. The Counter.razor has comprehensive OpenTelemetry instrumentation with ActivitySource, Meter, Counters, Histograms, and UpDownCounter
+2. The StateCompare.razor and CountryCompare.razor are comparison games that need similar instrumentation
+3. Program.cs already has the sources registered for `BlazorApp.Counter` and `BlazorApp.CountryCompare`, but needs `BlazorApp.StateCompare` added
+
+Let me create the updated files with OpenTelemetry instrumentation:Now let me provide the updated Program.cs snippet that adds the StateCompare source:I've created the OpenTelemetry instrumentation for both components. Here's a summary of what was added:
+
+## StateCompare.razor Telemetry
+
+**Tracing (ActivitySource: `BlazorApp.StateCompare`):**
+- `StateCompare.Initialize` - Component initialization
+- `StateCompare.StartNewRound` - New round started with state pair info
+- `StateCompare.SelectState` - User answer with result and streak info
+- `StateCompare.ResetGame` - Game reset with final stats
+- `StateCompare.SetQuestion` - Question type change
+- `StateCompare.ToggleRandomMode` - Mode switch
+
+**Metrics (Meter: `BlazorApp.StateCompare`):**
+- `statecompare.rounds` - Counter for rounds started
+- `statecompare.answers` - Counter for total answers (tagged by question type)
+- `statecompare.correct_answers` - Counter for correct answers
+- `statecompare.wrong_answers` - Counter for wrong answers
+- `statecompare.resets` - Counter for game resets
+- `statecompare.question_type_changes` - Counter for question changes
+- `statecompare.streak_length` - Histogram of streak lengths when broken
+- `statecompare.current_score` - UpDownCounter (gauge) for current score
+- `statecompare.current_streak` - UpDownCounter (gauge) for current streak
+
+## CountryCompare.razor Telemetry
+
+Same pattern as StateCompare, with additions:
+- `countrycompare.no_data_events` - Counter for when no data is available
+- Continent tags on answers for geographic analysis
+
+## Program.cs Update
+
+You need to add `BlazorApp.StateCompare` to both the tracing sources and metrics meters. The CountryCompare source was already in your configuration.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
