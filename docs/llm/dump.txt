@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/08/2025 18:40:14
+Generated: 12/08/2025 19:18:34
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -1161,15 +1161,18 @@ body {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
-SIZE: 8 KB
-MODIFIED: 12/08/2025 18:38:02
+SIZE: 8.46 KB
+MODIFIED: 12/08/2025 19:16:53
 ================================================================================
 
 @page "/country-compare"
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
 @inject CountryComparisonService ComparisonService
+@inject ILogger<CountryCompare> Logger
 
 <PageTitle>Country Comparison Game</PageTitle>
 
@@ -1307,6 +1310,13 @@ else if (_noDataAvailable)
 </div>
 
 @code {
+
+    // ActivitySource for distributed tracing (spans)
+    private static readonly ActivitySource ActivitySource = new("BlazorApp.CountryCompare", "1.0.0");
+
+    // Meter for metrics
+    private static readonly Meter Meter = new("BlazorApp.CountryCompare", "1.0.0");
+
     private CountryData? _country1;
     private CountryData? _country2;
     private CountryComparisonQuestion? _currentQuestion;
@@ -1322,6 +1332,8 @@ else if (_noDataAvailable)
 
     private void StartNewRound()
     {
+		Logger.LogInformation("Starting new round. Random mode: {RandomMode}", _randomMode);
+
         _noDataAvailable = false;
         
         if (_randomMode)
@@ -3421,8 +3433,8 @@ public class GameScore
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
-SIZE: 5.15 KB
-MODIFIED: 12/08/2025 18:39:05
+SIZE: 5.29 KB
+MODIFIED: 12/08/2025 19:05:25
 ================================================================================
 
 using BlazorApp.Components;
@@ -3459,6 +3471,7 @@ builder.Services.AddOpenTelemetry()
         tracing
             .AddSource("ClassLibrary1")
             .AddSource("BlazorApp.Counter")  // â† ADD THIS LINE
+            .AddSource("BlazorApp.CountryCompare")  // â† ADD THIS LINE
             // Console exporter for immediate visibility
             .AddConsoleExporter()
             // File exporter for persistent storage
@@ -3469,6 +3482,7 @@ builder.Services.AddOpenTelemetry()
         metrics
             .AddMeter("ClassLibrary1")
             .AddMeter("BlazorApp.Counter")   // â† ADD THIS LINE
+            .AddMeter("BlazorApp.CountryCompare")   // â† ADD THIS LINE
             .AddRuntimeInstrumentation()
             .AddProcessInstrumentation()
             // Console exporter for immediate visibility
@@ -64354,7 +64368,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/08/2025 18:40:14
+EXPORT COMPLETED: 12/08/2025 19:18:35
 Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================
