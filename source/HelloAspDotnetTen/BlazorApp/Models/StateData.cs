@@ -70,25 +70,34 @@ public record ComparisonResult
 /// </summary>
 public class GameScore
 {
-    public int CorrectAnswers { get; private set; }
-    public int TotalQuestions { get; private set; }
-    public List<ComparisonResult> History { get; } = [];
-    
-    public double PercentageCorrect => TotalQuestions > 0 
-        ? (double)CorrectAnswers / TotalQuestions * 100 
-        : 0;
-    
-    public void RecordAnswer(ComparisonResult result)
-    {
-        TotalQuestions++;
-        if (result.IsCorrect) CorrectAnswers++;
-        History.Add(result);
-    }
-    
+    public int CorrectAnswers { get; set; }
+    public int TotalQuestions { get; set; }
+
+    // Add these properties:
+    public int CurrentStreak { get; set; }
+    public int BestStreak { get; set; }
+
     public void Reset()
     {
         CorrectAnswers = 0;
         TotalQuestions = 0;
-        History.Clear();
+        CurrentStreak = 0;
+        BestStreak = 0;
+    }
+
+    // Helper methods for streak management
+    public void IncrementCorrect()
+    {
+        CorrectAnswers++;
+        TotalQuestions++;
+        CurrentStreak++;
+        if (CurrentStreak > BestStreak)
+            BestStreak = CurrentStreak;
+    }
+
+    public void IncrementWrong()
+    {
+        TotalQuestions++;
+        CurrentStreak = 0;
     }
 }

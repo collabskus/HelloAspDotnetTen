@@ -1016,3 +1016,85 @@ Restore complete (0.6s)
 
 Build failed with 7 error(s) and 1 warning(s) in 1.6s
 2025-12-08 19:30:58
+
+
+Based on my search through our previous conversations and project knowledge, I can see the issue clearly. The `StateCompare.razor` file is trying to use `CurrentStreak` and `BestStreak` properties on `GameScore`, but those properties don't exist on the `GameScore` class yet!
+
+## What's Happening
+
+The StateCompare.razor was updated to show streaks (`ComparisonService.Score.CurrentStreak` and `ComparisonService.Score.BestStreak`), but the `GameScore` class in your ClassLibrary doesn't have those properties defined.
+
+## Yes, You Should Add Streak Properties to GameScore
+
+Here's what you need to add to your `GameScore` class:
+
+```csharp
+public class GameScore
+{
+    public int CorrectAnswers { get; set; }
+    public int TotalQuestions { get; set; }
+    
+    // Add these properties:
+    public int CurrentStreak { get; set; }
+    public int BestStreak { get; set; }
+    
+    public void Reset()
+    {
+        CorrectAnswers = 0;
+        TotalQuestions = 0;
+        CurrentStreak = 0;
+        BestStreak = 0;
+    }
+    
+    // Helper methods for streak management
+    public void IncrementCorrect()
+    {
+        CorrectAnswers++;
+        TotalQuestions++;
+        CurrentStreak++;
+        if (CurrentStreak > BestStreak)
+            BestStreak = CurrentStreak;
+    }
+    
+    public void IncrementWrong()
+    {
+        TotalQuestions++;
+        CurrentStreak = 0;
+    }
+}
+```
+
+## Regarding OpenTelemetry in Comparison Services
+
+**Recommendation: Add OpenTelemetry to BOTH the Razor files AND the service files**, but with different purposes:
+
+| Location | What to Instrument |
+|----------|-------------------|
+| **Razor files** | User interactions, UI events, gauges for real-time display |
+| **Service files** | Business logic, data operations, game mechanics |
+
+For the **StateComparisonService** and **CountryComparisonService**, add:
+- An `ActivitySource` for tracing operations like `GetRandomPair`, `CheckAnswer`, `GetCountryCountForQuestion`
+- Metrics for service-level stats (could share the same Meter or create service-specific ones)
+
+This separation gives you:
+1. **UI telemetry** - How users interact with the game
+2. **Service telemetry** - How the game logic performs (useful for debugging, performance analysis)
+
+Would you like me to provide the updated code for both the `GameScore` class and OpenTelemetry instrumentation for the comparison services?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
