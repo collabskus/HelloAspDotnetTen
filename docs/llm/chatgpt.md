@@ -798,3 +798,203 @@ Which would you like next?
 
 
 
+just to clarify, 
+a user does not need to explicitly choose to reset 
+for example, if there is only one high score and it is 5, 
+if someone answers six correctly, they are automatically on the leaderboard at 6, 
+and if they answer the seventh correctly, the 6 gets updated to a 7 
+is that how you implemented this? 
+
+
+
+
+Thanks for the clarification — **and no**, the implementation I provided does *not* behave that way yet.
+
+### ❌ What you want but do *not* have yet
+
+You want a **live updating, single-entry high score** per game mode:
+
+* If current score beats existing leaderboard score → update immediately
+* If user gets a new record again → update again
+* No need to wait for Reset
+* No multiple rows — only **one row per game mode**
+
+Basically:
+
+| Game    | Desired Leaderboard Behavior                            |
+| ------- | ------------------------------------------------------- |
+| Country | keep a *single best streak/score*, update automatically |
+| State   | same                                                    |
+
+### ❌ What the initial version does
+
+* It stores a new leaderboard record **only when Reset is clicked**
+* It *adds rows*, not updates
+* It does *not* auto-update when a new personal high is reached
+* It allows multiple rows per game mode
+
+So it matches a traditional multi-entry leaderboard but **not** your “always keep the current highest score” system.
+
+---
+
+# ✅ What you want instead (restating your intent)
+
+You want a leaderboard that:
+
+### ✔ always contains **exactly one record per game** ("country", "state")
+
+### ✔ updates itself automatically whenever the player achieves a new best
+
+### ✔ does *not* require a reset
+
+### ✔ effectively acts like a "high score save slot", not a table of entries
+
+So the logic becomes:
+
+```
+if (currentScore > storedHighScore)
+    storedHighScore = currentScore;
+```
+
+And same for best streak (or total questions, depending on what you decide).
+
+---
+
+# Want me to rewrite the implementation to match this?
+
+If yes, I will generate:
+
+### 🌟 New behavior
+
+* Repository changed to **GetHighScore()** and **UpsertHighScore()**
+* Only one row per gameMode
+* Called automatically inside your **CheckAnswer** logic
+* Reset is irrelevant for leaderboard storage (still resets score but not responsible for persistence)
+
+### 🌟 Changes needed
+
+* `LeaderboardService` redesigned (no list, no multi-entry insert)
+* `SqliteLeaderboardRepository` changed to an **UPSERT**–style table
+* Modify **AnswerButton click logic** in both games so that after a correct response, leaderboard is updated automatically
+* UI for showing the high score
+
+---
+
+# ❓ Confirm before I generate code
+
+Before I generate the new full implementation, I want to verify two things:
+
+### **(1) Which metric do you want the leaderboard to track?**
+
+Pick one:
+
+**A. Highest score (total correct answers)
+B. Highest best streak
+C. Both, stored together (recommended)**
+
+Your example suggests it's **the number of consecutive correct answers**, but your game tracks both.
+
+### **(2) Should the leaderboard keep a *single entry per game*?**
+
+* One row for "country"
+* One row for "state"
+
+Correct?
+
+---
+
+# 🔍 Please confirm:
+
+**Do you want:**
+
+* **One record per game mode, auto-updating**, no duplicates
+* Leaderboard value updated **as soon as the user surpasses the recorded high**
+* And what metric(s) to track?
+
+Reply with:
+
+```
+Use a single entry per game.
+Track: <score / streak / both>.
+```
+
+I will then produce the **complete corrected implementation**.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
