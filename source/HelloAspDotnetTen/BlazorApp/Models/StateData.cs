@@ -2,7 +2,6 @@ namespace BlazorApp.Models;
 
 /// <summary>
 /// Represents a US state with various statistics for comparison games.
-/// Designed to be extensible - add new properties as needed.
 /// </summary>
 public record StateData
 {
@@ -24,7 +23,7 @@ public record StateData
     /// <summary>Year admitted to the Union</summary>
     public int? YearAdmitted { get; init; }
     
-    /// <summary>Image filename (without path) - e.g., "california.png"</summary>
+    /// <summary>Image filename (without path)</summary>
     public string? ImageFileName { get; init; }
     
     /// <summary>Gets the image path for use in Blazor</summary>
@@ -67,11 +66,13 @@ public record ComparisonResult
 
 /// <summary>
 /// Tracks the user's score during a game session.
+/// Uses public setters to allow restoration from local storage.
 /// </summary>
 public class GameScore
 {
-    public int CorrectAnswers { get; private set; }
-    public int TotalQuestions { get; private set; }
+    // Use public setters to allow restoration from persisted state
+    public int CorrectAnswers { get; set; }
+    public int TotalQuestions { get; set; }
     public int CurrentStreak { get; set; }
     public int BestStreak { get; set; }
     public List<ComparisonResult> History { get; } = [];
@@ -83,7 +84,19 @@ public class GameScore
     public void RecordAnswer(ComparisonResult result)
     {
         TotalQuestions++;
-        if (result.IsCorrect) CorrectAnswers++;
+        if (result.IsCorrect)
+        {
+            CorrectAnswers++;
+            CurrentStreak++;
+            if (CurrentStreak > BestStreak)
+            {
+                BestStreak = CurrentStreak;
+            }
+        }
+        else
+        {
+            CurrentStreak = 0;
+        }
         History.Add(result);
     }
 
@@ -93,9 +106,10 @@ public class GameScore
         TotalQuestions = 0;
         CurrentStreak = 0;
         BestStreak = 0;
+        History.Clear();
     }
 
-    // Helper methods for streak management
+    // Helper methods for manual score management
     public void IncrementCorrect()
     {
         CorrectAnswers++;

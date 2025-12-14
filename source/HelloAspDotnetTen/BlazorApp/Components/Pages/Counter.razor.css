@@ -1,20 +1,38 @@
-﻿body {
-}
-/* In wwwroot/css/app.css or Components/Pages/Counter.razor.css */
+﻿/* ═══════════════════════════════════════════════════════════════════════════
+   COUNTER PAGE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 .win-toss {
-    color: green;
-    /* Optional: make it bold for emphasis */
-    font-weight: bold;
-    border: 2px dashed green;
+    background-color: #d1fae5;
+    color: #065f46;
 }
 
 .lost-toss {
-    color: red;
-    border: 2px dashed red;
+    background-color: #fee2e2;
+    color: #991b1b;
 }
-.draw-toss {
-    color: orange;
-    border: dashed orange 2px;
+
+.lifetime-stats {
+    border-left: 4px solid #3b82f6;
 }
-/* You can add more styles as needed */
+
+.lifetime-stats h4 {
+    margin-bottom: 0.5rem;
+    color: #1e40af;
+}
+
+.lifetime-stats p {
+    margin-bottom: 0.25rem;
+}
+
+/* Responsive table for mobile */
+@media (max-width: 500px) {
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.4rem;
+    }
+}

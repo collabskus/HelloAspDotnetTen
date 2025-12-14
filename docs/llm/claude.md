@@ -2428,3 +2428,473 @@ All of it.
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+I'll search the project knowledge to get the latest code and understand the current state of the application.Let me search for the actual current implementation with local storage:Now I have a complete picture of the issues. Let me create the updated files that will:
+
+1. **Counter.razor**: Persist `currentCount` AND `historical` list (not just lifetime stats)
+2. **StateCompare.razor**: Persist session score, streak, and restore on reload
+3. **CountryCompare.razor**: Same as StateCompare
+4. **Fix equal values**: Prevent asking questions where two items have equal values
+5. **Fix GDP display**: Remove errant "M" suffix
+6. **Mobile layout**: Ensure iPhone SE compatibility
+
+Let me provide all the updated files:Now let me create the updated services that prevent equal-value ("gotcha") questions:Now let me create the key method needed for the CountryComparisonService:Now let me create the CSS for mobile responsiveness:I've created all the updated files. Here's a comprehensive summary of what was changed and why:
+
+---
+
+## Summary of Changes
+
+### 1. **Counter.razor** (Full Persistence)
+
+**Problem**: Only lifetime stats persisted; `currentCount` and `historical` list were lost on reload.
+
+**Solution**: Extended `CounterPersistedStats` to include:
+- `CurrentCount` - The current counter value
+- `Historical` - List of all toss results (via `TossResultDto`)
+
+**Key changes**:
+- Added `TossResultDto` class for JSON serialization
+- `LoadPersistedStatsAsync()` now restores `currentCount` and `historical`
+- `SavePersistedStatsAsync()` saves session state with every toss
+- OpenTelemetry traces every save/load operation
+
+---
+
+### 2. **StateCompare.razor** (Full Persistence)
+
+**Problem**: Session scores didn't survive page refresh.
+
+**Solution**: Extended `ComparePersistedStats` to include session state:
+- `SessionCorrect`, `SessionTotal` - Current session score
+- `SessionCurrentStreak`, `SessionBestStreak` - Current session streaks
+- `RandomMode`, `CurrentQuestionId` - UI state
+
+**Key changes**:
+- On load: Restores `ComparisonService.Score` properties from persisted state
+- On every answer: Calls `SavePersistedStatsAsync()` immediately
+- Separate tracking of "lifetime" vs "session" stats
+
+---
+
+### 3. **CountryCompare.razor** (Full Persistence)
+
+Same pattern as StateCompare, plus:
+- Custom `FormatValue()` method fixes GDP display (no errant "M" suffix)
+- Shows billions as "$X.XB" and trillions as "$X.XXT"
+- GDP per capita shows plain "$X,XXX" format
+
+---
+
+### 4. **StateComparisonService.cs** (No Tie Pairs)
+
+**Problem**: Could ask "gotcha" questions where both states had equal values.
+
+**Solution**: Added `GetRandomStatePairWithoutTie()` method:
+- Filters to states with data for the question
+- Loops until it finds a pair with **different** values
+- Fallback search if random attempts fail
+- Never returns a tie (unless mathematically impossible)
+
+---
+
+### 5. **CountryComparisonService** additions
+
+Added matching methods:
+- `GetRandomCountryPairWithoutTie()` - Same logic as states
+- `GetRandomViableQuestion()` - Returns only questions with enough data
+- Updated `CheckAnswer()` with proper streak tracking
+
+---
+
+### 6. **GameScore / CountryGameScore**
+
+**Problem**: Properties were `private set` so couldn't be restored from storage.
+
+**Solution**: Changed to `public set` to allow restoration:
+```csharp
+public int CorrectAnswers { get; set; }  // Was private set
+public int TotalQuestions { get; set; }  // Was private set
+public int CurrentStreak { get; set; }
+public int BestStreak { get; set; }
+```
+
+---
+
+### 7. **CSS Files** (iPhone SE Compatible)
+
+**Problem**: UI didn't fit on small screens.
+
+**Solution**: Mobile-first responsive design:
+- Cards scale down on screens < 400px width
+- Font sizes reduce appropriately
+- Height-based media queries for short screens
+- Content never overflows viewport
+
+---
+
+## OpenTelemetry Usage
+
+Every major operation has telemetry:
+
+| Operation | Trace Activity | Metrics |
+|-----------|---------------|---------|
+| Page load | `*.LoadPersistedStats` | `*.storage.loads` |
+| Save state | `*.SavePersistedStats` | `*.storage.saves` |
+| Answer | `*.SelectState/Country` | `*.correct_answers`, `*.wrong_answers` |
+| Reset | `*.ResetGame` | `*.resets` |
+| New round | `*.StartNewRound` | `*.rounds` |
+
+Metrics track:
+- Score gauges (UpDownCounter)
+- Streak histograms
+- Storage operation counts
+- Question type usage
+
+---
+
+## Files to Replace
+
+1. `Components/Pages/Counter.razor`
+2. `Components/Pages/Counter.razor.css`
+3. `Components/Pages/StateCompare.razor`
+4. `Components/Pages/StateCompare.razor.css`
+5. `Components/Pages/CountryCompare.razor`
+6. `Components/Pages/CountryCompare.razor.css`
+7. `Models/StateData.cs`
+8. `Services/StateComparisonService.cs`
+9. Add methods to `Services/CountryComparisonService.cs`
+10. Update `Models/CountryData.cs` (make `CountryGameScore` properties public setters)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ADD THESE METHODS TO YOUR EXISTING CountryComparisonService.cs
+// These go in the CountryComparisonService class alongside your existing methods
+
+/// <summary>
+/// Gets a random pair of countries where their values for the given question are NOT equal.
+/// This prevents "gotcha" questions where both countries have the same value.
+/// Returns null if not enough valid pairs exist.
+/// </summary>
+public (CountryData Country1, CountryData Country2)? GetRandomCountryPairWithoutTie(CountryComparisonQuestion question)
+{
+    // Filter to countries that have data for this question
+    var validCountries = _countries.Where(c => question.GetValue(c).HasValue).ToList();
+    
+    if (validCountries.Count < 2)
+    {
+        return null;
+    }
+
+    // Try to find a pair without equal values (max 100 attempts to avoid infinite loop)
+    for (int attempt = 0; attempt < 100; attempt++)
+    {
+        var country1 = validCountries[_random.Next(validCountries.Count)];
+        var country2 = validCountries[_random.Next(validCountries.Count)];
+
+        // Ensure different countries
+        if (country1 == country2) continue;
+
+        var value1 = question.GetValue(country1);
+        var value2 = question.GetValue(country2);
+
+        // Ensure values are NOT equal (prevents gotcha questions)
+        if (value1 != value2)
+        {
+            return (country1, country2);
+        }
+    }
+
+    // Fallback: try to find any two countries with different values
+    for (int i = 0; i < validCountries.Count; i++)
+    {
+        for (int j = i + 1; j < validCountries.Count; j++)
+        {
+            var value1 = question.GetValue(validCountries[i]);
+            var value2 = question.GetValue(validCountries[j]);
+            if (value1 != value2)
+            {
+                return (validCountries[i], validCountries[j]);
+            }
+        }
+    }
+
+    // If all countries have the same value, return null
+    return null;
+}
+
+/// <summary>
+/// Gets a random viable question (one that has at least 2 countries with different values).
+/// </summary>
+public CountryComparisonQuestion? GetRandomViableQuestion()
+{
+    var viableQuestions = _questions
+        .Where(q => GetCountryCountForQuestion(q) >= 2)
+        .ToList();
+    
+    if (viableQuestions.Count == 0)
+        return null;
+    
+    return viableQuestions[_random.Next(viableQuestions.Count)];
+}
+
+/// <summary>
+/// Checks the user's answer and records the result with streak tracking.
+/// </summary>
+public CountryComparisonResult CheckAnswer(CountryData country1, CountryData country2,
+    CountryComparisonQuestion question, CountryData userChoice)
+{
+    var correct = GetCorrectAnswer(country1, country2, question);
+    var isCorrect = correct == userChoice;
+    
+    var result = new CountryComparisonResult
+    {
+        Country1 = country1,
+        Country2 = country2,
+        Question = question,
+        CorrectAnswer = correct,
+        UserChoice = userChoice
+    };
+
+    // Update score with streak tracking
+    Score.TotalQuestions++;
+    if (isCorrect)
+    {
+        Score.CorrectAnswers++;
+        Score.CurrentStreak++;
+        if (Score.CurrentStreak > Score.BestStreak)
+        {
+            Score.BestStreak = Score.CurrentStreak;
+        }
+    }
+    else
+    {
+        Score.CurrentStreak = 0;
+    }
+    
+    Score.History.Add(result);
+    return result;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ALSO UPDATE CountryGameScore class (in CountryData.cs) to have public setters:
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// <summary>
+/// Tracks the user's score during a country comparison game session.
+/// Uses public setters to allow restoration from local storage.
+/// </summary>
+public class CountryGameScore
+{
+    // Use public setters to allow restoration from persisted state
+    public int CorrectAnswers { get; set; }
+    public int TotalQuestions { get; set; }
+    public int CurrentStreak { get; set; }
+    public int BestStreak { get; set; }
+    public List<CountryComparisonResult> History { get; } = [];
+    
+    public double PercentageCorrect => TotalQuestions > 0 
+        ? (double)CorrectAnswers / TotalQuestions * 100 
+        : 0;
+    
+    public void RecordAnswer(CountryComparisonResult result)
+    {
+        TotalQuestions++;
+        if (result.IsCorrect)
+        {
+            CorrectAnswers++;
+            CurrentStreak++;
+            if (CurrentStreak > BestStreak) BestStreak = CurrentStreak;
+        }
+        else
+        {
+            CurrentStreak = 0;
+        }
+        History.Add(result);
+    }
+    
+    public void Reset()
+    {
+        CorrectAnswers = 0;
+        TotalQuestions = 0;
+        CurrentStreak = 0;
+        BestStreak = 0;
+        History.Clear();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

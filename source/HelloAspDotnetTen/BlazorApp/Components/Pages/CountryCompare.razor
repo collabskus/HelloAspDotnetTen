@@ -1,184 +1,130 @@
 @page "/country-compare"
-@using System.Diagnostics
-@using System.Diagnostics.Metrics
-@using System.Text.Json
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
+@using System.Text.Json
 @inject CountryComparisonService ComparisonService
 @inject ILogger<CountryCompare> Logger
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
-<PageTitle>Country Comparison Game</PageTitle>
+<PageTitle>World Country Comparison</PageTitle>
 
-<h1 class="h3 mb-2">🌍 Country Comparison</h1>
+<div class="game-container">
+    <h1 class="game-title">🌍 Country Comparison</h1>
 
-<div class="score-display mb-3">
-    <span class="badge bg-primary fs-6">
-        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
-        @if (ComparisonService.Score.TotalQuestions > 0)
+    <div class="score-display">
+        <span class="score">Score: @ComparisonService.Score.CorrectAnswers/@ComparisonService.Score.TotalQuestions</span>
+        @if (ComparisonService.Score.CurrentStreak > 0)
         {
-            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+            <span class="streak">🔥 @ComparisonService.Score.CurrentStreak streak</span>
         }
-    </span>
-    @if (ComparisonService.Score.CurrentStreak > 1)
-    {
-        <span class="badge bg-warning text-dark fs-6 ms-1">🔥 @ComparisonService.Score.CurrentStreak streak</span>
-    }
-    @if (ComparisonService.Score.BestStreak > 1)
-    {
-        <span class="badge bg-secondary fs-6 ms-1">Best: @ComparisonService.Score.BestStreak</span>
-    }
-    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
-</div>
-
-@if (_noDataAvailable)
-{
-    <div class="alert alert-warning py-2">
-        <strong>No data available</strong> for this question. Please select a different one.
-    </div>
-}
-else if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
-{
-    <div class="question-section mb-3">
-        <h3 class="text-center h5">@_currentQuestion.QuestionTemplate</h3>
-        <p class="text-center text-muted small mb-0">
-            @ComparisonService.GetCountryCountForQuestion(_currentQuestion) countries have data
-        </p>
+        @if (ComparisonService.Score.BestStreak > 0)
+        {
+            <span class="best-streak">⭐ Best: @ComparisonService.Score.BestStreak</span>
+        }
     </div>
 
-    <div class="comparison-container">
-        <div class="comparison-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
-            {
-                <span class="correct-indicator">✓</span>
-            }
-            <div class="card-content">
-                <div class="flag-display">@_country1.FlagEmoji</div>
-                <h4 class="country-name">@_country1.Name</h4>
-                <p class="continent-name">@_country1.Continent</p>
+    @if (_noDataAvailable)
+    {
+        <div class="alert alert-warning">
+            Not enough countries with data for this question type. Please select another.
+        </div>
+    }
+    else if (_currentQuestion != null && _country1 != null && _country2 != null)
+    {
+        <p class="question-text">@_currentQuestion.QuestionTemplate</p>
+
+        <div class="comparison-container">
+            <div class="comparison-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
+                <div class="country-flag">@_country1.FlagEmoji</div>
+                <div class="country-name">@_country1.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@FormatValue(_country1)</p>
+                    <div class="value-reveal">@FormatValue(_country1)</div>
                 }
             </div>
-        </div>
 
-        <div class="vs-badge">VS</div>
+            <div class="vs-badge">VS</div>
 
-        <div class="comparison-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
-            {
-                <span class="correct-indicator">✓</span>
-            }
-            <div class="card-content">
-                <div class="flag-display">@_country2.FlagEmoji</div>
-                <h4 class="country-name">@_country2.Name</h4>
-                <p class="continent-name">@_country2.Continent</p>
+            <div class="comparison-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
+                <div class="country-flag">@_country2.FlagEmoji</div>
+                <div class="country-name">@_country2.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@FormatValue(_country2)</p>
+                    <div class="value-reveal">@FormatValue(_country2)</div>
                 }
             </div>
         </div>
-    </div>
 
-    @if (_hasAnswered && _lastResult is not null)
-    {
-        <div class="result-section text-center mt-3">
-            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger") py-2 mb-2">
-                @if (_lastResult.IsCorrect)
-                {
-                    <strong>✓ Correct!</strong>
-                }
-                else
-                {
-                    <strong>✗ Wrong!</strong>
-                    <span>@_lastResult.CorrectAnswer.Name was correct.</span>
-                }
+        @if (_hasAnswered && _lastResult != null)
+        {
+            <div class="result-message @(_lastResult.IsCorrect ? "correct" : "wrong")">
+                @(_lastResult.IsCorrect ? "✓ Correct!" : "✗ Wrong!")
             </div>
-            <button class="btn btn-primary" @onclick="StartNewRound">Next Question →</button>
-        </div>
+            <button class="btn btn-primary next-btn" @onclick="StartNewRound">Next →</button>
+        }
     }
-}
 
-<div class="question-buttons mt-3">
-    <small class="text-muted d-block mb-2">Question Type:</small>
-    <div class="btn-group btn-group-sm flex-wrap" role="group">
-        <button class="btn @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
-            🎲
+    <div class="controls mt-3">
+        <button class="btn btn-sm @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
+            🎲 Random
         </button>
-        @foreach (var q in ComparisonService.AvailableQuestions)
+        @foreach (var q in ComparisonService.Questions)
         {
             var count = ComparisonService.GetCountryCountForQuestion(q);
-            <button class="btn @(!_randomMode && _currentQuestion?.Id == q.Id ? "btn-primary" : "btn-outline-primary")"
+            <button class="btn btn-sm @(_currentQuestion?.Id == q.Id && !_randomMode ? "btn-primary" : "btn-outline-primary")"
                     @onclick="() => SetQuestion(q)"
                     disabled="@(count < 2)">
                 @GetShortQuestionName(q.Id)
+                <span class="badge bg-secondary ms-1">@count</span>
             </button>
         }
+        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="ResetGame">Reset</button>
     </div>
-</div>
 
-@if (_persistedStats != null)
-{
-    <div class="lifetime-stats mt-3">
-        <small class="text-muted">
-            Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
-            (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
-            | Best Streak: @_persistedStats.BestStreak
-            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
-        </small>
-    </div>
-}
+    @if (_persistedStats != null)
+    {
+        <div class="lifetime-stats mt-3">
+            <small class="text-muted">
+                Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
+                (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
+                | Best Streak: @_persistedStats.BestStreak
+                <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
+            </small>
+        </div>
+    }
+</div>
 
 @code {
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE KEY - NAMESPACED FOR THIS COMPONENT
+    // LOCAL STORAGE KEY
     // ═══════════════════════════════════════════════════════════════════════════
-
     private const string LocalStorageKey = "HelloAspDotnetTen.CountryCompare.Stats";
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OPENTELEMETRY INSTRUMENTATION
     // ═══════════════════════════════════════════════════════════════════════════
-
     private static readonly ActivitySource ActivitySource = new("BlazorApp.CountryCompare", "1.0.0");
     private static readonly Meter Meter = new("BlazorApp.CountryCompare", "1.0.0");
 
-    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
-        "countrycompare.rounds", unit: "{rounds}", description: "Total rounds started");
-    private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.answers", unit: "{answers}", description: "Total answers given");
-    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.correct_answers", unit: "{answers}", description: "Total correct answers");
-    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.wrong_answers", unit: "{answers}", description: "Total wrong answers");
-    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
-        "countrycompare.resets", unit: "{resets}", description: "Total game resets");
-    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
-        "countrycompare.question_type_changes", unit: "{changes}", description: "Question type changes");
-    private static readonly Counter<long> NoDataCounter = Meter.CreateCounter<long>(
-        "countrycompare.no_data_events", unit: "{events}", description: "No data available events");
-    private static readonly Counter<long> TieSkipCounter = Meter.CreateCounter<long>(
-        "countrycompare.tie_skips", unit: "{skips}", description: "Pairs skipped due to equal values");
-    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
-        "countrycompare.localstorage_loads", unit: "{loads}", description: "Local storage loads");
-    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
-        "countrycompare.localstorage_saves", unit: "{saves}", description: "Local storage saves");
-
-    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
-        "countrycompare.streak_length", unit: "{streak}", description: "Streak lengths when broken");
-    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
-        "countrycompare.current_score", unit: "{score}", description: "Current session score");
-    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
-        "countrycompare.current_streak", unit: "{streak}", description: "Current streak");
+    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>("countrycompare.rounds", "rounds", "Rounds started");
+    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>("countrycompare.correct_answers", "answers", "Correct answers");
+    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>("countrycompare.wrong_answers", "answers", "Wrong answers");
+    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>("countrycompare.resets", "resets", "Game resets");
+    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>("countrycompare.question_type_changes", "changes", "Question type changes");
+    private static readonly Counter<long> NoDataEventCounter = Meter.CreateCounter<long>("countrycompare.no_data_events", "events", "No data available events");
+    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>("countrycompare.streak_length", "streak", "Streak lengths when broken");
+    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>("countrycompare.current_score", "score", "Current score");
+    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>("countrycompare.current_streak", "streak", "Current streak");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>("countrycompare.storage.loads", "operations", "Local storage loads");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>("countrycompare.storage.saves", "operations", "Local storage saves");
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // COMPONENT STATE
+    // GAME STATE
     // ═══════════════════════════════════════════════════════════════════════════
-
     private CountryData? _country1;
     private CountryData? _country2;
     private CountryComparisonQuestion? _currentQuestion;
@@ -186,28 +132,36 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     private bool _hasAnswered;
     private bool _randomMode = true;
     private bool _noDataAvailable;
+    private int _previousStreak;
 
     // Local storage state
     private ComparePersistedStats? _persistedStats;
     private bool _isJsRuntimeAvailable = false;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSISTED STATS MODEL
+    // PERSISTED STATS MODEL - INCLUDES SESSION STATE
     // ═══════════════════════════════════════════════════════════════════════════
-
     private class ComparePersistedStats
     {
+        // Lifetime stats
         public int TotalQuestions { get; set; }
         public int TotalCorrect { get; set; }
         public int BestStreak { get; set; }
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+
+        // SESSION STATE - survives page reload
+        public int SessionCorrect { get; set; }
+        public int SessionTotal { get; set; }
+        public int SessionCurrentStreak { get; set; }
+        public int SessionBestStreak { get; set; }
+        public bool RandomMode { get; set; } = true;
+        public string? CurrentQuestionId { get; set; }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // LIFECYCLE METHODS
     // ═══════════════════════════════════════════════════════════════════════════
-
     protected override void OnInitialized()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.Initialize");
@@ -230,14 +184,13 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         if (_persistedStats != null && ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
         {
             _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
-            await SavePersistedStatsAsync();
         }
+        await SavePersistedStatsAsync();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE OPERATIONS
+    // LOCAL STORAGE OPERATIONS - SAVE EVERYTHING
     // ═══════════════════════════════════════════════════════════════════════════
-
     private async Task LoadPersistedStatsAsync()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.LoadPersistedStats");
@@ -250,6 +203,38 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
             {
                 _persistedStats = JsonSerializer.Deserialize<ComparePersistedStats>(json);
                 LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
+
+                // RESTORE SESSION STATE
+                if (_persistedStats != null)
+                {
+                    // Restore to ComparisonService.Score
+                    for (int i = 0; i < _persistedStats.SessionCorrect; i++)
+                    {
+                        ComparisonService.Score.CorrectAnswers++;
+                    }
+                    for (int i = 0; i < _persistedStats.SessionTotal; i++)
+                    {
+                        ComparisonService.Score.TotalQuestions++;
+                    }
+                    ComparisonService.Score.CurrentStreak = _persistedStats.SessionCurrentStreak;
+                    ComparisonService.Score.BestStreak = _persistedStats.SessionBestStreak;
+
+                    // Restore UI state
+                    _randomMode = _persistedStats.RandomMode;
+                    if (!string.IsNullOrEmpty(_persistedStats.CurrentQuestionId))
+                    {
+                        _currentQuestion = ComparisonService.Questions.FirstOrDefault(q => q.Id == _persistedStats.CurrentQuestionId);
+                    }
+
+                    // Sync gauges
+                    CurrentScoreGauge.Add(_persistedStats.SessionCorrect);
+                    CurrentStreakGauge.Add(_persistedStats.SessionCurrentStreak);
+                }
+
+                Logger.LogInformation(
+                    "Loaded CountryCompare stats: Lifetime={Total}/{Correct}, Session={SessionTotal}/{SessionCorrect}",
+                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0,
+                    _persistedStats?.SessionTotal ?? 0, _persistedStats?.SessionCorrect ?? 0);
             }
             else
             {
@@ -271,7 +256,21 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
 
         try
         {
+            // SAVE SESSION STATE
+            _persistedStats.SessionCorrect = ComparisonService.Score.CorrectAnswers;
+            _persistedStats.SessionTotal = ComparisonService.Score.TotalQuestions;
+            _persistedStats.SessionCurrentStreak = ComparisonService.Score.CurrentStreak;
+            _persistedStats.SessionBestStreak = ComparisonService.Score.BestStreak;
+            _persistedStats.RandomMode = _randomMode;
+            _persistedStats.CurrentQuestionId = _currentQuestion?.Id;
             _persistedStats.LastPlayedUtc = DateTime.UtcNow;
+
+            // Update lifetime best streak if needed
+            if (ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
+            {
+                _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
+            }
+
             var json = JsonSerializer.Serialize(_persistedStats);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
             LocalStorageSaveCounter.Add(1);
@@ -287,7 +286,14 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+
+            // Reset gauges
+            CurrentScoreGauge.Add(-ComparisonService.Score.CorrectAnswers);
+            CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
+
+            ComparisonService.Score.Reset();
             _persistedStats = new ComparePersistedStats();
+            StartNewRound();
         }
         catch (Exception ex)
         {
@@ -298,7 +304,6 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     // ═══════════════════════════════════════════════════════════════════════════
     // GAME LOGIC
     // ═══════════════════════════════════════════════════════════════════════════
-
     private void StartNewRound()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.StartNewRound");
@@ -311,77 +316,77 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         }
         else
         {
-            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+            _currentQuestion ??= ComparisonService.Questions.First();
         }
 
-        // Get a pair where values are NOT equal (no ties)
-        var pair = ComparisonService.GetRandomCountryPairWithoutTie(_currentQuestion);
-        if (pair is null)
+        if (_currentQuestion == null)
         {
             _noDataAvailable = true;
-            NoDataCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion?.Id));
+            NoDataEventCounter.Add(1);
+            return;
+        }
+
+        // Get pair WITHOUT ties - prevents gotcha questions
+        var pair = ComparisonService.GetRandomCountryPairWithoutTie(_currentQuestion);
+        if (pair == null)
+        {
+            _noDataAvailable = true;
+            NoDataEventCounter.Add(1);
             return;
         }
 
         (_country1, _country2) = pair.Value;
-        _hasAnswered = false;
         _lastResult = null;
-
+        _hasAnswered = false;
         RoundCounter.Add(1);
 
-        activity?.SetTag("country1.name", _country1.Name);
-        activity?.SetTag("country2.name", _country2.Name);
-        activity?.SetTag("question.type", _currentQuestion?.Id);
+        activity?.SetTag("country1", _country1?.Name);
+        activity?.SetTag("country2", _country2?.Name);
+        activity?.SetTag("question", _currentQuestion?.Id);
     }
 
-    private async Task SelectCountry(CountryData selected)
+    private async Task SelectCountry(CountryData selectedCountry)
     {
-        if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null)
-            return;
+        if (_hasAnswered || _currentQuestion == null || _country1 == null || _country2 == null) return;
 
         using var activity = ActivitySource.StartActivity("CountryCompare.SelectCountry");
 
-        var previousStreak = ComparisonService.Score.CurrentStreak;
-        _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selected);
+        _previousStreak = ComparisonService.Score.CurrentStreak;
+
+        _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selectedCountry);
         _hasAnswered = true;
 
-        AnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
-
-        if (_lastResult.IsCorrect)
+        // Update persisted lifetime stats
+        if (_persistedStats != null)
         {
-            CorrectAnswerCounter.Add(1);
-            CurrentScoreGauge.Add(1);
-            CurrentStreakGauge.Add(1);
-
-            if (_persistedStats != null)
+            _persistedStats.TotalQuestions++;
+            if (_lastResult.IsCorrect)
             {
-                _persistedStats.TotalQuestions++;
                 _persistedStats.TotalCorrect++;
-                if (ComparisonService.Score.CurrentStreak > _persistedStats.BestStreak)
-                    _persistedStats.BestStreak = ComparisonService.Score.CurrentStreak;
-                await SavePersistedStatsAsync();
+                CorrectAnswerCounter.Add(1);
+                CurrentScoreGauge.Add(1);
+                CurrentStreakGauge.Add(1);
             }
-        }
-        else
-        {
-            WrongAnswerCounter.Add(1);
-            if (previousStreak > 0)
+            else
             {
-                StreakHistogram.Record(previousStreak);
-                CurrentStreakGauge.Add(-previousStreak);
-            }
-
-            if (_persistedStats != null)
-            {
-                _persistedStats.TotalQuestions++;
-                await SavePersistedStatsAsync();
+                WrongAnswerCounter.Add(1);
+                if (_previousStreak > 0)
+                {
+                    StreakHistogram.Record(_previousStreak);
+                    CurrentStreakGauge.Add(-_previousStreak);
+                }
             }
         }
 
-        activity?.SetTag("result", _lastResult.IsCorrect ? "correct" : "wrong");
+        activity?.SetTag("correct", _lastResult.IsCorrect);
+        activity?.SetTag("streak", ComparisonService.Score.CurrentStreak);
+        activity?.SetTag("continent", _country1.Continent);
+
+        // Save immediately after every answer
+        await SavePersistedStatsAsync();
     }
 
-    private void ResetGame()
+    private async Task ResetGame()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.ResetGame");
 
@@ -391,23 +396,36 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
 
         ComparisonService.Score.Reset();
+
+        // Reset session in persisted stats but keep lifetime
+        if (_persistedStats != null)
+        {
+            _persistedStats.SessionCorrect = 0;
+            _persistedStats.SessionTotal = 0;
+            _persistedStats.SessionCurrentStreak = 0;
+            _persistedStats.SessionBestStreak = 0;
+        }
+
         ResetCounter.Add(1);
 
+        await SavePersistedStatsAsync();
         StartNewRound();
     }
 
-    private void SetQuestion(CountryComparisonQuestion question)
+    private async Task SetQuestion(CountryComparisonQuestion question)
     {
         _randomMode = false;
         _currentQuestion = question;
         QuestionTypeChangeCounter.Add(1);
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
-    private void ToggleRandomMode()
+    private async Task ToggleRandomMode()
     {
         _randomMode = true;
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
     private string GetCardClass(CountryData country)
@@ -423,8 +441,7 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     }
 
     /// <summary>
-    /// Custom formatting for GDP to show in billions instead of millions with "M" suffix.
-    /// Also handles other question types appropriately.
+    /// Custom formatting for GDP - NO "M" suffix. Shows B for billions, T for trillions.
     /// </summary>
     private string FormatValue(CountryData country)
     {
@@ -433,16 +450,22 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         var value = _currentQuestion.GetValue(country);
         if (!value.HasValue) return "N/A";
 
-        // Special handling for GDP - convert from millions to billions for readability
+        // Special handling for GDP - stored in millions, display in billions/trillions
         if (_currentQuestion.Id == "gdp")
         {
             var billions = value.Value / 1000.0;
             if (billions >= 1000)
-                return $"${billions / 1000:N2}T"; // Trillions
+                return $"${billions / 1000:N2}T";
             else if (billions >= 1)
-                return $"${billions:N1}B"; // Billions
+                return $"${billions:N1}B";
             else
-                return $"${value.Value:N0}M"; // Keep millions for small values
+                return $"${value.Value:N0}M";
+        }
+
+        // Special handling for GDP per capita - no "M", just dollars
+        if (_currentQuestion.Id == "gdp_per_capita")
+        {
+            return $"${value.Value:N0}";
         }
 
         // Use default formatting for all other question types

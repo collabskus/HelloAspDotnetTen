@@ -1,197 +1,156 @@
 @page "/state-compare"
-@using System.Diagnostics
-@using System.Diagnostics.Metrics
-@using System.Text.Json
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
+@using System.Text.Json
 @inject StateComparisonService ComparisonService
 @inject ILogger<StateCompare> Logger
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
-<PageTitle>State Comparison Game</PageTitle>
+<PageTitle>US State Comparison</PageTitle>
 
-<h1 class="h3 mb-2">State Comparison Game</h1>
+<div class="game-container">
+    <h1 class="game-title">🇺🇸 US State Comparison</h1>
 
-<div class="score-display mb-3">
-    <span class="badge bg-primary fs-6">
-        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
-        @if (ComparisonService.Score.TotalQuestions > 0)
+    <div class="score-display">
+        <span class="score">Score: @ComparisonService.Score.CorrectAnswers/@ComparisonService.Score.TotalQuestions</span>
+        @if (ComparisonService.Score.CurrentStreak > 0)
         {
-            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+            <span class="streak">🔥 @ComparisonService.Score.CurrentStreak streak</span>
         }
-    </span>
-    @if (ComparisonService.Score.CurrentStreak > 1)
-    {
-        <span class="badge bg-warning text-dark fs-6 ms-1">🔥 @ComparisonService.Score.CurrentStreak streak</span>
-    }
-    @if (ComparisonService.Score.BestStreak > 1)
-    {
-        <span class="badge bg-secondary fs-6 ms-1">Best: @ComparisonService.Score.BestStreak</span>
-    }
-    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
-</div>
-
-@if (_currentQuestion is not null && _state1 is not null && _state2 is not null)
-{
-    <div class="question-section mb-3">
-        <h3 class="text-center h5">@_currentQuestion.QuestionTemplate</h3>
+        @if (ComparisonService.Score.BestStreak > 0)
+        {
+            <span class="best-streak">⭐ Best: @ComparisonService.Score.BestStreak</span>
+        }
     </div>
 
-    <div class="comparison-container">
-        <div class="comparison-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _state1)
-            {
-                <span class="correct-indicator">✓</span>
-            }
-            <div class="card-content">
+    @if (_currentQuestion != null && _state1 != null && _state2 != null)
+    {
+        <p class="question-text">@_currentQuestion.QuestionTemplate</p>
+
+        <div class="comparison-container">
+            <div class="comparison-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
                 <div class="state-abbrev">@_state1.Abbreviation</div>
-                <h4 class="state-name">@_state1.Name</h4>
+                <div class="state-name">@_state1.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state1)</p>
+                    <div class="value-reveal">@_currentQuestion.GetFormattedValue(_state1)</div>
                 }
             </div>
-        </div>
 
-        <div class="vs-badge">VS</div>
+            <div class="vs-badge">VS</div>
 
-        <div class="comparison-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _state2)
-            {
-                <span class="correct-indicator">✓</span>
-            }
-            <div class="card-content">
+            <div class="comparison-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
                 <div class="state-abbrev">@_state2.Abbreviation</div>
-                <h4 class="state-name">@_state2.Name</h4>
+                <div class="state-name">@_state2.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state2)</p>
+                    <div class="value-reveal">@_currentQuestion.GetFormattedValue(_state2)</div>
                 }
             </div>
         </div>
-    </div>
 
-    @if (_hasAnswered && _lastResult is not null)
-    {
-        <div class="result-section text-center mt-3">
-            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger") py-2 mb-2">
-                @if (_lastResult.IsCorrect)
-                {
-                    <strong>✓ Correct!</strong>
-                }
-                else
-                {
-                    <strong>✗ Wrong!</strong>
-                    <span>@_lastResult.CorrectAnswer.Name was correct.</span>
-                }
+        @if (_hasAnswered && _lastResult != null)
+        {
+            <div class="result-message @(_lastResult.IsCorrect ? "correct" : "wrong")">
+                @(_lastResult.IsCorrect ? "✓ Correct!" : "✗ Wrong!")
             </div>
-            <button class="btn btn-primary" @onclick="StartNewRound">Next Question →</button>
-        </div>
+            <button class="btn btn-primary next-btn" @onclick="StartNewRound">Next →</button>
+        }
     }
-}
 
-<div class="question-buttons mt-3">
-    <small class="text-muted d-block mb-2">Question Type:</small>
-    <div class="btn-group btn-group-sm flex-wrap" role="group">
-        <button class="btn @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
+    <div class="controls mt-3">
+        <button class="btn btn-sm @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
             🎲 Random
         </button>
-        @foreach (var q in ComparisonService.AvailableQuestions)
+        @foreach (var q in ComparisonService.Questions)
         {
-            <button class="btn @(!_randomMode && _currentQuestion?.Id == q.Id ? "btn-primary" : "btn-outline-primary")"
+            <button class="btn btn-sm @(_currentQuestion?.Id == q.Id && !_randomMode ? "btn-primary" : "btn-outline-primary")"
                     @onclick="() => SetQuestion(q)">
                 @GetShortQuestionName(q.Id)
             </button>
         }
+        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="ResetGame">Reset</button>
     </div>
-</div>
 
-@if (_persistedStats != null)
-{
-    <div class="lifetime-stats mt-3">
-        <small class="text-muted">
-            Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
-            (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
-            | Best Streak: @_persistedStats.BestStreak
-            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
-        </small>
-    </div>
-}
+    @if (_persistedStats != null)
+    {
+        <div class="lifetime-stats mt-3">
+            <small class="text-muted">
+                Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
+                (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
+                | Best Streak: @_persistedStats.BestStreak
+                <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
+            </small>
+        </div>
+    }
+</div>
 
 @code {
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE KEY - NAMESPACED FOR THIS COMPONENT
+    // LOCAL STORAGE KEY
     // ═══════════════════════════════════════════════════════════════════════════
-
     private const string LocalStorageKey = "HelloAspDotnetTen.StateCompare.Stats";
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OPENTELEMETRY INSTRUMENTATION
     // ═══════════════════════════════════════════════════════════════════════════
-
     private static readonly ActivitySource ActivitySource = new("BlazorApp.StateCompare", "1.0.0");
     private static readonly Meter Meter = new("BlazorApp.StateCompare", "1.0.0");
 
-    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
-        "statecompare.rounds", unit: "{rounds}", description: "Total rounds started");
-    private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.answers", unit: "{answers}", description: "Total answers given");
-    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.correct_answers", unit: "{answers}", description: "Total correct answers");
-    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.wrong_answers", unit: "{answers}", description: "Total wrong answers");
-    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
-        "statecompare.resets", unit: "{resets}", description: "Total game resets");
-    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
-        "statecompare.question_type_changes", unit: "{changes}", description: "Question type changes");
-    private static readonly Counter<long> TieSkipCounter = Meter.CreateCounter<long>(
-        "statecompare.tie_skips", unit: "{skips}", description: "Pairs skipped due to equal values");
-    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
-        "statecompare.localstorage_loads", unit: "{loads}", description: "Local storage loads");
-    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
-        "statecompare.localstorage_saves", unit: "{saves}", description: "Local storage saves");
-
-    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
-        "statecompare.streak_length", unit: "{streak}", description: "Streak lengths when broken");
-    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
-        "statecompare.current_score", unit: "{score}", description: "Current session score");
-    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
-        "statecompare.current_streak", unit: "{streak}", description: "Current streak");
+    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>("statecompare.rounds", "rounds", "Rounds started");
+    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>("statecompare.correct_answers", "answers", "Correct answers");
+    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>("statecompare.wrong_answers", "answers", "Wrong answers");
+    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>("statecompare.resets", "resets", "Game resets");
+    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>("statecompare.question_type_changes", "changes", "Question type changes");
+    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>("statecompare.streak_length", "streak", "Streak lengths when broken");
+    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>("statecompare.current_score", "score", "Current score");
+    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>("statecompare.current_streak", "streak", "Current streak");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>("statecompare.storage.loads", "operations", "Local storage loads");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>("statecompare.storage.saves", "operations", "Local storage saves");
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // COMPONENT STATE
+    // GAME STATE
     // ═══════════════════════════════════════════════════════════════════════════
-
     private StateData? _state1;
     private StateData? _state2;
     private ComparisonQuestion? _currentQuestion;
     private ComparisonResult? _lastResult;
     private bool _hasAnswered;
     private bool _randomMode = true;
+    private int _previousStreak;
 
     // Local storage state
     private ComparePersistedStats? _persistedStats;
     private bool _isJsRuntimeAvailable = false;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSISTED STATS MODEL (shared pattern for StateCompare/CountryCompare)
+    // PERSISTED STATS MODEL - INCLUDES SESSION STATE
     // ═══════════════════════════════════════════════════════════════════════════
-
     private class ComparePersistedStats
     {
+        // Lifetime stats
         public int TotalQuestions { get; set; }
         public int TotalCorrect { get; set; }
         public int BestStreak { get; set; }
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+
+        // SESSION STATE - survives page reload
+        public int SessionCorrect { get; set; }
+        public int SessionTotal { get; set; }
+        public int SessionCurrentStreak { get; set; }
+        public int SessionBestStreak { get; set; }
+        public bool RandomMode { get; set; } = true;
+        public string? CurrentQuestionId { get; set; }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // LIFECYCLE METHODS
     // ═══════════════════════════════════════════════════════════════════════════
-
     protected override void OnInitialized()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.Initialize");
@@ -211,18 +170,17 @@
 
     public async ValueTask DisposeAsync()
     {
-        // Save final stats on dispose
+        // Update best streak before saving
         if (_persistedStats != null && ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
         {
             _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
-            await SavePersistedStatsAsync();
         }
+        await SavePersistedStatsAsync();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE OPERATIONS
+    // LOCAL STORAGE OPERATIONS - SAVE EVERYTHING
     // ═══════════════════════════════════════════════════════════════════════════
-
     private async Task LoadPersistedStatsAsync()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.LoadPersistedStats");
@@ -235,8 +193,38 @@
             {
                 _persistedStats = JsonSerializer.Deserialize<ComparePersistedStats>(json);
                 LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
-                Logger.LogInformation("Loaded StateCompare stats: {Total} questions, {Correct} correct",
-                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0);
+
+                // RESTORE SESSION STATE
+                if (_persistedStats != null)
+                {
+                    // Restore to ComparisonService.Score
+                    for (int i = 0; i < _persistedStats.SessionCorrect; i++)
+                    {
+                        ComparisonService.Score.CorrectAnswers++;
+                    }
+                    for (int i = 0; i < _persistedStats.SessionTotal; i++)
+                    {
+                        ComparisonService.Score.TotalQuestions++;
+                    }
+                    ComparisonService.Score.CurrentStreak = _persistedStats.SessionCurrentStreak;
+                    ComparisonService.Score.BestStreak = _persistedStats.SessionBestStreak;
+
+                    // Restore UI state
+                    _randomMode = _persistedStats.RandomMode;
+                    if (!string.IsNullOrEmpty(_persistedStats.CurrentQuestionId))
+                    {
+                        _currentQuestion = ComparisonService.Questions.FirstOrDefault(q => q.Id == _persistedStats.CurrentQuestionId);
+                    }
+
+                    // Sync gauges
+                    CurrentScoreGauge.Add(_persistedStats.SessionCorrect);
+                    CurrentStreakGauge.Add(_persistedStats.SessionCurrentStreak);
+                }
+
+                Logger.LogInformation(
+                    "Loaded StateCompare stats: Lifetime={Total}/{Correct}, Session={SessionTotal}/{SessionCorrect}",
+                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0,
+                    _persistedStats?.SessionTotal ?? 0, _persistedStats?.SessionCorrect ?? 0);
             }
             else
             {
@@ -258,7 +246,21 @@
 
         try
         {
+            // SAVE SESSION STATE
+            _persistedStats.SessionCorrect = ComparisonService.Score.CorrectAnswers;
+            _persistedStats.SessionTotal = ComparisonService.Score.TotalQuestions;
+            _persistedStats.SessionCurrentStreak = ComparisonService.Score.CurrentStreak;
+            _persistedStats.SessionBestStreak = ComparisonService.Score.BestStreak;
+            _persistedStats.RandomMode = _randomMode;
+            _persistedStats.CurrentQuestionId = _currentQuestion?.Id;
             _persistedStats.LastPlayedUtc = DateTime.UtcNow;
+
+            // Update lifetime best streak if needed
+            if (ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
+            {
+                _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
+            }
+
             var json = JsonSerializer.Serialize(_persistedStats);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
             LocalStorageSaveCounter.Add(1);
@@ -276,8 +278,17 @@
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+
+            // Reset gauges
+            CurrentScoreGauge.Add(-ComparisonService.Score.CorrectAnswers);
+            CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
+
+            // Reset service score
+            ComparisonService.Score.Reset();
+
             _persistedStats = new ComparePersistedStats();
             Logger.LogInformation("Cleared StateCompare persisted stats");
+            StartNewRound();
         }
         catch (Exception ex)
         {
@@ -288,7 +299,6 @@
     // ═══════════════════════════════════════════════════════════════════════════
     // GAME LOGIC
     // ═══════════════════════════════════════════════════════════════════════════
-
     private void StartNewRound()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.StartNewRound");
@@ -299,84 +309,62 @@
         }
         else
         {
-            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+            _currentQuestion ??= ComparisonService.Questions.First();
         }
 
-        // Get a pair where values are NOT equal (no ties)
-        var pair = ComparisonService.GetRandomStatePairWithoutTie(_currentQuestion);
-        if (pair == null)
-        {
-            // Fallback if somehow no valid pairs exist
-            (_state1, _state2) = ComparisonService.GetRandomStatePair();
-            TieSkipCounter.Add(1);
-        }
-        else
-        {
-            (_state1, _state2) = pair.Value;
-        }
+        // Get pair WITHOUT ties - this ensures we never ask gotcha questions
+        (_state1, _state2) = ComparisonService.GetRandomStatePairWithoutTie(_currentQuestion);
 
-        _hasAnswered = false;
         _lastResult = null;
-
+        _hasAnswered = false;
         RoundCounter.Add(1);
 
-        activity?.SetTag("state1.name", _state1?.Name);
-        activity?.SetTag("state2.name", _state2?.Name);
-        activity?.SetTag("question.type", _currentQuestion?.Id);
-
-        Logger.LogInformation("New round: {State1} vs {State2}, Question: {QuestionType}",
-            _state1?.Name, _state2?.Name, _currentQuestion?.Id);
+        activity?.SetTag("state1", _state1?.Name);
+        activity?.SetTag("state2", _state2?.Name);
+        activity?.SetTag("question", _currentQuestion?.Id);
     }
 
     private async Task SelectState(StateData selectedState)
     {
-        if (_hasAnswered || _currentQuestion is null || _state1 is null || _state2 is null)
-            return;
+        if (_hasAnswered || _currentQuestion == null || _state1 == null || _state2 == null) return;
 
         using var activity = ActivitySource.StartActivity("StateCompare.SelectState");
 
-        var previousStreak = ComparisonService.Score.CurrentStreak;
+        _previousStreak = ComparisonService.Score.CurrentStreak;
+
         _lastResult = ComparisonService.CheckAnswer(_state1, _state2, _currentQuestion, selectedState);
         _hasAnswered = true;
 
-        AnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
-
-        if (_lastResult.IsCorrect)
+        // Update persisted lifetime stats
+        if (_persistedStats != null)
         {
-            CorrectAnswerCounter.Add(1);
-            CurrentScoreGauge.Add(1);
-            CurrentStreakGauge.Add(1);
-
-            // Update persisted stats
-            if (_persistedStats != null)
+            _persistedStats.TotalQuestions++;
+            if (_lastResult.IsCorrect)
             {
-                _persistedStats.TotalQuestions++;
                 _persistedStats.TotalCorrect++;
-                if (ComparisonService.Score.CurrentStreak > _persistedStats.BestStreak)
-                    _persistedStats.BestStreak = ComparisonService.Score.CurrentStreak;
-                await SavePersistedStatsAsync();
+                CorrectAnswerCounter.Add(1);
+                CurrentScoreGauge.Add(1);
+                CurrentStreakGauge.Add(1);
             }
-        }
-        else
-        {
-            WrongAnswerCounter.Add(1);
-            if (previousStreak > 0)
+            else
             {
-                StreakHistogram.Record(previousStreak);
-                CurrentStreakGauge.Add(-previousStreak);
-            }
-
-            if (_persistedStats != null)
-            {
-                _persistedStats.TotalQuestions++;
-                await SavePersistedStatsAsync();
+                WrongAnswerCounter.Add(1);
+                if (_previousStreak > 0)
+                {
+                    StreakHistogram.Record(_previousStreak);
+                    CurrentStreakGauge.Add(-_previousStreak);
+                }
             }
         }
 
-        activity?.SetTag("result", _lastResult.IsCorrect ? "correct" : "wrong");
+        activity?.SetTag("correct", _lastResult.IsCorrect);
+        activity?.SetTag("streak", ComparisonService.Score.CurrentStreak);
+
+        // Save immediately after every answer
+        await SavePersistedStatsAsync();
     }
 
-    private void ResetGame()
+    private async Task ResetGame()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.ResetGame");
 
@@ -386,7 +374,18 @@
         CurrentScoreGauge.Add(-finalScore);
         CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
 
+        // Reset service score but keep lifetime stats
         ComparisonService.Score.Reset();
+
+        // Reset session in persisted stats but keep lifetime
+        if (_persistedStats != null)
+        {
+            _persistedStats.SessionCorrect = 0;
+            _persistedStats.SessionTotal = 0;
+            _persistedStats.SessionCurrentStreak = 0;
+            _persistedStats.SessionBestStreak = 0;
+        }
+
         ResetCounter.Add(1);
 
         activity?.SetTag("final.score", finalScore);
@@ -394,10 +393,11 @@
 
         Logger.LogInformation("Game reset. Final score: {Score}, Best streak: {BestStreak}", finalScore, bestStreak);
 
+        await SavePersistedStatsAsync();
         StartNewRound();
     }
 
-    private void SetQuestion(ComparisonQuestion question)
+    private async Task SetQuestion(ComparisonQuestion question)
     {
         using var activity = ActivitySource.StartActivity("StateCompare.SetQuestion");
 
@@ -406,12 +406,14 @@
         QuestionTypeChangeCounter.Add(1);
 
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
-    private void ToggleRandomMode()
+    private async Task ToggleRandomMode()
     {
         _randomMode = true;
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
     private string GetCardClass(StateData state)
@@ -429,8 +431,8 @@
     private string GetShortQuestionName(string id) => id switch
     {
         "area" => "Area",
-        "population" => "Population",
-        "representatives" => "House Reps",
+        "population" => "Pop",
+        "representatives" => "Reps",
         _ => id
     };
 }

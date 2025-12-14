@@ -3,179 +3,228 @@
    Designed to fit on iPhone SE (375x667) and all larger screens
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.game-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.game-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.score-display {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.score {
+    font-weight: bold;
+}
+
+.streak {
+    color: #f59e0b;
+}
+
+.best-streak {
+    color: #8b5cf6;
+}
+
+.question-text {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+    min-height: 2em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPARISON CARDS - Side by side, fits on small screens
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .comparison-container {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    margin: 0.5rem 0;
 }
 
 .comparison-card {
     flex: 1;
-    max-width: 200px;
-    min-width: 120px;
+    max-width: 140px;
+    min-width: 100px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
+    border-radius: 8px;
+    padding: 0.75rem 0.5rem;
     color: white;
-    position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
 }
 
-    .comparison-card.clickable {
-        cursor: pointer;
-    }
-
-        .comparison-card.clickable:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-    .comparison-card.correct-answer {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
-    }
-
-    .comparison-card.wrong-answer {
-        background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
-        box-shadow: 0 0 20px rgba(239, 71, 58, 0.5);
-    }
-
-.correct-indicator {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #28a745;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.875rem;
+.comparison-card.clickable {
+    cursor: pointer;
 }
 
-.card-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.comparison-card.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.comparison-card.correct-answer {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 0 3px #34d399;
+}
+
+.comparison-card.wrong-answer {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 0 3px #f87171;
 }
 
 .state-abbrev {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: bold;
-    background: rgba(255,255,255,0.2);
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0.5rem;
+    line-height: 1;
 }
 
 .state-name {
-    font-size: 1rem;
-    margin: 0;
-    font-weight: 600;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.stat-reveal {
-    font-size: 0.875rem;
-    margin: 0.5rem 0 0 0;
-    background: rgba(0,0,0,0.2);
-    padding: 0.25rem 0.5rem;
+.value-reveal {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
 }
 
 .vs-badge {
-    background: #343a40;
-    color: white;
-    padding: 0.5rem;
-    border-radius: 50%;
     font-weight: bold;
-    font-size: 0.875rem;
+    font-size: 1rem;
+    color: #6b7280;
+    padding: 0 0.25rem;
     flex-shrink: 0;
 }
 
-.score-display {
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESULT AND CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.result-message {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.result-message.correct {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.result-message.wrong {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.next-btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    margin: 0.25rem 0;
+}
+
+.controls {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    justify-content: center;
     gap: 0.25rem;
 }
 
-.question-section h3 {
-    margin: 0;
-}
-
-.question-buttons .btn-group {
-    gap: 2px;
-}
-
-.question-buttons .btn {
+.controls .btn {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
 }
 
 .lifetime-stats {
-    text-align: center;
-}
-
-.result-section .alert {
-    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE OPTIMIZATIONS (iPhone SE: 375px width)
+   MOBILE-SPECIFIC ADJUSTMENTS (iPhone SE: 375x667)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 576px) {
-    h1 {
-        font-size: 1.25rem !important;
+@media (max-width: 400px) {
+    .game-container {
+        padding: 0.25rem;
     }
-
+    
+    .game-title {
+        font-size: 1.1rem;
+    }
+    
     .comparison-card {
-        padding: 0.75rem;
-        min-width: 100px;
+        min-width: 90px;
+        max-width: 120px;
+        padding: 0.5rem 0.25rem;
     }
-
+    
     .state-abbrev {
         font-size: 1.5rem;
-        padding: 0.375rem 0.75rem;
     }
-
+    
     .state-name {
-        font-size: 0.875rem;
-    }
-
-    .stat-reveal {
-        font-size: 0.75rem;
-    }
-
-    .vs-badge {
-        padding: 0.375rem;
-        font-size: 0.75rem;
-    }
-
-    .score-display .badge {
-        font-size: 0.75rem !important;
-    }
-
-    .question-buttons .btn {
         font-size: 0.65rem;
-        padding: 0.2rem 0.35rem;
+    }
+    
+    .value-reveal {
+        font-size: 0.7rem;
+    }
+    
+    .question-text {
+        font-size: 0.9rem;
+    }
+    
+    .controls .btn {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
     }
 }
 
-/* Extra small screens */
-@media (max-width: 360px) {
-    .comparison-card {
-        min-width: 90px;
-        padding: 0.5rem;
+/* Ensure content doesn't overflow viewport height */
+@media (max-height: 700px) {
+    .game-title {
+        margin-bottom: 0.25rem;
     }
-
-    .state-abbrev {
-        font-size: 1.25rem;
+    
+    .score-display {
+        margin-bottom: 0.25rem;
+    }
+    
+    .comparison-container {
+        margin: 0.25rem 0;
+    }
+    
+    .result-message {
+        margin: 0.25rem 0;
+        padding: 0.25rem;
+    }
+    
+    .next-btn {
+        padding: 0.4rem 1rem;
     }
 }

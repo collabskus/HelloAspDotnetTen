@@ -11,17 +11,17 @@ public class CountryComparisonService
     private readonly List<CountryData> _countries;
     private readonly List<CountryComparisonQuestion> _questions;
     private readonly Random _random = new();
-    
+
     public CountryGameScore Score { get; } = new();
     public IReadOnlyList<CountryData> Countries => _countries;
     public IReadOnlyList<CountryComparisonQuestion> AvailableQuestions => _questions;
-    
+
     public CountryComparisonService()
     {
         _countries = CountryDataStore.GetAllCountries();
         _questions = InitializeQuestions();
     }
-    
+
     /// <summary>
     /// Gets two random countries that both have data for the specified question.
     /// </summary>
@@ -29,22 +29,16 @@ public class CountryComparisonService
     {
         var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
         if (eligible.Count < 2) return null;
-        
+
         var idx1 = _random.Next(eligible.Count);
         int idx2;
         do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
         return (eligible[idx1], eligible[idx2]);
     }
-    
+
     public CountryComparisonQuestion GetRandomQuestion() => _questions[_random.Next(_questions.Count)];
-    
-    public CountryComparisonQuestion GetRandomViableQuestion()
-    {
-        var viable = _questions.Where(q => _countries.Count(c => q.HasDataFor(c)) >= 2).ToList();
-        return viable[_random.Next(viable.Count)];
-    }
-    
-    public int GetCountryCountForQuestion(CountryComparisonQuestion question) 
+
+    public int GetCountryCountForQuestion(CountryComparisonQuestion question)
         => _countries.Count(c => question.HasDataFor(c));
 
     public CountryData GetCorrectAnswer(CountryData c1, CountryData c2, CountryComparisonQuestion question)
@@ -56,52 +50,157 @@ public class CountryComparisonService
         return v1 > v2 ? c1 : c2;
     }
 
-    public CountryComparisonResult CheckAnswer(CountryData c1, CountryData c2, 
-        CountryComparisonQuestion question, CountryData userChoice)
-    {
-        var correct = GetCorrectAnswer(c1, c2, question);
-        var result = new CountryComparisonResult
-        {
-            Country1 = c1, Country2 = c2, Question = question,
-            CorrectAnswer = correct, UserChoice = userChoice
-        };
-        Score.RecordAnswer(result);
-        return result;
-    }
-
     /// <summary>
-    /// Gets two random countries that both have data for the specified question
-    /// AND have DIFFERENT values (no ties allowed).
+    /// Gets a random pair of countries where their values for the given question are NOT equal.
     /// This prevents "gotcha" questions where both countries have the same value.
+    /// Returns null if not enough valid pairs exist.
     /// </summary>
     public (CountryData Country1, CountryData Country2)? GetRandomCountryPairWithoutTie(CountryComparisonQuestion question)
     {
-        var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
-        if (eligible.Count < 2) return null;
+        // Filter to countries that have data for this question
+        var validCountries = _countries.Where(c => question.GetValue(c).HasValue).ToList();
 
-        // Try to find a pair with different values (max 100 attempts to avoid infinite loop)
+        if (validCountries.Count < 2)
+        {
+            return null;
+        }
+
+        // Try to find a pair without equal values (max 100 attempts to avoid infinite loop)
         for (int attempt = 0; attempt < 100; attempt++)
         {
-            var idx1 = _random.Next(eligible.Count);
-            int idx2;
-            do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
+            var country1 = validCountries[_random.Next(validCountries.Count)];
+            var country2 = validCountries[_random.Next(validCountries.Count)];
 
-            var country1 = eligible[idx1];
-            var country2 = eligible[idx2];
+            // Ensure different countries
+            if (country1 == country2) continue;
 
             var value1 = question.GetValue(country1);
             var value2 = question.GetValue(country2);
 
-            // If values are different, we have a valid pair (no tie)
-            if (value1.HasValue && value2.HasValue && Math.Abs(value1.Value - value2.Value) > 0.0001)
+            // Ensure values are NOT equal (prevents gotcha questions)
+            if (value1 != value2)
             {
                 return (country1, country2);
             }
         }
 
-        // Fallback: couldn't find a non-tie pair
-        // This is very unlikely with real-world country data
+        // Fallback: try to find any two countries with different values
+        for (int i = 0; i < validCountries.Count; i++)
+        {
+            for (int j = i + 1; j < validCountries.Count; j++)
+            {
+                var value1 = question.GetValue(validCountries[i]);
+                var value2 = question.GetValue(validCountries[j]);
+                if (value1 != value2)
+                {
+                    return (validCountries[i], validCountries[j]);
+                }
+            }
+        }
+
+        // If all countries have the same value, return null
         return null;
+    }
+
+    /// <summary>
+    /// Gets a random viable question (one that has at least 2 countries with different values).
+    /// </summary>
+    public CountryComparisonQuestion? GetRandomViableQuestion()
+    {
+        var viableQuestions = _questions
+            .Where(q => GetCountryCountForQuestion(q) >= 2)
+            .ToList();
+
+        if (viableQuestions.Count == 0)
+            return null;
+
+        return viableQuestions[_random.Next(viableQuestions.Count)];
+    }
+
+    /// <summary>
+    /// Checks the user's answer and records the result with streak tracking.
+    /// </summary>
+    public CountryComparisonResult CheckAnswer(CountryData country1, CountryData country2,
+        CountryComparisonQuestion question, CountryData userChoice)
+    {
+        var correct = GetCorrectAnswer(country1, country2, question);
+        var isCorrect = correct == userChoice;
+
+        var result = new CountryComparisonResult
+        {
+            Country1 = country1,
+            Country2 = country2,
+            Question = question,
+            CorrectAnswer = correct,
+            UserChoice = userChoice
+        };
+
+        // Update score with streak tracking
+        Score.TotalQuestions++;
+        if (isCorrect)
+        {
+            Score.CorrectAnswers++;
+            Score.CurrentStreak++;
+            if (Score.CurrentStreak > Score.BestStreak)
+            {
+                Score.BestStreak = Score.CurrentStreak;
+            }
+        }
+        else
+        {
+            Score.CurrentStreak = 0;
+        }
+
+        Score.History.Add(result);
+        return result;
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ALSO UPDATE CountryGameScore class (in CountryData.cs) to have public setters:
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Tracks the user's score during a country comparison game session.
+    /// Uses public setters to allow restoration from local storage.
+    /// </summary>
+    public class CountryGameScore
+    {
+        // Use public setters to allow restoration from persisted state
+        public int CorrectAnswers { get; set; }
+        public int TotalQuestions { get; set; }
+        public int CurrentStreak { get; set; }
+        public int BestStreak { get; set; }
+        public List<CountryComparisonResult> History { get; } = [];
+
+        public double PercentageCorrect => TotalQuestions > 0
+            ? (double)CorrectAnswers / TotalQuestions * 100
+            : 0;
+
+        public void RecordAnswer(CountryComparisonResult result)
+        {
+            TotalQuestions++;
+            if (result.IsCorrect)
+            {
+                CorrectAnswers++;
+                CurrentStreak++;
+                if (CurrentStreak > BestStreak) BestStreak = CurrentStreak;
+            }
+            else
+            {
+                CurrentStreak = 0;
+            }
+            History.Add(result);
+        }
+
+        public void Reset()
+        {
+            CorrectAnswers = 0;
+            TotalQuestions = 0;
+            CurrentStreak = 0;
+            BestStreak = 0;
+            History.Clear();
+        }
     }
 
     private static List<CountryComparisonQuestion> InitializeQuestions() =>
@@ -355,10 +454,20 @@ public static class CountryDataStore
     private static CountryData C(string name, string iso2, string flag, string cont,
         long? area, long? pop, long? gdp, int? gdpPc, int? gniPpp,
         double? density, double? literacy, double? hdi, double? lifeExp) => new()
-    {
-        Name = name, IsoCode2 = iso2, IsoCode3 = iso2 + "X", FlagEmoji = flag,
-        Continent = cont, AreaSquareKm = area, Population = pop,
-        GdpMillionsUsd = gdp, GdpPerCapitaUsd = gdpPc, GniPerCapitaPpp = gniPpp,
-        PopulationDensity = density, LiteracyRate = literacy, Hdi = hdi, LifeExpectancy = lifeExp
-    };
+        {
+            Name = name,
+            IsoCode2 = iso2,
+            IsoCode3 = iso2 + "X",
+            FlagEmoji = flag,
+            Continent = cont,
+            AreaSquareKm = area,
+            Population = pop,
+            GdpMillionsUsd = gdp,
+            GdpPerCapitaUsd = gdpPc,
+            GniPerCapitaPpp = gniPpp,
+            PopulationDensity = density,
+            LiteracyRate = literacy,
+            Hdi = hdi,
+            LifeExpectancy = lifeExp
+        };
 }
