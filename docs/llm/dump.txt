@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/14/2025 12:14:22
+Generated: 12/14/2025 12:24:03
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -171,8 +171,8 @@ FILE CONTENTS:
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\.github\workflows\build.yml
-SIZE: 0.73 KB
-MODIFIED: 12/14/2025 12:13:32
+SIZE: 0.91 KB
+MODIFIED: 12/14/2025 12:23:19
 ================================================================================
 
 name: Build and Verify
@@ -187,7 +187,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
     
     steps:
     - name: Checkout code
@@ -199,10 +202,10 @@ jobs:
         dotnet-version: '10.0.x'
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore source/HelloAspDotnetTen/HelloAspDotnetTen.slnx
     
     - name: Build solution
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build source/HelloAspDotnetTen/HelloAspDotnetTen.slnx --configuration Release --no-restore
     
     - name: Build summary
       if: success()
@@ -65595,7 +65598,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/14/2025 12:14:22
+EXPORT COMPLETED: 12/14/2025 12:24:03
 Total Files Exported: 72
 Output File: .\docs\llm\dump.txt
 ===============================================================================
