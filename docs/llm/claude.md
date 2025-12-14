@@ -2249,3 +2249,62 @@ public CountryData GetCorrectAnswer(CountryData c1, CountryData c2, CountryCompa
     return v1 > v2 ? c1 : c2;
 }
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This isn't working as intended. 
+The counter page works almost right. 
+I can see the life times statistics even after a page reload and even after a new publish of the application. 
+However, actual historical increments and counter count are gone so it is not quite completely correct. 
+The state and country scores don't survive a page refresh at all. 
+We should store as much data as possible in the local storage 
+and retrieve it all if available when the page loads. 
+All of it. 
+Not some of it. 
+All of it. 
