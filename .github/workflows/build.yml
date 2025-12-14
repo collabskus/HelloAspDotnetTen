@@ -1,0 +1,36 @@
+name: Build and Verify
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build solution
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Build summary
+      if: success()
+      run: echo "✅ Build completed successfully!"
+    
+    - name: Build failed
+      if: failure()
+      run: echo "❌ Build failed. Please check the errors above."
