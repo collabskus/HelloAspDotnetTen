@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/14/2025 09:44:05
+Generated: 12/14/2025 10:18:38
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -862,15 +862,18 @@ async function retryWhenDocumentBecomesVisible() {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
-SIZE: 9.85 KB
-MODIFIED: 12/08/2025 14:48:07
+SIZE: 25.15 KB
+MODIFIED: 12/14/2025 10:01:59
 ================================================================================
 
 @page "/counter"
 @using System.Diagnostics
 @using System.Diagnostics.Metrics
+@using System.Text.Json
 @rendermode InteractiveServer
 @inject ILogger<Counter> Logger
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <PageTitle>Counter</PageTitle>
 
@@ -880,8 +883,12 @@ MODIFIED: 12/08/2025 14:48:07
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
-<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+<button class="btn btn-primary" @onclick="() => SlowlyIncrement()" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
     Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
+</button>
+
+<button class="btn @(isUnattendedMode ? "btn-danger" : "btn-secondary")" @onclick="ToggleUnattendedMode">
+    @(isUnattendedMode ? "Stop Unattended Mode" : "Start Unattended Mode")
 </button>
 
 @if (isIncrementing)
@@ -893,6 +900,17 @@ MODIFIED: 12/08/2025 14:48:07
             <span>currently, @incrementBy</span>
         }
     </p>
+}
+
+@if (isUnattendedMode)
+{
+    <div class="alert alert-info mt-2">
+        <strong>Unattended Mode Active</strong> - Automatically clicking "Slow Increment" when available.
+        @if (unattendedTossCount > 0)
+        {
+            <span>Unattended tosses this session: @unattendedTossCount</span>
+        }
+    </div>
 }
 
 @if (historical.Count > 0)
@@ -924,7 +942,33 @@ MODIFIED: 12/08/2025 14:48:07
     <p>Tosses: @historical.Count</p>
 }
 
+@if (persistedStats != null)
+{
+    <hr />
+    <h4>Lifetime Statistics (from Local Storage)</h4>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Total Tosses:</strong> @persistedStats.TotalTosses</p>
+            <p><strong>Total Wins:</strong> @persistedStats.TotalWins</p>
+            <p><strong>Total Losses:</strong> @persistedStats.TotalLosses</p>
+            <p><strong>Win Rate:</strong> @(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A")</p>
+            <p><strong>Highest Single Toss:</strong> @persistedStats.HighestTossValue</p>
+            <p><strong>Lowest Single Toss:</strong> @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue.ToString())</p>
+            <p><strong>First Played:</strong> @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</p>
+            <p><strong>Last Played:</strong> @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</p>
+            <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear History</button>
+        </div>
+    </div>
+}
+
 @code {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LOCAL STORAGE KEY CONSTANTS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Namespaced to avoid collisions with StateCompare/CountryCompare
+    private const string LocalStorageKey = "HelloAspDotnetTen.Counter.Stats";
+
     // ═══════════════════════════════════════════════════════════════════════════
     // OPENTELEMETRY INSTRUMENTATION
     // ═══════════════════════════════════════════════════════════════════════════
@@ -956,6 +1000,26 @@ MODIFIED: 12/08/2025 14:48:07
         unit: "{losses}",
         description: "Total number of losing tosses (<= 500)");
 
+    private static readonly Counter<long> UnattendedTossCounter = Meter.CreateCounter<long>(
+        "counter.unattended_tosses",
+        unit: "{tosses}",
+        description: "Total number of tosses made in unattended mode");
+
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
+        "counter.localstorage_loads",
+        unit: "{loads}",
+        description: "Number of times local storage was loaded");
+
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
+        "counter.localstorage_saves",
+        unit: "{saves}",
+        description: "Number of times local storage was saved");
+
+    private static readonly Counter<long> LocalStorageClearCounter = Meter.CreateCounter<long>(
+        "counter.localstorage_clears",
+        unit: "{clears}",
+        description: "Number of times local storage was cleared");
+
     // ── Histograms ────────────────────────────────────────────────────────────
     private static readonly Histogram<int> TossValueHistogram = Meter.CreateHistogram<int>(
         "counter.toss_value",
@@ -973,6 +1037,11 @@ MODIFIED: 12/08/2025 14:48:07
         unit: "{count}",
         description: "Current counter value");
 
+    private static readonly UpDownCounter<int> UnattendedModeGauge = Meter.CreateUpDownCounter<int>(
+        "counter.unattended_mode_active",
+        unit: "{active}",
+        description: "Whether unattended mode is currently active (1 or 0)");
+
     // ═══════════════════════════════════════════════════════════════════════════
     // COMPONENT STATE
     // ═══════════════════════════════════════════════════════════════════════════
@@ -986,12 +1055,172 @@ MODIFIED: 12/08/2025 14:48:07
     private const int WinThreshold = 500;
     private const int DelayMilliseconds = 1;
 
+    // Unattended mode state
+    private bool isUnattendedMode = false;
+    private CancellationTokenSource? unattendedCts;
+    private int unattendedTossCount = 0;
+
+    // Persisted statistics from local storage
+    private CounterPersistedStats? persistedStats;
+    private bool isJsRuntimeAvailable = false;
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PERSISTED STATS MODEL
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Model for persisted counter statistics.
+    /// This data is stored in browser local storage and is NOT personal/sensitive.
+    /// Clearing browser storage will reset these stats (by design).
+    /// </summary>
+    private class CounterPersistedStats
+    {
+        public int TotalTosses { get; set; }
+        public int TotalWins { get; set; }
+        public int TotalLosses { get; set; }
+        public int HighestTossValue { get; set; }
+        public int LowestTossValue { get; set; } = int.MaxValue;
+        public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+    }
+
     private class TossResult
     {
         public int Value { get; set; }
         public string Status { get; set; } = string.Empty;
         public string CssClass { get; set; } = string.Empty;
         public int RunningTotal { get; set; }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LIFECYCLE METHODS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            using var activity = ActivitySource.StartActivity("Counter.OnAfterRenderAsync.FirstRender");
+
+            isJsRuntimeAvailable = true;
+            await LoadPersistedStatsAsync();
+
+            activity?.SetTag("storage.loaded", persistedStats != null);
+            activity?.SetTag("storage.key", LocalStorageKey);
+
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        using var activity = ActivitySource.StartActivity("Counter.DisposeAsync");
+
+        // Stop unattended mode if running
+        if (isUnattendedMode)
+        {
+            activity?.SetTag("unattended.was_active", true);
+            await StopUnattendedModeAsync();
+        }
+
+        activity?.SetTag("disposed", true);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LOCAL STORAGE OPERATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    private async Task LoadPersistedStatsAsync()
+    {
+        using var activity = ActivitySource.StartActivity("Counter.LoadPersistedStats");
+
+        try
+        {
+            var json = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                persistedStats = JsonSerializer.Deserialize<CounterPersistedStats>(json);
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
+
+                activity?.SetTag("storage.found", true);
+                activity?.SetTag("storage.total_tosses", persistedStats?.TotalTosses ?? 0);
+
+                Logger.LogInformation(
+                    "Loaded persisted stats from local storage: TotalTosses={TotalTosses}, TotalWins={TotalWins}",
+                    persistedStats?.TotalTosses ?? 0, persistedStats?.TotalWins ?? 0);
+            }
+            else
+            {
+                // First time user - create new stats
+                persistedStats = new CounterPersistedStats();
+                await SavePersistedStatsAsync();
+
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
+                activity?.SetTag("storage.found", false);
+                activity?.SetTag("storage.created_new", true);
+
+                Logger.LogInformation("No existing stats found, created new persisted stats");
+            }
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetTag("error.type", ex.GetType().Name);
+
+            Logger.LogWarning(ex, "Failed to load persisted stats from local storage, creating new");
+            persistedStats = new CounterPersistedStats();
+        }
+    }
+
+    private async Task SavePersistedStatsAsync()
+    {
+        if (!isJsRuntimeAvailable || persistedStats == null) return;
+
+        using var activity = ActivitySource.StartActivity("Counter.SavePersistedStats");
+
+        try
+        {
+            persistedStats.LastPlayedUtc = DateTime.UtcNow;
+            var json = JsonSerializer.Serialize(persistedStats);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
+
+            LocalStorageSaveCounter.Add(1);
+            activity?.SetTag("storage.bytes", json.Length);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+
+            Logger.LogDebug("Saved persisted stats to local storage");
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogWarning(ex, "Failed to save persisted stats to local storage");
+        }
+    }
+
+    private async Task ClearPersistedStats()
+    {
+        using var activity = ActivitySource.StartActivity("Counter.ClearPersistedStats");
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+            persistedStats = new CounterPersistedStats();
+            await SavePersistedStatsAsync();
+
+            LocalStorageClearCounter.Add(1);
+            activity?.SetTag("storage.cleared", true);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+
+            Logger.LogInformation("Cleared persisted stats from local storage");
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogWarning(ex, "Failed to clear persisted stats from local storage");
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1022,11 +1251,13 @@ MODIFIED: 12/08/2025 14:48:07
             previousCount, currentCount);
     }
 
-    private async Task SlowlyIncrement()
+    private async Task SlowlyIncrement(bool isUnattended = false)
     {
         // Start a parent span for the entire slow increment operation
         using var activity = ActivitySource.StartActivity("Counter.SlowlyIncrement");
         var stopwatch = Stopwatch.StartNew();
+
+        activity?.SetTag("toss.is_unattended", isUnattended);
 
         int targetIncrement;
 
@@ -1051,6 +1282,12 @@ MODIFIED: 12/08/2025 14:48:07
         // Record toss metrics
         TossCounter.Add(1);
         TossValueHistogram.Record(targetIncrement);
+
+        if (isUnattended)
+        {
+            UnattendedTossCounter.Add(1);
+            unattendedTossCount++;
+        }
 
         if (isWin)
         {
@@ -1101,6 +1338,9 @@ MODIFIED: 12/08/2025 14:48:07
         // Record duration
         TossDurationHistogram.Record(stopwatch.Elapsed.TotalMilliseconds);
 
+        // Update persisted stats
+        await UpdatePersistedStatsAsync(targetIncrement, isWin);
+
         // Final span tags
         activity?.SetTag("counter.final_value", currentCount);
         activity?.SetTag("operation.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
@@ -1108,12 +1348,137 @@ MODIFIED: 12/08/2025 14:48:07
 
         // Structured logging with all context
         Logger.LogInformation(
-            "Slow increment completed: Value={TossValue}, Win={IsWin}, Duration={DurationMs}ms, FinalCount={FinalCount}",
-            targetIncrement, isWin, stopwatch.Elapsed.TotalMilliseconds, currentCount);
+            "Slow increment completed: Value={TossValue}, Win={IsWin}, Duration={DurationMs}ms, FinalCount={FinalCount}, Unattended={IsUnattended}",
+            targetIncrement, isWin, stopwatch.Elapsed.TotalMilliseconds, currentCount, isUnattended);
 
         isIncrementing = false;
         StateHasChanged();
     }
+
+    private async Task UpdatePersistedStatsAsync(int tossValue, bool isWin)
+    {
+        if (persistedStats == null) return;
+
+        using var activity = ActivitySource.StartActivity("Counter.UpdatePersistedStats");
+
+        persistedStats.TotalTosses++;
+        if (isWin)
+            persistedStats.TotalWins++;
+        else
+            persistedStats.TotalLosses++;
+
+        if (tossValue > persistedStats.HighestTossValue)
+            persistedStats.HighestTossValue = tossValue;
+        if (tossValue < persistedStats.LowestTossValue)
+            persistedStats.LowestTossValue = tossValue;
+
+        activity?.SetTag("stats.total_tosses", persistedStats.TotalTosses);
+        activity?.SetTag("stats.total_wins", persistedStats.TotalWins);
+        activity?.SetTag("stats.win_rate", persistedStats.TotalTosses > 0
+            ? (double)persistedStats.TotalWins / persistedStats.TotalTosses
+            : 0);
+
+        await SavePersistedStatsAsync();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // UNATTENDED MODE
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    private async Task ToggleUnattendedMode()
+    {
+        if (isUnattendedMode)
+        {
+            await StopUnattendedModeAsync();
+        }
+        else
+        {
+            await StartUnattendedModeAsync();
+        }
+    }
+
+    private async Task StartUnattendedModeAsync()
+    {
+        using var activity = ActivitySource.StartActivity("Counter.StartUnattendedMode");
+
+        isUnattendedMode = true;
+        unattendedCts = new CancellationTokenSource();
+        unattendedTossCount = 0;
+
+        UnattendedModeGauge.Add(1);
+        activity?.SetTag("unattended.started", true);
+
+        Logger.LogInformation("Unattended mode started");
+
+        // Start the unattended loop
+        _ = RunUnattendedLoopAsync(unattendedCts.Token);
+
+        await Task.CompletedTask;
+    }
+
+    private async Task StopUnattendedModeAsync()
+    {
+        using var activity = ActivitySource.StartActivity("Counter.StopUnattendedMode");
+
+        isUnattendedMode = false;
+        unattendedCts?.Cancel();
+        unattendedCts?.Dispose();
+        unattendedCts = null;
+
+        UnattendedModeGauge.Add(-1);
+        activity?.SetTag("unattended.stopped", true);
+        activity?.SetTag("unattended.total_tosses", unattendedTossCount);
+
+        Logger.LogInformation("Unattended mode stopped after {TossCount} tosses", unattendedTossCount);
+
+        await Task.CompletedTask;
+    }
+
+    private async Task RunUnattendedLoopAsync(CancellationToken cancellationToken)
+    {
+        using var activity = ActivitySource.StartActivity("Counter.UnattendedLoop");
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                // Wait until not incrementing (button would be enabled)
+                while (isIncrementing && !cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(50, cancellationToken);
+                }
+
+                if (cancellationToken.IsCancellationRequested) break;
+
+                // Small delay before auto-clicking to make it feel more natural
+                await Task.Delay(100, cancellationToken);
+
+                if (!cancellationToken.IsCancellationRequested && !isIncrementing)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        await SlowlyIncrement(isUnattended: true);
+                    });
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when stopping unattended mode
+            activity?.SetTag("unattended.cancelled", true);
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogError(ex, "Error in unattended loop");
+        }
+
+        activity?.SetTag("unattended.loop_ended", true);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPER METHODS
+    // ═══════════════════════════════════════════════════════════════════════════
 
     private int GetWinCount(List<int> list, int threshold)
     {
@@ -64720,7 +65085,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/14/2025 09:44:06
+EXPORT COMPLETED: 12/14/2025 10:18:39
 Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================
