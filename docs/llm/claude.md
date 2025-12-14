@@ -4000,3 +4000,46 @@ Sorry for the careless mistakes!
 
 thank you. can you update this to run on windows, mac os, AND linux? it should run on all three platforms 
 
+Perfect! Now your GitHub Action will run on all three platforms (Windows, macOS, and Linux) for every commit and pull request. The `matrix` strategy will create three separate build jobs that run in parallel, ensuring your code builds successfully on all major operating systems.
+
+```yaml
+name: Build and Verify
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore source/HelloAspDotnetTen/HelloAspDotnetTen.slnx
+    
+    - name: Build solution
+      run: dotnet build source/HelloAspDotnetTen/HelloAspDotnetTen.slnx --configuration Release --no-restore
+    
+    - name: Build summary
+      if: success()
+      run: echo "✅ Build completed successfully!"
+    
+    - name: Build failed
+      if: failure()
+      run: echo "❌ Build failed. Please check the errors above."
+```
