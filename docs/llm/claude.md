@@ -1898,7 +1898,7 @@ New spans:
 
 
 
-Thank you, one small problem. the application does not build 
+Thank you, one small problem. the application does not build. instead of the entire file, for this time, can you please give me only the part that changed? feels like it should be a small fix. 
 Severity	Code	Description	Project	File	Line	Suppression State
 Error (active)	CS1503	Argument 2: cannot convert from 'method group' to 'Microsoft.AspNetCore.Components.EventCallback'	BlazorApp	C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor	18	
 ```html
@@ -1906,5 +1906,25 @@ Error (active)	CS1503	Argument 2: cannot convert from 'method group' to 'Microso
     Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
 </button>
 ```
+
+
+The issue is that `SlowlyIncrement` now has an optional parameter `(bool isUnattended = false)`, which breaks the method group conversion for `@onclick`.
+
+**Change this line (around line 18):**
+
+```razor
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+```
+
+**To:**
+
+```razor
+<button class="btn btn-primary" @onclick="() => SlowlyIncrement()" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+```
+
+The lambda wraps the call so Blazor can properly bind it as an `EventCallback`.
+
+
+
 
 
