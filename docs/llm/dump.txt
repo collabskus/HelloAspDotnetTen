@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/14/2025 12:12:04
+Generated: 12/14/2025 12:14:22
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -15,6 +15,10 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
 |   LICENSE.txt
 |   README.md
 |   
++---.github
+|   \---workflows
+|           build.yml
+|           
 +---docs
 |   \---llm
 |           chatgpt.md
@@ -164,6 +168,51 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
 
 FILE CONTENTS:
 ==============
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\.github\workflows\build.yml
+SIZE: 0.73 KB
+MODIFIED: 12/14/2025 12:13:32
+================================================================================
+
+name: Build and Verify
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build solution
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Build summary
+      if: success()
+      run: echo "âœ… Build completed successfully!"
+    
+    - name: Build failed
+      if: failure()
+      run: echo "âŒ Build failed. Please check the errors above."
+
+
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.Development.json
@@ -65546,7 +65595,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/14/2025 12:12:04
-Total Files Exported: 71
+EXPORT COMPLETED: 12/14/2025 12:14:22
+Total Files Exported: 72
 Output File: .\docs\llm\dump.txt
 ===============================================================================
