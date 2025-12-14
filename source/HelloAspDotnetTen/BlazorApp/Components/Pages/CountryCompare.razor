@@ -72,7 +72,7 @@
         <button class="btn btn-sm @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
             🎲 Random
         </button>
-        @foreach (var q in ComparisonService.Questions)
+        @foreach (var q in ComparisonService.AvailableQuestions)
         {
             var count = ComparisonService.GetCountryCountForQuestion(q);
             <button class="btn btn-sm @(_currentQuestion?.Id == q.Id && !_randomMode ? "btn-primary" : "btn-outline-primary")"
@@ -223,7 +223,7 @@
                     _randomMode = _persistedStats.RandomMode;
                     if (!string.IsNullOrEmpty(_persistedStats.CurrentQuestionId))
                     {
-                        _currentQuestion = ComparisonService.Questions.FirstOrDefault(q => q.Id == _persistedStats.CurrentQuestionId);
+                        _currentQuestion = ComparisonService.AvailableQuestions.FirstOrDefault(q => q.Id == _persistedStats.CurrentQuestionId);
                     }
 
                     // Sync gauges
@@ -316,7 +316,7 @@
         }
         else
         {
-            _currentQuestion ??= ComparisonService.Questions.First();
+            _currentQuestion ??= ComparisonService.AvailableQuestions.First();
         }
 
         if (_currentQuestion == null)
