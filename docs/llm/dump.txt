@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/14/2025 11:23:04
+Generated: 12/14/2025 11:40:24
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -862,15 +862,15 @@ async function retryWhenDocumentBecomesVisible() {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
-SIZE: 25.16 KB
-MODIFIED: 12/14/2025 10:44:51
+SIZE: 18.01 KB
+MODIFIED: 12/14/2025 11:39:33
 ================================================================================
 
 @page "/counter"
+@rendermode InteractiveServer
 @using System.Diagnostics
 @using System.Diagnostics.Metrics
 @using System.Text.Json
-@rendermode InteractiveServer
 @inject ILogger<Counter> Logger
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
@@ -883,34 +883,23 @@ MODIFIED: 12/14/2025 10:44:51
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
-<button class="btn btn-primary" @onclick="() => SlowlyIncrement()" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">    
-    Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
+    Slow Increment (Random between 100-900, **FAIR TOSS**)
 </button>
 
-<button class="btn @(isUnattendedMode ? "btn-danger" : "btn-secondary")" @onclick="ToggleUnattendedMode">
-    @(isUnattendedMode ? "Stop Unattended Mode" : "Start Unattended Mode")
+<button class="btn btn-secondary ms-2" @onclick="ToggleUnattendedMode" disabled="@isIncrementing">
+    @(isUnattendedMode ? "Stop Unattended" : "Start Unattended")
 </button>
 
 @if (isIncrementing)
 {
     <p>
-        Incrementing by a random number... (Random between a hundred and nine hundred)
+        Incrementing by a random number... (Random between 100-900)
         @if (incrementBy != 0)
         {
             <span>currently, @incrementBy</span>
         }
     </p>
-}
-
-@if (isUnattendedMode)
-{
-    <div class="alert alert-info mt-2">
-        <strong>Unattended Mode Active</strong> - Automatically clicking "Slow Increment" when available.
-        @if (unattendedTossCount > 0)
-        {
-            <span>Unattended tosses this session: @unattendedTossCount</span>
-        }
-    </div>
 }
 
 @if (historical.Count > 0)
@@ -944,108 +933,43 @@ MODIFIED: 12/14/2025 10:44:51
 
 @if (persistedStats != null)
 {
-    <hr />
-    <h4>Lifetime Statistics (from Local Storage)</h4>
-    <div class="card">
-        <div class="card-body">
-            <p><strong>Total Tosses:</strong> @persistedStats.TotalTosses</p>
-            <p><strong>Total Wins:</strong> @persistedStats.TotalWins</p>
-            <p><strong>Total Losses:</strong> @persistedStats.TotalLosses</p>
-            <p><strong>Win Rate:</strong> @(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A")</p>
-            <p><strong>Highest Single Toss:</strong> @persistedStats.HighestTossValue</p>
-            <p><strong>Lowest Single Toss:</strong> @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue.ToString())</p>
-            <p><strong>First Played:</strong> @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</p>
-            <p><strong>Last Played:</strong> @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</p>
-            <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear History</button>
-        </div>
+    <div class="lifetime-stats mt-4 p-3 bg-light rounded">
+        <h4>Lifetime Statistics</h4>
+        <p>Total Tosses: @persistedStats.TotalTosses</p>
+        <p>Total Wins: @persistedStats.TotalWins (@(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A"))</p>
+        <p>Highest Toss: @(persistedStats.HighestTossValue > 0 ? persistedStats.HighestTossValue.ToString() : "N/A")</p>
+        <p>Lowest Toss: @(persistedStats.LowestTossValue < int.MaxValue ? persistedStats.LowestTossValue.ToString() : "N/A")</p>
+        <p><small class="text-muted">Playing since: @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</small></p>
+        <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear All Stats</button>
     </div>
 }
 
 @code {
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE KEY CONSTANTS
+    // LOCAL STORAGE KEY
     // ═══════════════════════════════════════════════════════════════════════════
-
-    // Namespaced to avoid collisions with StateCompare/CountryCompare
     private const string LocalStorageKey = "HelloAspDotnetTen.Counter.Stats";
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OPENTELEMETRY INSTRUMENTATION
     // ═══════════════════════════════════════════════════════════════════════════
-
-    // ActivitySource for distributed tracing (spans)
     private static readonly ActivitySource ActivitySource = new("BlazorApp.Counter", "1.0.0");
-
-    // Meter for metrics
     private static readonly Meter Meter = new("BlazorApp.Counter", "1.0.0");
 
-    // ── Counters ──────────────────────────────────────────────────────────────
-    private static readonly Counter<long> ClickCounter = Meter.CreateCounter<long>(
-        "counter.clicks",
-        unit: "{clicks}",
-        description: "Total number of simple increment clicks");
-
-    private static readonly Counter<long> TossCounter = Meter.CreateCounter<long>(
-        "counter.tosses",
-        unit: "{tosses}",
-        description: "Total number of slow increment tosses");
-
-    private static readonly Counter<long> WinCounter = Meter.CreateCounter<long>(
-        "counter.wins",
-        unit: "{wins}",
-        description: "Total number of winning tosses (> 500)");
-
-    private static readonly Counter<long> LossCounter = Meter.CreateCounter<long>(
-        "counter.losses",
-        unit: "{losses}",
-        description: "Total number of losing tosses (<= 500)");
-
-    private static readonly Counter<long> UnattendedTossCounter = Meter.CreateCounter<long>(
-        "counter.unattended_tosses",
-        unit: "{tosses}",
-        description: "Total number of tosses made in unattended mode");
-
-    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
-        "counter.localstorage_loads",
-        unit: "{loads}",
-        description: "Number of times local storage was loaded");
-
-    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
-        "counter.localstorage_saves",
-        unit: "{saves}",
-        description: "Number of times local storage was saved");
-
-    private static readonly Counter<long> LocalStorageClearCounter = Meter.CreateCounter<long>(
-        "counter.localstorage_clears",
-        unit: "{clears}",
-        description: "Number of times local storage was cleared");
-
-    // ── Histograms ────────────────────────────────────────────────────────────
-    private static readonly Histogram<int> TossValueHistogram = Meter.CreateHistogram<int>(
-        "counter.toss_value",
-        unit: "{value}",
-        description: "Distribution of toss values (100-900)");
-
-    private static readonly Histogram<double> TossDurationHistogram = Meter.CreateHistogram<double>(
-        "counter.toss_duration",
-        unit: "ms",
-        description: "Duration of slow increment operations");
-
-    // ── Gauges (via UpDownCounter for current state) ──────────────────────────
-    private static readonly UpDownCounter<int> CurrentCountGauge = Meter.CreateUpDownCounter<int>(
-        "counter.current_value",
-        unit: "{count}",
-        description: "Current counter value");
-
-    private static readonly UpDownCounter<int> UnattendedModeGauge = Meter.CreateUpDownCounter<int>(
-        "counter.unattended_mode_active",
-        unit: "{active}",
-        description: "Whether unattended mode is currently active (1 or 0)");
+    private static readonly Counter<long> ClickCounter = Meter.CreateCounter<long>("counter.clicks", "clicks", "Number of simple increment clicks");
+    private static readonly Counter<long> TossCounter = Meter.CreateCounter<long>("counter.tosses", "tosses", "Number of slow increment tosses");
+    private static readonly Counter<long> WinCounter = Meter.CreateCounter<long>("counter.wins", "wins", "Number of winning tosses");
+    private static readonly Counter<long> LossCounter = Meter.CreateCounter<long>("counter.losses", "losses", "Number of losing tosses");
+    private static readonly Histogram<int> TossValueHistogram = Meter.CreateHistogram<int>("counter.toss_value", "value", "Distribution of toss values");
+    private static readonly Histogram<double> TossDurationHistogram = Meter.CreateHistogram<double>("counter.toss_duration", "ms", "Duration of slow increment");
+    private static readonly UpDownCounter<int> CurrentValueGauge = Meter.CreateUpDownCounter<int>("counter.current_value", "count", "Current counter value");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>("counter.storage.loads", "operations", "Local storage load operations");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>("counter.storage.saves", "operations", "Local storage save operations");
+    private static readonly Counter<long> LocalStorageClearCounter = Meter.CreateCounter<long>("counter.storage.clears", "operations", "Local storage clear operations");
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // COMPONENT STATE
+    // GAME STATE - ALL PERSISTED TO LOCAL STORAGE
     // ═══════════════════════════════════════════════════════════════════════════
-
     private int currentCount = 0;
     private bool isIncrementing = false;
     private int incrementBy = 0;
@@ -1055,26 +979,20 @@ MODIFIED: 12/14/2025 10:44:51
     private const int WinThreshold = 500;
     private const int DelayMilliseconds = 1;
 
-    // Unattended mode state
+    // Unattended mode
     private bool isUnattendedMode = false;
     private CancellationTokenSource? unattendedCts;
-    private int unattendedTossCount = 0;
 
-    // Persisted statistics from local storage
+    // Local storage state
     private CounterPersistedStats? persistedStats;
     private bool isJsRuntimeAvailable = false;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSISTED STATS MODEL
+    // PERSISTED STATS MODEL - NOW INCLUDES SESSION STATE
     // ═══════════════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Model for persisted counter statistics.
-    /// This data is stored in browser local storage and is NOT personal/sensitive.
-    /// Clearing browser storage will reset these stats (by design).
-    /// </summary>
     private class CounterPersistedStats
     {
+        // Lifetime stats
         public int TotalTosses { get; set; }
         public int TotalWins { get; set; }
         public int TotalLosses { get; set; }
@@ -1082,6 +1000,19 @@ MODIFIED: 12/14/2025 10:44:51
         public int LowestTossValue { get; set; } = int.MaxValue;
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+
+        // SESSION STATE - survives page reload
+        public int CurrentCount { get; set; }
+        public List<TossResultDto> Historical { get; set; } = new();
+    }
+
+    // DTO for serialization (TossResult has computed properties)
+    private class TossResultDto
+    {
+        public int Value { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string CssClass { get; set; } = string.Empty;
+        public int RunningTotal { get; set; }
     }
 
     private class TossResult
@@ -1090,24 +1021,35 @@ MODIFIED: 12/14/2025 10:44:51
         public string Status { get; set; } = string.Empty;
         public string CssClass { get; set; } = string.Empty;
         public int RunningTotal { get; set; }
+
+        public TossResultDto ToDto() => new()
+        {
+            Value = Value,
+            Status = Status,
+            CssClass = CssClass,
+            RunningTotal = RunningTotal
+        };
+
+        public static TossResult FromDto(TossResultDto dto) => new()
+        {
+            Value = dto.Value,
+            Status = dto.Status,
+            CssClass = dto.CssClass,
+            RunningTotal = dto.RunningTotal
+        };
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // LIFECYCLE METHODS
     // ═══════════════════════════════════════════════════════════════════════════
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             using var activity = ActivitySource.StartActivity("Counter.OnAfterRenderAsync.FirstRender");
-
             isJsRuntimeAvailable = true;
             await LoadPersistedStatsAsync();
-
             activity?.SetTag("storage.loaded", persistedStats != null);
-            activity?.SetTag("storage.key", LocalStorageKey);
-
             StateHasChanged();
         }
     }
@@ -1115,21 +1057,17 @@ MODIFIED: 12/14/2025 10:44:51
     public async ValueTask DisposeAsync()
     {
         using var activity = ActivitySource.StartActivity("Counter.DisposeAsync");
-
-        // Stop unattended mode if running
         if (isUnattendedMode)
         {
-            activity?.SetTag("unattended.was_active", true);
             await StopUnattendedModeAsync();
         }
-
-        activity?.SetTag("disposed", true);
+        // Final save on dispose
+        await SavePersistedStatsAsync();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE OPERATIONS
+    // LOCAL STORAGE OPERATIONS - SAVE EVERYTHING
     // ═══════════════════════════════════════════════════════════════════════════
-
     private async Task LoadPersistedStatsAsync()
     {
         using var activity = ActivitySource.StartActivity("Counter.LoadPersistedStats");
@@ -1143,34 +1081,28 @@ MODIFIED: 12/14/2025 10:44:51
                 persistedStats = JsonSerializer.Deserialize<CounterPersistedStats>(json);
                 LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
 
-                activity?.SetTag("storage.found", true);
-                activity?.SetTag("storage.total_tosses", persistedStats?.TotalTosses ?? 0);
+                // RESTORE SESSION STATE
+                if (persistedStats != null)
+                {
+                    currentCount = persistedStats.CurrentCount;
+                    historical = persistedStats.Historical.Select(TossResult.FromDto).ToList();
+                    CurrentValueGauge.Add(currentCount); // Sync gauge
+                }
 
                 Logger.LogInformation(
-                    "Loaded persisted stats from local storage: TotalTosses={TotalTosses}, TotalWins={TotalWins}",
-                    persistedStats?.TotalTosses ?? 0, persistedStats?.TotalWins ?? 0);
+                    "Loaded persisted stats: TotalTosses={TotalTosses}, CurrentCount={CurrentCount}, Historical={HistoricalCount}",
+                    persistedStats?.TotalTosses ?? 0, persistedStats?.CurrentCount ?? 0, persistedStats?.Historical?.Count ?? 0);
             }
             else
             {
-                // First time user - create new stats
                 persistedStats = new CounterPersistedStats();
                 await SavePersistedStatsAsync();
-
                 LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
-                activity?.SetTag("storage.found", false);
-                activity?.SetTag("storage.created_new", true);
-
-                Logger.LogInformation("No existing stats found, created new persisted stats");
             }
-
-            activity?.SetStatus(ActivityStatusCode.Ok);
         }
         catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            activity?.SetTag("error.type", ex.GetType().Name);
-
-            Logger.LogWarning(ex, "Failed to load persisted stats from local storage, creating new");
+            Logger.LogWarning(ex, "Failed to load persisted stats");
             persistedStats = new CounterPersistedStats();
         }
     }
@@ -1183,20 +1115,21 @@ MODIFIED: 12/14/2025 10:44:51
 
         try
         {
+            // SAVE SESSION STATE
+            persistedStats.CurrentCount = currentCount;
+            persistedStats.Historical = historical.Select(h => h.ToDto()).ToList();
             persistedStats.LastPlayedUtc = DateTime.UtcNow;
+
             var json = JsonSerializer.Serialize(persistedStats);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
 
             LocalStorageSaveCounter.Add(1);
             activity?.SetTag("storage.bytes", json.Length);
-            activity?.SetStatus(ActivityStatusCode.Ok);
-
-            Logger.LogDebug("Saved persisted stats to local storage");
+            Logger.LogDebug("Saved persisted stats: Count={Count}, Historical={HistoricalCount}", currentCount, historical.Count);
         }
         catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            Logger.LogWarning(ex, "Failed to save persisted stats to local storage");
+            Logger.LogWarning(ex, "Failed to save persisted stats");
         }
     }
 
@@ -1207,103 +1140,63 @@ MODIFIED: 12/14/2025 10:44:51
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+
+            // Reset everything
+            currentCount = 0;
+            historical.Clear();
+            CurrentValueGauge.Add(-currentCount);
             persistedStats = new CounterPersistedStats();
             await SavePersistedStatsAsync();
 
             LocalStorageClearCounter.Add(1);
-            activity?.SetTag("storage.cleared", true);
-            activity?.SetStatus(ActivityStatusCode.Ok);
-
-            Logger.LogInformation("Cleared persisted stats from local storage");
+            Logger.LogInformation("Cleared all persisted stats");
         }
         catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            Logger.LogWarning(ex, "Failed to clear persisted stats from local storage");
+            Logger.LogWarning(ex, "Failed to clear persisted stats");
         }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // EVENT HANDLERS WITH INSTRUMENTATION
+    // EVENT HANDLERS
     // ═══════════════════════════════════════════════════════════════════════════
-
-    private void IncrementCount()
+    private async Task IncrementCount()
     {
-        // Start a trace span for this click
         using var activity = ActivitySource.StartActivity("Counter.IncrementCount");
 
-        var previousCount = currentCount;
+        var previousValue = currentCount;
         currentCount++;
-
-        // Record metrics
+        CurrentValueGauge.Add(1);
         ClickCounter.Add(1);
-        CurrentCountGauge.Add(1);
 
-        // Add rich context to the span
-        activity?.SetTag("counter.previous_value", previousCount);
-        activity?.SetTag("counter.new_value", currentCount);
-        activity?.SetTag("counter.increment_type", "simple");
-        activity?.SetStatus(ActivityStatusCode.Ok);
+        activity?.SetTag("counter.previous", previousValue);
+        activity?.SetTag("counter.new", currentCount);
 
-        // Structured logging
-        Logger.LogInformation(
-            "Simple increment: {PreviousValue} → {NewValue}",
-            previousCount, currentCount);
+        // Save immediately
+        await SavePersistedStatsAsync();
     }
 
-    private async Task SlowlyIncrement(bool isUnattended = false)
+    private async Task SlowlyIncrement()
     {
-        // Start a parent span for the entire slow increment operation
         using var activity = ActivitySource.StartActivity("Counter.SlowlyIncrement");
         var stopwatch = Stopwatch.StartNew();
 
-        activity?.SetTag("toss.is_unattended", isUnattended);
-
         int targetIncrement;
-
-        // Generate fair toss value (child span)
-        using (var generateActivity = ActivitySource.StartActivity("Counter.GenerateTossValue"))
+        do
         {
-            do
-            {
-                targetIncrement = Random.Shared.Next(100, 901);
-            } while (targetIncrement == WinThreshold);
-
-            generateActivity?.SetTag("toss.value", targetIncrement);
-            generateActivity?.SetTag("toss.threshold", WinThreshold);
-        }
+            targetIncrement = Random.Shared.Next(100, 901);
+        } while (targetIncrement == WinThreshold);
 
         incrementBy = targetIncrement;
-        var isWin = targetIncrement > WinThreshold;
-        string status = isWin ? "You won a toss" : "You lost a toss";
-        string cssClass = isWin ? "win-toss" : "lost-toss";
-        int runningTotal = currentCount + targetIncrement;
-
-        // Record toss metrics
         TossCounter.Add(1);
         TossValueHistogram.Record(targetIncrement);
 
-        if (isUnattended)
-        {
-            UnattendedTossCounter.Add(1);
-            unattendedTossCount++;
-        }
-
-        if (isWin)
-        {
-            WinCounter.Add(1, new KeyValuePair<string, object?>("toss.value", targetIncrement));
-        }
-        else
-        {
-            LossCounter.Add(1, new KeyValuePair<string, object?>("toss.value", targetIncrement));
-        }
-
-        // Add span tags
         activity?.SetTag("toss.value", targetIncrement);
-        activity?.SetTag("toss.is_win", isWin);
-        activity?.SetTag("toss.status", status);
-        activity?.SetTag("counter.starting_value", currentCount);
-        activity?.SetTag("counter.expected_final", runningTotal);
+        activity?.SetTag("toss.is_win", targetIncrement > WinThreshold);
+
+        string status = targetIncrement > WinThreshold ? "You won a toss" : "You lost a toss";
+        string cssClass = targetIncrement > WinThreshold ? "win-toss" : "lost-toss";
+        int runningTotal = currentCount + targetIncrement;
 
         historical.Add(new TossResult
         {
@@ -1313,77 +1206,47 @@ MODIFIED: 12/14/2025 10:44:51
             RunningTotal = runningTotal
         });
 
+        // Update lifetime stats
+        if (persistedStats != null)
+        {
+            persistedStats.TotalTosses++;
+            if (targetIncrement > WinThreshold)
+            {
+                persistedStats.TotalWins++;
+                WinCounter.Add(1, new KeyValuePair<string, object?>("value", targetIncrement));
+            }
+            else
+            {
+                persistedStats.TotalLosses++;
+                LossCounter.Add(1, new KeyValuePair<string, object?>("value", targetIncrement));
+            }
+            if (targetIncrement > persistedStats.HighestTossValue)
+                persistedStats.HighestTossValue = targetIncrement;
+            if (targetIncrement < persistedStats.LowestTossValue)
+                persistedStats.LowestTossValue = targetIncrement;
+        }
+
         isIncrementing = true;
         StateHasChanged();
 
-        // Increment loop (child span)
-        using (var loopActivity = ActivitySource.StartActivity("Counter.IncrementLoop"))
+        for (int i = 0; i < targetIncrement; i++)
         {
-            loopActivity?.SetTag("loop.iterations", targetIncrement);
-
-            for (int i = 0; i < targetIncrement; i++)
-            {
-                currentCount++;
-                CurrentCountGauge.Add(1);
-
-                await Task.Delay(DelayMilliseconds);
-                await InvokeAsync(StateHasChanged);
-            }
-
-            loopActivity?.SetTag("loop.completed", true);
+            currentCount++;
+            CurrentValueGauge.Add(1);
+            await Task.Delay(DelayMilliseconds);
+            await InvokeAsync(StateHasChanged);
         }
 
         stopwatch.Stop();
-
-        // Record duration
         TossDurationHistogram.Record(stopwatch.Elapsed.TotalMilliseconds);
-
-        // Update persisted stats
-        await UpdatePersistedStatsAsync(targetIncrement, isWin);
-
-        // Final span tags
-        activity?.SetTag("counter.final_value", currentCount);
-        activity?.SetTag("operation.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
-        activity?.SetStatus(ActivityStatusCode.Ok);
-
-        // Structured logging with all context
-        Logger.LogInformation(
-            "Slow increment completed: Value={TossValue}, Win={IsWin}, Duration={DurationMs}ms, FinalCount={FinalCount}, Unattended={IsUnattended}",
-            targetIncrement, isWin, stopwatch.Elapsed.TotalMilliseconds, currentCount, isUnattended);
+        activity?.SetTag("toss.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
 
         isIncrementing = false;
+
+        // Save after every toss
+        await SavePersistedStatsAsync();
         StateHasChanged();
     }
-
-    private async Task UpdatePersistedStatsAsync(int tossValue, bool isWin)
-    {
-        if (persistedStats == null) return;
-
-        using var activity = ActivitySource.StartActivity("Counter.UpdatePersistedStats");
-
-        persistedStats.TotalTosses++;
-        if (isWin)
-            persistedStats.TotalWins++;
-        else
-            persistedStats.TotalLosses++;
-
-        if (tossValue > persistedStats.HighestTossValue)
-            persistedStats.HighestTossValue = tossValue;
-        if (tossValue < persistedStats.LowestTossValue)
-            persistedStats.LowestTossValue = tossValue;
-
-        activity?.SetTag("stats.total_tosses", persistedStats.TotalTosses);
-        activity?.SetTag("stats.total_wins", persistedStats.TotalWins);
-        activity?.SetTag("stats.win_rate", persistedStats.TotalTosses > 0
-            ? (double)persistedStats.TotalWins / persistedStats.TotalTosses
-            : 0);
-
-        await SavePersistedStatsAsync();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // UNATTENDED MODE
-    // ═══════════════════════════════════════════════════════════════════════════
 
     private async Task ToggleUnattendedMode()
     {
@@ -1399,96 +1262,42 @@ MODIFIED: 12/14/2025 10:44:51
 
     private async Task StartUnattendedModeAsync()
     {
-        using var activity = ActivitySource.StartActivity("Counter.StartUnattendedMode");
-
         isUnattendedMode = true;
         unattendedCts = new CancellationTokenSource();
-        unattendedTossCount = 0;
 
-        UnattendedModeGauge.Add(1);
-        activity?.SetTag("unattended.started", true);
-
-        Logger.LogInformation("Unattended mode started");
-
-        // Start the unattended loop
-        _ = RunUnattendedLoopAsync(unattendedCts.Token);
+        _ = Task.Run(async () =>
+        {
+            while (!unattendedCts.Token.IsCancellationRequested)
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (!isIncrementing)
+                    {
+                        await SlowlyIncrement();
+                    }
+                });
+                await Task.Delay(100, unattendedCts.Token).ConfigureAwait(false);
+            }
+        }, unattendedCts.Token);
 
         await Task.CompletedTask;
     }
 
     private async Task StopUnattendedModeAsync()
     {
-        using var activity = ActivitySource.StartActivity("Counter.StopUnattendedMode");
-
         isUnattendedMode = false;
         unattendedCts?.Cancel();
         unattendedCts?.Dispose();
         unattendedCts = null;
-
-        UnattendedModeGauge.Add(-1);
-        activity?.SetTag("unattended.stopped", true);
-        activity?.SetTag("unattended.total_tosses", unattendedTossCount);
-
-        Logger.LogInformation("Unattended mode stopped after {TossCount} tosses", unattendedTossCount);
-
-        await Task.CompletedTask;
+        await SavePersistedStatsAsync();
     }
-
-    private async Task RunUnattendedLoopAsync(CancellationToken cancellationToken)
-    {
-        using var activity = ActivitySource.StartActivity("Counter.UnattendedLoop");
-
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                // Wait until not incrementing (button would be enabled)
-                while (isIncrementing && !cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(50, cancellationToken);
-                }
-
-                if (cancellationToken.IsCancellationRequested) break;
-
-                // Small delay before auto-clicking to make it feel more natural
-                await Task.Delay(100, cancellationToken);
-
-                if (!cancellationToken.IsCancellationRequested && !isIncrementing)
-                {
-                    await InvokeAsync(async () =>
-                    {
-                        await SlowlyIncrement(isUnattended: true);
-                    });
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected when stopping unattended mode
-            activity?.SetTag("unattended.cancelled", true);
-        }
-        catch (Exception ex)
-        {
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            Logger.LogError(ex, "Error in unattended loop");
-        }
-
-        activity?.SetTag("unattended.loop_ended", true);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // HELPER METHODS
-    // ═══════════════════════════════════════════════════════════════════════════
 
     private int GetWinCount(List<int> list, int threshold)
     {
         int winCount = 0;
         foreach (int item in list)
         {
-            if (item > threshold)
-            {
-                winCount++;
-            }
+            if (item > threshold) winCount++;
         }
         return winCount;
     }
@@ -1498,220 +1307,184 @@ MODIFIED: 12/14/2025 10:44:51
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor.css
-SIZE: 0.39 KB
-MODIFIED: 12/08/2025 14:12:14
+SIZE: 0.99 KB
+MODIFIED: 12/14/2025 11:33:58
 ================================================================================
 
-body {
-}
-/* In wwwroot/css/app.css or Components/Pages/Counter.razor.css */
+/* ═══════════════════════════════════════════════════════════════════════════
+   COUNTER PAGE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 .win-toss {
-    color: green;
-    /* Optional: make it bold for emphasis */
-    font-weight: bold;
-    border: 2px dashed green;
+    background-color: #d1fae5;
+    color: #065f46;
 }
 
 .lost-toss {
-    color: red;
-    border: 2px dashed red;
+    background-color: #fee2e2;
+    color: #991b1b;
 }
-.draw-toss {
-    color: orange;
-    border: dashed orange 2px;
+
+.lifetime-stats {
+    border-left: 4px solid #3b82f6;
 }
-/* You can add more styles as needed */
+
+.lifetime-stats h4 {
+    margin-bottom: 0.5rem;
+    color: #1e40af;
+}
+
+.lifetime-stats p {
+    margin-bottom: 0.25rem;
+}
+
+/* Responsive table for mobile */
+@media (max-width: 500px) {
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.4rem;
+    }
+}
 
 
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
-SIZE: 19.62 KB
-MODIFIED: 12/14/2025 10:41:26
+SIZE: 21.09 KB
+MODIFIED: 12/14/2025 11:39:06
 ================================================================================
 
 @page "/country-compare"
-@using System.Diagnostics
-@using System.Diagnostics.Metrics
-@using System.Text.Json
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
+@using System.Text.Json
 @inject CountryComparisonService ComparisonService
 @inject ILogger<CountryCompare> Logger
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
-<PageTitle>Country Comparison Game</PageTitle>
+<PageTitle>World Country Comparison</PageTitle>
 
-<h1 class="h3 mb-2">ðŸŒ Country Comparison</h1>
+<div class="game-container">
+    <h1 class="game-title">ðŸŒ Country Comparison</h1>
 
-<div class="score-display mb-3">
-    <span class="badge bg-primary fs-6">
-        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
-        @if (ComparisonService.Score.TotalQuestions > 0)
+    <div class="score-display">
+        <span class="score">Score: @ComparisonService.Score.CorrectAnswers/@ComparisonService.Score.TotalQuestions</span>
+        @if (ComparisonService.Score.CurrentStreak > 0)
         {
-            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+            <span class="streak">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
         }
-    </span>
-    @if (ComparisonService.Score.CurrentStreak > 1)
-    {
-        <span class="badge bg-warning text-dark fs-6 ms-1">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
-    }
-    @if (ComparisonService.Score.BestStreak > 1)
-    {
-        <span class="badge bg-secondary fs-6 ms-1">Best: @ComparisonService.Score.BestStreak</span>
-    }
-    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
-</div>
-
-@if (_noDataAvailable)
-{
-    <div class="alert alert-warning py-2">
-        <strong>No data available</strong> for this question. Please select a different one.
-    </div>
-}
-else if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
-{
-    <div class="question-section mb-3">
-        <h3 class="text-center h5">@_currentQuestion.QuestionTemplate</h3>
-        <p class="text-center text-muted small mb-0">
-            @ComparisonService.GetCountryCountForQuestion(_currentQuestion) countries have data
-        </p>
+        @if (ComparisonService.Score.BestStreak > 0)
+        {
+            <span class="best-streak">â­ Best: @ComparisonService.Score.BestStreak</span>
+        }
     </div>
 
-    <div class="comparison-container">
-        <div class="comparison-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
-            {
-                <span class="correct-indicator">âœ“</span>
-            }
-            <div class="card-content">
-                <div class="flag-display">@_country1.FlagEmoji</div>
-                <h4 class="country-name">@_country1.Name</h4>
-                <p class="continent-name">@_country1.Continent</p>
+    @if (_noDataAvailable)
+    {
+        <div class="alert alert-warning">
+            Not enough countries with data for this question type. Please select another.
+        </div>
+    }
+    else if (_currentQuestion != null && _country1 != null && _country2 != null)
+    {
+        <p class="question-text">@_currentQuestion.QuestionTemplate</p>
+
+        <div class="comparison-container">
+            <div class="comparison-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
+                <div class="country-flag">@_country1.FlagEmoji</div>
+                <div class="country-name">@_country1.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@FormatValue(_country1)</p>
+                    <div class="value-reveal">@FormatValue(_country1)</div>
                 }
             </div>
-        </div>
 
-        <div class="vs-badge">VS</div>
+            <div class="vs-badge">VS</div>
 
-        <div class="comparison-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
-            {
-                <span class="correct-indicator">âœ“</span>
-            }
-            <div class="card-content">
-                <div class="flag-display">@_country2.FlagEmoji</div>
-                <h4 class="country-name">@_country2.Name</h4>
-                <p class="continent-name">@_country2.Continent</p>
+            <div class="comparison-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
+                <div class="country-flag">@_country2.FlagEmoji</div>
+                <div class="country-name">@_country2.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@FormatValue(_country2)</p>
+                    <div class="value-reveal">@FormatValue(_country2)</div>
                 }
             </div>
         </div>
-    </div>
 
-    @if (_hasAnswered && _lastResult is not null)
-    {
-        <div class="result-section text-center mt-3">
-            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger") py-2 mb-2">
-                @if (_lastResult.IsCorrect)
-                {
-                    <strong>âœ“ Correct!</strong>
-                }
-                else
-                {
-                    <strong>âœ— Wrong!</strong>
-                    <span>@_lastResult.CorrectAnswer.Name was correct.</span>
-                }
+        @if (_hasAnswered && _lastResult != null)
+        {
+            <div class="result-message @(_lastResult.IsCorrect ? "correct" : "wrong")">
+                @(_lastResult.IsCorrect ? "âœ“ Correct!" : "âœ— Wrong!")
             </div>
-            <button class="btn btn-primary" @onclick="StartNewRound">Next Question â†’</button>
-        </div>
+            <button class="btn btn-primary next-btn" @onclick="StartNewRound">Next â†’</button>
+        }
     }
-}
 
-<div class="question-buttons mt-3">
-    <small class="text-muted d-block mb-2">Question Type:</small>
-    <div class="btn-group btn-group-sm flex-wrap" role="group">
-        <button class="btn @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
-            ðŸŽ²
+    <div class="controls mt-3">
+        <button class="btn btn-sm @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
+            ðŸŽ² Random
         </button>
-        @foreach (var q in ComparisonService.AvailableQuestions)
+        @foreach (var q in ComparisonService.Questions)
         {
             var count = ComparisonService.GetCountryCountForQuestion(q);
-            <button class="btn @(!_randomMode && _currentQuestion?.Id == q.Id ? "btn-primary" : "btn-outline-primary")"
+            <button class="btn btn-sm @(_currentQuestion?.Id == q.Id && !_randomMode ? "btn-primary" : "btn-outline-primary")"
                     @onclick="() => SetQuestion(q)"
                     disabled="@(count < 2)">
                 @GetShortQuestionName(q.Id)
+                <span class="badge bg-secondary ms-1">@count</span>
             </button>
         }
+        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="ResetGame">Reset</button>
     </div>
-</div>
 
-@if (_persistedStats != null)
-{
-    <div class="lifetime-stats mt-3">
-        <small class="text-muted">
-            Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
-            (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
-            | Best Streak: @_persistedStats.BestStreak
-            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
-        </small>
-    </div>
-}
+    @if (_persistedStats != null)
+    {
+        <div class="lifetime-stats mt-3">
+            <small class="text-muted">
+                Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
+                (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
+                | Best Streak: @_persistedStats.BestStreak
+                <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
+            </small>
+        </div>
+    }
+</div>
 
 @code {
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // LOCAL STORAGE KEY - NAMESPACED FOR THIS COMPONENT
+    // LOCAL STORAGE KEY
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private const string LocalStorageKey = "HelloAspDotnetTen.CountryCompare.Stats";
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // OPENTELEMETRY INSTRUMENTATION
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private static readonly ActivitySource ActivitySource = new("BlazorApp.CountryCompare", "1.0.0");
     private static readonly Meter Meter = new("BlazorApp.CountryCompare", "1.0.0");
 
-    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
-        "countrycompare.rounds", unit: "{rounds}", description: "Total rounds started");
-    private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.answers", unit: "{answers}", description: "Total answers given");
-    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.correct_answers", unit: "{answers}", description: "Total correct answers");
-    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.wrong_answers", unit: "{answers}", description: "Total wrong answers");
-    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
-        "countrycompare.resets", unit: "{resets}", description: "Total game resets");
-    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
-        "countrycompare.question_type_changes", unit: "{changes}", description: "Question type changes");
-    private static readonly Counter<long> NoDataCounter = Meter.CreateCounter<long>(
-        "countrycompare.no_data_events", unit: "{events}", description: "No data available events");
-    private static readonly Counter<long> TieSkipCounter = Meter.CreateCounter<long>(
-        "countrycompare.tie_skips", unit: "{skips}", description: "Pairs skipped due to equal values");
-    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
-        "countrycompare.localstorage_loads", unit: "{loads}", description: "Local storage loads");
-    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
-        "countrycompare.localstorage_saves", unit: "{saves}", description: "Local storage saves");
-
-    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
-        "countrycompare.streak_length", unit: "{streak}", description: "Streak lengths when broken");
-    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
-        "countrycompare.current_score", unit: "{score}", description: "Current session score");
-    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
-        "countrycompare.current_streak", unit: "{streak}", description: "Current streak");
+    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>("countrycompare.rounds", "rounds", "Rounds started");
+    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>("countrycompare.correct_answers", "answers", "Correct answers");
+    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>("countrycompare.wrong_answers", "answers", "Wrong answers");
+    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>("countrycompare.resets", "resets", "Game resets");
+    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>("countrycompare.question_type_changes", "changes", "Question type changes");
+    private static readonly Counter<long> NoDataEventCounter = Meter.CreateCounter<long>("countrycompare.no_data_events", "events", "No data available events");
+    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>("countrycompare.streak_length", "streak", "Streak lengths when broken");
+    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>("countrycompare.current_score", "score", "Current score");
+    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>("countrycompare.current_streak", "streak", "Current streak");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>("countrycompare.storage.loads", "operations", "Local storage loads");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>("countrycompare.storage.saves", "operations", "Local storage saves");
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // COMPONENT STATE
+    // GAME STATE
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private CountryData? _country1;
     private CountryData? _country2;
     private CountryComparisonQuestion? _currentQuestion;
@@ -1719,28 +1492,36 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     private bool _hasAnswered;
     private bool _randomMode = true;
     private bool _noDataAvailable;
+    private int _previousStreak;
 
     // Local storage state
     private ComparePersistedStats? _persistedStats;
     private bool _isJsRuntimeAvailable = false;
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // PERSISTED STATS MODEL
+    // PERSISTED STATS MODEL - INCLUDES SESSION STATE
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private class ComparePersistedStats
     {
+        // Lifetime stats
         public int TotalQuestions { get; set; }
         public int TotalCorrect { get; set; }
         public int BestStreak { get; set; }
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+
+        // SESSION STATE - survives page reload
+        public int SessionCorrect { get; set; }
+        public int SessionTotal { get; set; }
+        public int SessionCurrentStreak { get; set; }
+        public int SessionBestStreak { get; set; }
+        public bool RandomMode { get; set; } = true;
+        public string? CurrentQuestionId { get; set; }
     }
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // LIFECYCLE METHODS
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     protected override void OnInitialized()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.Initialize");
@@ -1763,14 +1544,13 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         if (_persistedStats != null && ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
         {
             _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
-            await SavePersistedStatsAsync();
         }
+        await SavePersistedStatsAsync();
     }
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // LOCAL STORAGE OPERATIONS
+    // LOCAL STORAGE OPERATIONS - SAVE EVERYTHING
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private async Task LoadPersistedStatsAsync()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.LoadPersistedStats");
@@ -1783,6 +1563,38 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
             {
                 _persistedStats = JsonSerializer.Deserialize<ComparePersistedStats>(json);
                 LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
+
+                // RESTORE SESSION STATE
+                if (_persistedStats != null)
+                {
+                    // Restore to ComparisonService.Score
+                    for (int i = 0; i < _persistedStats.SessionCorrect; i++)
+                    {
+                        ComparisonService.Score.CorrectAnswers++;
+                    }
+                    for (int i = 0; i < _persistedStats.SessionTotal; i++)
+                    {
+                        ComparisonService.Score.TotalQuestions++;
+                    }
+                    ComparisonService.Score.CurrentStreak = _persistedStats.SessionCurrentStreak;
+                    ComparisonService.Score.BestStreak = _persistedStats.SessionBestStreak;
+
+                    // Restore UI state
+                    _randomMode = _persistedStats.RandomMode;
+                    if (!string.IsNullOrEmpty(_persistedStats.CurrentQuestionId))
+                    {
+                        _currentQuestion = ComparisonService.Questions.FirstOrDefault(q => q.Id == _persistedStats.CurrentQuestionId);
+                    }
+
+                    // Sync gauges
+                    CurrentScoreGauge.Add(_persistedStats.SessionCorrect);
+                    CurrentStreakGauge.Add(_persistedStats.SessionCurrentStreak);
+                }
+
+                Logger.LogInformation(
+                    "Loaded CountryCompare stats: Lifetime={Total}/{Correct}, Session={SessionTotal}/{SessionCorrect}",
+                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0,
+                    _persistedStats?.SessionTotal ?? 0, _persistedStats?.SessionCorrect ?? 0);
             }
             else
             {
@@ -1804,7 +1616,21 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
 
         try
         {
+            // SAVE SESSION STATE
+            _persistedStats.SessionCorrect = ComparisonService.Score.CorrectAnswers;
+            _persistedStats.SessionTotal = ComparisonService.Score.TotalQuestions;
+            _persistedStats.SessionCurrentStreak = ComparisonService.Score.CurrentStreak;
+            _persistedStats.SessionBestStreak = ComparisonService.Score.BestStreak;
+            _persistedStats.RandomMode = _randomMode;
+            _persistedStats.CurrentQuestionId = _currentQuestion?.Id;
             _persistedStats.LastPlayedUtc = DateTime.UtcNow;
+
+            // Update lifetime best streak if needed
+            if (ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
+            {
+                _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
+            }
+
             var json = JsonSerializer.Serialize(_persistedStats);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
             LocalStorageSaveCounter.Add(1);
@@ -1820,7 +1646,14 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+
+            // Reset gauges
+            CurrentScoreGauge.Add(-ComparisonService.Score.CorrectAnswers);
+            CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
+
+            ComparisonService.Score.Reset();
             _persistedStats = new ComparePersistedStats();
+            StartNewRound();
         }
         catch (Exception ex)
         {
@@ -1831,7 +1664,6 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // GAME LOGIC
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private void StartNewRound()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.StartNewRound");
@@ -1844,77 +1676,77 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         }
         else
         {
-            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+            _currentQuestion ??= ComparisonService.Questions.First();
         }
 
-        // Get a pair where values are NOT equal (no ties)
-        var pair = ComparisonService.GetRandomCountryPairWithoutTie(_currentQuestion);
-        if (pair is null)
+        if (_currentQuestion == null)
         {
             _noDataAvailable = true;
-            NoDataCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion?.Id));
+            NoDataEventCounter.Add(1);
+            return;
+        }
+
+        // Get pair WITHOUT ties - prevents gotcha questions
+        var pair = ComparisonService.GetRandomCountryPairWithoutTie(_currentQuestion);
+        if (pair == null)
+        {
+            _noDataAvailable = true;
+            NoDataEventCounter.Add(1);
             return;
         }
 
         (_country1, _country2) = pair.Value;
-        _hasAnswered = false;
         _lastResult = null;
-
+        _hasAnswered = false;
         RoundCounter.Add(1);
 
-        activity?.SetTag("country1.name", _country1.Name);
-        activity?.SetTag("country2.name", _country2.Name);
-        activity?.SetTag("question.type", _currentQuestion?.Id);
+        activity?.SetTag("country1", _country1?.Name);
+        activity?.SetTag("country2", _country2?.Name);
+        activity?.SetTag("question", _currentQuestion?.Id);
     }
 
-    private async Task SelectCountry(CountryData selected)
+    private async Task SelectCountry(CountryData selectedCountry)
     {
-        if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null)
-            return;
+        if (_hasAnswered || _currentQuestion == null || _country1 == null || _country2 == null) return;
 
         using var activity = ActivitySource.StartActivity("CountryCompare.SelectCountry");
 
-        var previousStreak = ComparisonService.Score.CurrentStreak;
-        _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selected);
+        _previousStreak = ComparisonService.Score.CurrentStreak;
+
+        _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selectedCountry);
         _hasAnswered = true;
 
-        AnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
-
-        if (_lastResult.IsCorrect)
+        // Update persisted lifetime stats
+        if (_persistedStats != null)
         {
-            CorrectAnswerCounter.Add(1);
-            CurrentScoreGauge.Add(1);
-            CurrentStreakGauge.Add(1);
-
-            if (_persistedStats != null)
+            _persistedStats.TotalQuestions++;
+            if (_lastResult.IsCorrect)
             {
-                _persistedStats.TotalQuestions++;
                 _persistedStats.TotalCorrect++;
-                if (ComparisonService.Score.CurrentStreak > _persistedStats.BestStreak)
-                    _persistedStats.BestStreak = ComparisonService.Score.CurrentStreak;
-                await SavePersistedStatsAsync();
+                CorrectAnswerCounter.Add(1);
+                CurrentScoreGauge.Add(1);
+                CurrentStreakGauge.Add(1);
             }
-        }
-        else
-        {
-            WrongAnswerCounter.Add(1);
-            if (previousStreak > 0)
+            else
             {
-                StreakHistogram.Record(previousStreak);
-                CurrentStreakGauge.Add(-previousStreak);
-            }
-
-            if (_persistedStats != null)
-            {
-                _persistedStats.TotalQuestions++;
-                await SavePersistedStatsAsync();
+                WrongAnswerCounter.Add(1);
+                if (_previousStreak > 0)
+                {
+                    StreakHistogram.Record(_previousStreak);
+                    CurrentStreakGauge.Add(-_previousStreak);
+                }
             }
         }
 
-        activity?.SetTag("result", _lastResult.IsCorrect ? "correct" : "wrong");
+        activity?.SetTag("correct", _lastResult.IsCorrect);
+        activity?.SetTag("streak", ComparisonService.Score.CurrentStreak);
+        activity?.SetTag("continent", _country1.Continent);
+
+        // Save immediately after every answer
+        await SavePersistedStatsAsync();
     }
 
-    private void ResetGame()
+    private async Task ResetGame()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.ResetGame");
 
@@ -1924,23 +1756,36 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
 
         ComparisonService.Score.Reset();
+
+        // Reset session in persisted stats but keep lifetime
+        if (_persistedStats != null)
+        {
+            _persistedStats.SessionCorrect = 0;
+            _persistedStats.SessionTotal = 0;
+            _persistedStats.SessionCurrentStreak = 0;
+            _persistedStats.SessionBestStreak = 0;
+        }
+
         ResetCounter.Add(1);
 
+        await SavePersistedStatsAsync();
         StartNewRound();
     }
 
-    private void SetQuestion(CountryComparisonQuestion question)
+    private async Task SetQuestion(CountryComparisonQuestion question)
     {
         _randomMode = false;
         _currentQuestion = question;
         QuestionTypeChangeCounter.Add(1);
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
-    private void ToggleRandomMode()
+    private async Task ToggleRandomMode()
     {
         _randomMode = true;
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
     private string GetCardClass(CountryData country)
@@ -1956,8 +1801,7 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     }
 
     /// <summary>
-    /// Custom formatting for GDP to show in billions instead of millions with "M" suffix.
-    /// Also handles other question types appropriately.
+    /// Custom formatting for GDP - NO "M" suffix. Shows B for billions, T for trillions.
     /// </summary>
     private string FormatValue(CountryData country)
     {
@@ -1966,16 +1810,22 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         var value = _currentQuestion.GetValue(country);
         if (!value.HasValue) return "N/A";
 
-        // Special handling for GDP - convert from millions to billions for readability
+        // Special handling for GDP - stored in millions, display in billions/trillions
         if (_currentQuestion.Id == "gdp")
         {
             var billions = value.Value / 1000.0;
             if (billions >= 1000)
-                return $"${billions / 1000:N2}T"; // Trillions
+                return $"${billions / 1000:N2}T";
             else if (billions >= 1)
-                return $"${billions:N1}B"; // Billions
+                return $"${billions:N1}B";
             else
-                return $"${value.Value:N0}M"; // Keep millions for small values
+                return $"${value.Value:N0}M";
+        }
+
+        // Special handling for GDP per capita - no "M", just dollars
+        if (_currentQuestion.Id == "gdp_per_capita")
+        {
+            return $"${value.Value:N0}";
         }
 
         // Use default formatting for all other question types
@@ -2001,13 +1851,57 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
-SIZE: 4.38 KB
-MODIFIED: 12/14/2025 10:38:51
+SIZE: 5.77 KB
+MODIFIED: 12/14/2025 11:34:20
 ================================================================================
 
 /* ═══════════════════════════════════════════════════════════════════════════
    COUNTRY COMPARE - RESPONSIVE LAYOUT
    Designed to fit on iPhone SE (375x667) and all larger screens
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.game-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.game-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.score-display {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.score {
+    font-weight: bold;
+}
+
+.streak {
+    color: #f59e0b;
+}
+
+.best-streak {
+    color: #8b5cf6;
+}
+
+.question-text {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+    min-height: 2em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPARISON CARDS - Side by side, fits on small screens
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .comparison-container {
@@ -2016,195 +1910,194 @@ MODIFIED: 12/14/2025 10:38:51
     justify-content: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    margin: 0.5rem 0;
 }
 
 .comparison-card {
     flex: 1;
-    max-width: 200px;
-    min-width: 120px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
+    max-width: 150px;
+    min-width: 110px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 8px;
+    padding: 0.75rem 0.5rem;
     color: white;
-    position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
 }
 
-    .comparison-card.clickable {
-        cursor: pointer;
-    }
-
-        .comparison-card.clickable:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-    .comparison-card.correct-answer {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
-    }
-
-    .comparison-card.wrong-answer {
-        background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
-        box-shadow: 0 0 20px rgba(239, 71, 58, 0.5);
-    }
-
-.correct-indicator {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #28a745;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.875rem;
+.comparison-card.clickable {
+    cursor: pointer;
 }
 
-.card-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.comparison-card.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
-.flag-display {
-    font-size: 2.5rem;
-    margin-bottom: 0.25rem;
+.comparison-card.correct-answer {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 0 3px #34d399;
+}
+
+.comparison-card.wrong-answer {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 0 3px #f87171;
+}
+
+.country-flag {
+    font-size: 2rem;
     line-height: 1;
 }
 
 .country-name {
-    font-size: 0.9rem;
-    margin: 0;
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: 0.75rem;
+    opacity: 0.95;
+    margin-top: 0.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.continent-name {
-    font-size: 0.7rem;
-    margin: 0.25rem 0 0 0;
-    opacity: 0.8;
-}
-
-.stat-reveal {
+.value-reveal {
     font-size: 0.8rem;
-    margin: 0.5rem 0 0 0;
-    background: rgba(0,0,0,0.2);
-    padding: 0.25rem 0.5rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
-    word-break: break-word;
 }
 
 .vs-badge {
-    background: #343a40;
-    color: white;
-    padding: 0.5rem;
-    border-radius: 50%;
     font-weight: bold;
-    font-size: 0.875rem;
+    font-size: 1rem;
+    color: #6b7280;
+    padding: 0 0.25rem;
     flex-shrink: 0;
 }
 
-.score-display {
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESULT AND CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.result-message {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.result-message.correct {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.result-message.wrong {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.next-btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    margin: 0.25rem 0;
+}
+
+.controls {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    justify-content: center;
     gap: 0.25rem;
 }
 
-.question-section h3 {
-    margin: 0;
-}
-
-.question-section p {
-    margin: 0;
-}
-
-.question-buttons .btn-group {
-    gap: 2px;
-}
-
-.question-buttons .btn {
+.controls .btn {
     font-size: 0.7rem;
     padding: 0.2rem 0.4rem;
 }
 
-.lifetime-stats {
-    text-align: center;
+.controls .btn .badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.25rem;
 }
 
-.result-section .alert {
-    margin-bottom: 0.5rem;
+.lifetime-stats {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.alert {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    font-size: 0.9rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE OPTIMIZATIONS (iPhone SE: 375px width)
+   MOBILE-SPECIFIC ADJUSTMENTS (iPhone SE: 375x667)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 576px) {
-    h1 {
-        font-size: 1.25rem !important;
+@media (max-width: 400px) {
+    .game-container {
+        padding: 0.25rem;
     }
-
+    
+    .game-title {
+        font-size: 1.1rem;
+    }
+    
     .comparison-card {
-        padding: 0.75rem;
-        min-width: 100px;
+        min-width: 95px;
+        max-width: 130px;
+        padding: 0.5rem 0.25rem;
     }
-
-    .flag-display {
-        font-size: 2rem;
+    
+    .country-flag {
+        font-size: 1.75rem;
     }
-
+    
     .country-name {
-        font-size: 0.8rem;
-    }
-
-    .continent-name {
         font-size: 0.65rem;
     }
-
-    .stat-reveal {
+    
+    .value-reveal {
         font-size: 0.7rem;
-        padding: 0.2rem 0.4rem;
     }
-
-    .vs-badge {
-        padding: 0.375rem;
-        font-size: 0.75rem;
+    
+    .question-text {
+        font-size: 0.9rem;
     }
-
-    .score-display .badge {
-        font-size: 0.7rem !important;
-    }
-
-    .question-buttons .btn {
+    
+    .controls .btn {
         font-size: 0.6rem;
         padding: 0.15rem 0.3rem;
     }
-
-    .question-section h3 {
-        font-size: 1rem !important;
+    
+    .controls .btn .badge {
+        font-size: 0.55rem;
     }
 }
 
-/* Extra small screens */
-@media (max-width: 360px) {
-    .comparison-card {
-        min-width: 85px;
-        padding: 0.5rem;
+/* Ensure content doesn't overflow viewport height */
+@media (max-height: 700px) {
+    .game-title {
+        margin-bottom: 0.25rem;
     }
-
-    .flag-display {
-        font-size: 1.75rem;
+    
+    .score-display {
+        margin-bottom: 0.25rem;
     }
-
-    .country-name {
-        font-size: 0.7rem;
+    
+    .comparison-container {
+        margin: 0.25rem 0;
+    }
+    
+    .result-message {
+        margin: 0.25rem 0;
+        padding: 0.25rem;
+    }
+    
+    .next-btn {
+        padding: 0.4rem 1rem;
     }
 }
 
@@ -2286,204 +2179,163 @@ MODIFIED: 12/08/2025 11:14:15
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
-SIZE: 18.59 KB
-MODIFIED: 12/14/2025 10:42:21
+SIZE: 19.48 KB
+MODIFIED: 12/14/2025 11:39:21
 ================================================================================
 
 @page "/state-compare"
-@using System.Diagnostics
-@using System.Diagnostics.Metrics
-@using System.Text.Json
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
+@using System.Diagnostics
+@using System.Diagnostics.Metrics
+@using System.Text.Json
 @inject StateComparisonService ComparisonService
 @inject ILogger<StateCompare> Logger
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
-<PageTitle>State Comparison Game</PageTitle>
+<PageTitle>US State Comparison</PageTitle>
 
-<h1 class="h3 mb-2">State Comparison Game</h1>
+<div class="game-container">
+    <h1 class="game-title">ðŸ‡ºðŸ‡¸ US State Comparison</h1>
 
-<div class="score-display mb-3">
-    <span class="badge bg-primary fs-6">
-        Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
-        @if (ComparisonService.Score.TotalQuestions > 0)
+    <div class="score-display">
+        <span class="score">Score: @ComparisonService.Score.CorrectAnswers/@ComparisonService.Score.TotalQuestions</span>
+        @if (ComparisonService.Score.CurrentStreak > 0)
         {
-            <span>(@ComparisonService.Score.PercentageCorrect.ToString("F0")%)</span>
+            <span class="streak">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
         }
-    </span>
-    @if (ComparisonService.Score.CurrentStreak > 1)
-    {
-        <span class="badge bg-warning text-dark fs-6 ms-1">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
-    }
-    @if (ComparisonService.Score.BestStreak > 1)
-    {
-        <span class="badge bg-secondary fs-6 ms-1">Best: @ComparisonService.Score.BestStreak</span>
-    }
-    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
-</div>
-
-@if (_currentQuestion is not null && _state1 is not null && _state2 is not null)
-{
-    <div class="question-section mb-3">
-        <h3 class="text-center h5">@_currentQuestion.QuestionTemplate</h3>
+        @if (ComparisonService.Score.BestStreak > 0)
+        {
+            <span class="best-streak">â­ Best: @ComparisonService.Score.BestStreak</span>
+        }
     </div>
 
-    <div class="comparison-container">
-        <div class="comparison-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _state1)
-            {
-                <span class="correct-indicator">âœ“</span>
-            }
-            <div class="card-content">
+    @if (_currentQuestion != null && _state1 != null && _state2 != null)
+    {
+        <p class="question-text">@_currentQuestion.QuestionTemplate</p>
+
+        <div class="comparison-container">
+            <div class="comparison-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
                 <div class="state-abbrev">@_state1.Abbreviation</div>
-                <h4 class="state-name">@_state1.Name</h4>
+                <div class="state-name">@_state1.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state1)</p>
+                    <div class="value-reveal">@_currentQuestion.GetFormattedValue(_state1)</div>
                 }
             </div>
-        </div>
 
-        <div class="vs-badge">VS</div>
+            <div class="vs-badge">VS</div>
 
-        <div class="comparison-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
-            @if (_hasAnswered && _lastResult?.CorrectAnswer == _state2)
-            {
-                <span class="correct-indicator">âœ“</span>
-            }
-            <div class="card-content">
+            <div class="comparison-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
                 <div class="state-abbrev">@_state2.Abbreviation</div>
-                <h4 class="state-name">@_state2.Name</h4>
+                <div class="state-name">@_state2.Name</div>
                 @if (_hasAnswered)
                 {
-                    <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state2)</p>
+                    <div class="value-reveal">@_currentQuestion.GetFormattedValue(_state2)</div>
                 }
             </div>
         </div>
-    </div>
 
-    @if (_hasAnswered && _lastResult is not null)
-    {
-        <div class="result-section text-center mt-3">
-            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger") py-2 mb-2">
-                @if (_lastResult.IsCorrect)
-                {
-                    <strong>âœ“ Correct!</strong>
-                }
-                else
-                {
-                    <strong>âœ— Wrong!</strong>
-                    <span>@_lastResult.CorrectAnswer.Name was correct.</span>
-                }
+        @if (_hasAnswered && _lastResult != null)
+        {
+            <div class="result-message @(_lastResult.IsCorrect ? "correct" : "wrong")">
+                @(_lastResult.IsCorrect ? "âœ“ Correct!" : "âœ— Wrong!")
             </div>
-            <button class="btn btn-primary" @onclick="StartNewRound">Next Question â†’</button>
-        </div>
+            <button class="btn btn-primary next-btn" @onclick="StartNewRound">Next â†’</button>
+        }
     }
-}
 
-<div class="question-buttons mt-3">
-    <small class="text-muted d-block mb-2">Question Type:</small>
-    <div class="btn-group btn-group-sm flex-wrap" role="group">
-        <button class="btn @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
+    <div class="controls mt-3">
+        <button class="btn btn-sm @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
             ðŸŽ² Random
         </button>
-        @foreach (var q in ComparisonService.AvailableQuestions)
+        @foreach (var q in ComparisonService.Questions)
         {
-            <button class="btn @(!_randomMode && _currentQuestion?.Id == q.Id ? "btn-primary" : "btn-outline-primary")"
+            <button class="btn btn-sm @(_currentQuestion?.Id == q.Id && !_randomMode ? "btn-primary" : "btn-outline-primary")"
                     @onclick="() => SetQuestion(q)">
                 @GetShortQuestionName(q.Id)
             </button>
         }
+        <button class="btn btn-sm btn-outline-danger ms-2" @onclick="ResetGame">Reset</button>
     </div>
-</div>
 
-@if (_persistedStats != null)
-{
-    <div class="lifetime-stats mt-3">
-        <small class="text-muted">
-            Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
-            (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
-            | Best Streak: @_persistedStats.BestStreak
-            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
-        </small>
-    </div>
-}
+    @if (_persistedStats != null)
+    {
+        <div class="lifetime-stats mt-3">
+            <small class="text-muted">
+                Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
+                (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
+                | Best Streak: @_persistedStats.BestStreak
+                <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
+            </small>
+        </div>
+    }
+</div>
 
 @code {
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // LOCAL STORAGE KEY - NAMESPACED FOR THIS COMPONENT
+    // LOCAL STORAGE KEY
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private const string LocalStorageKey = "HelloAspDotnetTen.StateCompare.Stats";
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // OPENTELEMETRY INSTRUMENTATION
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private static readonly ActivitySource ActivitySource = new("BlazorApp.StateCompare", "1.0.0");
     private static readonly Meter Meter = new("BlazorApp.StateCompare", "1.0.0");
 
-    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
-        "statecompare.rounds", unit: "{rounds}", description: "Total rounds started");
-    private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.answers", unit: "{answers}", description: "Total answers given");
-    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.correct_answers", unit: "{answers}", description: "Total correct answers");
-    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.wrong_answers", unit: "{answers}", description: "Total wrong answers");
-    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
-        "statecompare.resets", unit: "{resets}", description: "Total game resets");
-    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
-        "statecompare.question_type_changes", unit: "{changes}", description: "Question type changes");
-    private static readonly Counter<long> TieSkipCounter = Meter.CreateCounter<long>(
-        "statecompare.tie_skips", unit: "{skips}", description: "Pairs skipped due to equal values");
-    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
-        "statecompare.localstorage_loads", unit: "{loads}", description: "Local storage loads");
-    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
-        "statecompare.localstorage_saves", unit: "{saves}", description: "Local storage saves");
-
-    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
-        "statecompare.streak_length", unit: "{streak}", description: "Streak lengths when broken");
-    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
-        "statecompare.current_score", unit: "{score}", description: "Current session score");
-    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
-        "statecompare.current_streak", unit: "{streak}", description: "Current streak");
+    private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>("statecompare.rounds", "rounds", "Rounds started");
+    private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>("statecompare.correct_answers", "answers", "Correct answers");
+    private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>("statecompare.wrong_answers", "answers", "Wrong answers");
+    private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>("statecompare.resets", "resets", "Game resets");
+    private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>("statecompare.question_type_changes", "changes", "Question type changes");
+    private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>("statecompare.streak_length", "streak", "Streak lengths when broken");
+    private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>("statecompare.current_score", "score", "Current score");
+    private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>("statecompare.current_streak", "streak", "Current streak");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>("statecompare.storage.loads", "operations", "Local storage loads");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>("statecompare.storage.saves", "operations", "Local storage saves");
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // COMPONENT STATE
+    // GAME STATE
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private StateData? _state1;
     private StateData? _state2;
     private ComparisonQuestion? _currentQuestion;
     private ComparisonResult? _lastResult;
     private bool _hasAnswered;
     private bool _randomMode = true;
+    private int _previousStreak;
 
     // Local storage state
     private ComparePersistedStats? _persistedStats;
     private bool _isJsRuntimeAvailable = false;
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // PERSISTED STATS MODEL (shared pattern for StateCompare/CountryCompare)
+    // PERSISTED STATS MODEL - INCLUDES SESSION STATE
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private class ComparePersistedStats
     {
+        // Lifetime stats
         public int TotalQuestions { get; set; }
         public int TotalCorrect { get; set; }
         public int BestStreak { get; set; }
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+
+        // SESSION STATE - survives page reload
+        public int SessionCorrect { get; set; }
+        public int SessionTotal { get; set; }
+        public int SessionCurrentStreak { get; set; }
+        public int SessionBestStreak { get; set; }
+        public bool RandomMode { get; set; } = true;
+        public string? CurrentQuestionId { get; set; }
     }
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // LIFECYCLE METHODS
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     protected override void OnInitialized()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.Initialize");
@@ -2503,18 +2355,17 @@ MODIFIED: 12/14/2025 10:42:21
 
     public async ValueTask DisposeAsync()
     {
-        // Save final stats on dispose
+        // Update best streak before saving
         if (_persistedStats != null && ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
         {
             _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
-            await SavePersistedStatsAsync();
         }
+        await SavePersistedStatsAsync();
     }
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    // LOCAL STORAGE OPERATIONS
+    // LOCAL STORAGE OPERATIONS - SAVE EVERYTHING
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private async Task LoadPersistedStatsAsync()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.LoadPersistedStats");
@@ -2527,8 +2378,38 @@ MODIFIED: 12/14/2025 10:42:21
             {
                 _persistedStats = JsonSerializer.Deserialize<ComparePersistedStats>(json);
                 LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
-                Logger.LogInformation("Loaded StateCompare stats: {Total} questions, {Correct} correct",
-                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0);
+
+                // RESTORE SESSION STATE
+                if (_persistedStats != null)
+                {
+                    // Restore to ComparisonService.Score
+                    for (int i = 0; i < _persistedStats.SessionCorrect; i++)
+                    {
+                        ComparisonService.Score.CorrectAnswers++;
+                    }
+                    for (int i = 0; i < _persistedStats.SessionTotal; i++)
+                    {
+                        ComparisonService.Score.TotalQuestions++;
+                    }
+                    ComparisonService.Score.CurrentStreak = _persistedStats.SessionCurrentStreak;
+                    ComparisonService.Score.BestStreak = _persistedStats.SessionBestStreak;
+
+                    // Restore UI state
+                    _randomMode = _persistedStats.RandomMode;
+                    if (!string.IsNullOrEmpty(_persistedStats.CurrentQuestionId))
+                    {
+                        _currentQuestion = ComparisonService.Questions.FirstOrDefault(q => q.Id == _persistedStats.CurrentQuestionId);
+                    }
+
+                    // Sync gauges
+                    CurrentScoreGauge.Add(_persistedStats.SessionCorrect);
+                    CurrentStreakGauge.Add(_persistedStats.SessionCurrentStreak);
+                }
+
+                Logger.LogInformation(
+                    "Loaded StateCompare stats: Lifetime={Total}/{Correct}, Session={SessionTotal}/{SessionCorrect}",
+                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0,
+                    _persistedStats?.SessionTotal ?? 0, _persistedStats?.SessionCorrect ?? 0);
             }
             else
             {
@@ -2550,7 +2431,21 @@ MODIFIED: 12/14/2025 10:42:21
 
         try
         {
+            // SAVE SESSION STATE
+            _persistedStats.SessionCorrect = ComparisonService.Score.CorrectAnswers;
+            _persistedStats.SessionTotal = ComparisonService.Score.TotalQuestions;
+            _persistedStats.SessionCurrentStreak = ComparisonService.Score.CurrentStreak;
+            _persistedStats.SessionBestStreak = ComparisonService.Score.BestStreak;
+            _persistedStats.RandomMode = _randomMode;
+            _persistedStats.CurrentQuestionId = _currentQuestion?.Id;
             _persistedStats.LastPlayedUtc = DateTime.UtcNow;
+
+            // Update lifetime best streak if needed
+            if (ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
+            {
+                _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
+            }
+
             var json = JsonSerializer.Serialize(_persistedStats);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
             LocalStorageSaveCounter.Add(1);
@@ -2568,8 +2463,17 @@ MODIFIED: 12/14/2025 10:42:21
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+
+            // Reset gauges
+            CurrentScoreGauge.Add(-ComparisonService.Score.CorrectAnswers);
+            CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
+
+            // Reset service score
+            ComparisonService.Score.Reset();
+
             _persistedStats = new ComparePersistedStats();
             Logger.LogInformation("Cleared StateCompare persisted stats");
+            StartNewRound();
         }
         catch (Exception ex)
         {
@@ -2580,7 +2484,6 @@ MODIFIED: 12/14/2025 10:42:21
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // GAME LOGIC
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
     private void StartNewRound()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.StartNewRound");
@@ -2591,84 +2494,62 @@ MODIFIED: 12/14/2025 10:42:21
         }
         else
         {
-            _currentQuestion ??= ComparisonService.AvailableQuestions[0];
+            _currentQuestion ??= ComparisonService.Questions.First();
         }
 
-        // Get a pair where values are NOT equal (no ties)
-        var pair = ComparisonService.GetRandomStatePairWithoutTie(_currentQuestion);
-        if (pair == null)
-        {
-            // Fallback if somehow no valid pairs exist
-            (_state1, _state2) = ComparisonService.GetRandomStatePair();
-            TieSkipCounter.Add(1);
-        }
-        else
-        {
-            (_state1, _state2) = pair.Value;
-        }
+        // Get pair WITHOUT ties - this ensures we never ask gotcha questions
+        (_state1, _state2) = ComparisonService.GetRandomStatePairWithoutTie(_currentQuestion);
 
-        _hasAnswered = false;
         _lastResult = null;
-
+        _hasAnswered = false;
         RoundCounter.Add(1);
 
-        activity?.SetTag("state1.name", _state1?.Name);
-        activity?.SetTag("state2.name", _state2?.Name);
-        activity?.SetTag("question.type", _currentQuestion?.Id);
-
-        Logger.LogInformation("New round: {State1} vs {State2}, Question: {QuestionType}",
-            _state1?.Name, _state2?.Name, _currentQuestion?.Id);
+        activity?.SetTag("state1", _state1?.Name);
+        activity?.SetTag("state2", _state2?.Name);
+        activity?.SetTag("question", _currentQuestion?.Id);
     }
 
     private async Task SelectState(StateData selectedState)
     {
-        if (_hasAnswered || _currentQuestion is null || _state1 is null || _state2 is null)
-            return;
+        if (_hasAnswered || _currentQuestion == null || _state1 == null || _state2 == null) return;
 
         using var activity = ActivitySource.StartActivity("StateCompare.SelectState");
 
-        var previousStreak = ComparisonService.Score.CurrentStreak;
+        _previousStreak = ComparisonService.Score.CurrentStreak;
+
         _lastResult = ComparisonService.CheckAnswer(_state1, _state2, _currentQuestion, selectedState);
         _hasAnswered = true;
 
-        AnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
-
-        if (_lastResult.IsCorrect)
+        // Update persisted lifetime stats
+        if (_persistedStats != null)
         {
-            CorrectAnswerCounter.Add(1);
-            CurrentScoreGauge.Add(1);
-            CurrentStreakGauge.Add(1);
-
-            // Update persisted stats
-            if (_persistedStats != null)
+            _persistedStats.TotalQuestions++;
+            if (_lastResult.IsCorrect)
             {
-                _persistedStats.TotalQuestions++;
                 _persistedStats.TotalCorrect++;
-                if (ComparisonService.Score.CurrentStreak > _persistedStats.BestStreak)
-                    _persistedStats.BestStreak = ComparisonService.Score.CurrentStreak;
-                await SavePersistedStatsAsync();
+                CorrectAnswerCounter.Add(1);
+                CurrentScoreGauge.Add(1);
+                CurrentStreakGauge.Add(1);
             }
-        }
-        else
-        {
-            WrongAnswerCounter.Add(1);
-            if (previousStreak > 0)
+            else
             {
-                StreakHistogram.Record(previousStreak);
-                CurrentStreakGauge.Add(-previousStreak);
-            }
-
-            if (_persistedStats != null)
-            {
-                _persistedStats.TotalQuestions++;
-                await SavePersistedStatsAsync();
+                WrongAnswerCounter.Add(1);
+                if (_previousStreak > 0)
+                {
+                    StreakHistogram.Record(_previousStreak);
+                    CurrentStreakGauge.Add(-_previousStreak);
+                }
             }
         }
 
-        activity?.SetTag("result", _lastResult.IsCorrect ? "correct" : "wrong");
+        activity?.SetTag("correct", _lastResult.IsCorrect);
+        activity?.SetTag("streak", ComparisonService.Score.CurrentStreak);
+
+        // Save immediately after every answer
+        await SavePersistedStatsAsync();
     }
 
-    private void ResetGame()
+    private async Task ResetGame()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.ResetGame");
 
@@ -2678,7 +2559,18 @@ MODIFIED: 12/14/2025 10:42:21
         CurrentScoreGauge.Add(-finalScore);
         CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
 
+        // Reset service score but keep lifetime stats
         ComparisonService.Score.Reset();
+
+        // Reset session in persisted stats but keep lifetime
+        if (_persistedStats != null)
+        {
+            _persistedStats.SessionCorrect = 0;
+            _persistedStats.SessionTotal = 0;
+            _persistedStats.SessionCurrentStreak = 0;
+            _persistedStats.SessionBestStreak = 0;
+        }
+
         ResetCounter.Add(1);
 
         activity?.SetTag("final.score", finalScore);
@@ -2686,10 +2578,11 @@ MODIFIED: 12/14/2025 10:42:21
 
         Logger.LogInformation("Game reset. Final score: {Score}, Best streak: {BestStreak}", finalScore, bestStreak);
 
+        await SavePersistedStatsAsync();
         StartNewRound();
     }
 
-    private void SetQuestion(ComparisonQuestion question)
+    private async Task SetQuestion(ComparisonQuestion question)
     {
         using var activity = ActivitySource.StartActivity("StateCompare.SetQuestion");
 
@@ -2698,12 +2591,14 @@ MODIFIED: 12/14/2025 10:42:21
         QuestionTypeChangeCounter.Add(1);
 
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
-    private void ToggleRandomMode()
+    private async Task ToggleRandomMode()
     {
         _randomMode = true;
         StartNewRound();
+        await SavePersistedStatsAsync();
     }
 
     private string GetCardClass(StateData state)
@@ -2721,8 +2616,8 @@ MODIFIED: 12/14/2025 10:42:21
     private string GetShortQuestionName(string id) => id switch
     {
         "area" => "Area",
-        "population" => "Population",
-        "representatives" => "House Reps",
+        "population" => "Pop",
+        "representatives" => "Reps",
         _ => id
     };
 }
@@ -2731,13 +2626,57 @@ MODIFIED: 12/14/2025 10:42:21
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
-SIZE: 4.12 KB
-MODIFIED: 12/14/2025 10:42:07
+SIZE: 5.55 KB
+MODIFIED: 12/14/2025 11:34:34
 ================================================================================
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STATE COMPARE - RESPONSIVE LAYOUT
    Designed to fit on iPhone SE (375x667) and all larger screens
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.game-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.game-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.score-display {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.score {
+    font-weight: bold;
+}
+
+.streak {
+    color: #f59e0b;
+}
+
+.best-streak {
+    color: #8b5cf6;
+}
+
+.question-text {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+    min-height: 2em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPARISON CARDS - Side by side, fits on small screens
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .comparison-container {
@@ -2746,174 +2685,179 @@ MODIFIED: 12/14/2025 10:42:07
     justify-content: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    margin: 0.5rem 0;
 }
 
 .comparison-card {
     flex: 1;
-    max-width: 200px;
-    min-width: 120px;
+    max-width: 140px;
+    min-width: 100px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
+    border-radius: 8px;
+    padding: 0.75rem 0.5rem;
     color: white;
-    position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
 }
 
-    .comparison-card.clickable {
-        cursor: pointer;
-    }
-
-        .comparison-card.clickable:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-    .comparison-card.correct-answer {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
-    }
-
-    .comparison-card.wrong-answer {
-        background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
-        box-shadow: 0 0 20px rgba(239, 71, 58, 0.5);
-    }
-
-.correct-indicator {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #28a745;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.875rem;
+.comparison-card.clickable {
+    cursor: pointer;
 }
 
-.card-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.comparison-card.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.comparison-card.correct-answer {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 0 3px #34d399;
+}
+
+.comparison-card.wrong-answer {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 0 3px #f87171;
 }
 
 .state-abbrev {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: bold;
-    background: rgba(255,255,255,0.2);
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0.5rem;
+    line-height: 1;
 }
 
 .state-name {
-    font-size: 1rem;
-    margin: 0;
-    font-weight: 600;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.stat-reveal {
-    font-size: 0.875rem;
-    margin: 0.5rem 0 0 0;
-    background: rgba(0,0,0,0.2);
-    padding: 0.25rem 0.5rem;
+.value-reveal {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
 }
 
 .vs-badge {
-    background: #343a40;
-    color: white;
-    padding: 0.5rem;
-    border-radius: 50%;
     font-weight: bold;
-    font-size: 0.875rem;
+    font-size: 1rem;
+    color: #6b7280;
+    padding: 0 0.25rem;
     flex-shrink: 0;
 }
 
-.score-display {
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESULT AND CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.result-message {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.result-message.correct {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.result-message.wrong {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.next-btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    margin: 0.25rem 0;
+}
+
+.controls {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    justify-content: center;
     gap: 0.25rem;
 }
 
-.question-section h3 {
-    margin: 0;
-}
-
-.question-buttons .btn-group {
-    gap: 2px;
-}
-
-.question-buttons .btn {
+.controls .btn {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
 }
 
 .lifetime-stats {
-    text-align: center;
-}
-
-.result-section .alert {
-    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE OPTIMIZATIONS (iPhone SE: 375px width)
+   MOBILE-SPECIFIC ADJUSTMENTS (iPhone SE: 375x667)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 576px) {
-    h1 {
-        font-size: 1.25rem !important;
+@media (max-width: 400px) {
+    .game-container {
+        padding: 0.25rem;
     }
-
+    
+    .game-title {
+        font-size: 1.1rem;
+    }
+    
     .comparison-card {
-        padding: 0.75rem;
-        min-width: 100px;
+        min-width: 90px;
+        max-width: 120px;
+        padding: 0.5rem 0.25rem;
     }
-
+    
     .state-abbrev {
         font-size: 1.5rem;
-        padding: 0.375rem 0.75rem;
     }
-
+    
     .state-name {
-        font-size: 0.875rem;
-    }
-
-    .stat-reveal {
-        font-size: 0.75rem;
-    }
-
-    .vs-badge {
-        padding: 0.375rem;
-        font-size: 0.75rem;
-    }
-
-    .score-display .badge {
-        font-size: 0.75rem !important;
-    }
-
-    .question-buttons .btn {
         font-size: 0.65rem;
-        padding: 0.2rem 0.35rem;
+    }
+    
+    .value-reveal {
+        font-size: 0.7rem;
+    }
+    
+    .question-text {
+        font-size: 0.9rem;
+    }
+    
+    .controls .btn {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
     }
 }
 
-/* Extra small screens */
-@media (max-width: 360px) {
-    .comparison-card {
-        min-width: 90px;
-        padding: 0.5rem;
+/* Ensure content doesn't overflow viewport height */
+@media (max-height: 700px) {
+    .game-title {
+        margin-bottom: 0.25rem;
     }
-
-    .state-abbrev {
-        font-size: 1.25rem;
+    
+    .score-display {
+        margin-bottom: 0.25rem;
+    }
+    
+    .comparison-container {
+        margin: 0.25rem 0;
+    }
+    
+    .result-message {
+        margin: 0.25rem 0;
+        padding: 0.25rem;
+    }
+    
+    .next-btn {
+        padding: 0.4rem 1rem;
     }
 }
 
@@ -4326,15 +4270,14 @@ public class CountryGameScore
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
-SIZE: 3.52 KB
-MODIFIED: 12/08/2025 19:39:34
+SIZE: 3.83 KB
+MODIFIED: 12/14/2025 11:38:31
 ================================================================================
 
 namespace BlazorApp.Models;
 
 /// <summary>
 /// Represents a US state with various statistics for comparison games.
-/// Designed to be extensible - add new properties as needed.
 /// </summary>
 public record StateData
 {
@@ -4356,7 +4299,7 @@ public record StateData
     /// <summary>Year admitted to the Union</summary>
     public int? YearAdmitted { get; init; }
     
-    /// <summary>Image filename (without path) - e.g., "california.png"</summary>
+    /// <summary>Image filename (without path)</summary>
     public string? ImageFileName { get; init; }
     
     /// <summary>Gets the image path for use in Blazor</summary>
@@ -4399,11 +4342,13 @@ public record ComparisonResult
 
 /// <summary>
 /// Tracks the user's score during a game session.
+/// Uses public setters to allow restoration from local storage.
 /// </summary>
 public class GameScore
 {
-    public int CorrectAnswers { get; private set; }
-    public int TotalQuestions { get; private set; }
+    // Use public setters to allow restoration from persisted state
+    public int CorrectAnswers { get; set; }
+    public int TotalQuestions { get; set; }
     public int CurrentStreak { get; set; }
     public int BestStreak { get; set; }
     public List<ComparisonResult> History { get; } = [];
@@ -4415,7 +4360,19 @@ public class GameScore
     public void RecordAnswer(ComparisonResult result)
     {
         TotalQuestions++;
-        if (result.IsCorrect) CorrectAnswers++;
+        if (result.IsCorrect)
+        {
+            CorrectAnswers++;
+            CurrentStreak++;
+            if (CurrentStreak > BestStreak)
+            {
+                BestStreak = CurrentStreak;
+            }
+        }
+        else
+        {
+            CurrentStreak = 0;
+        }
         History.Add(result);
     }
 
@@ -4425,9 +4382,10 @@ public class GameScore
         TotalQuestions = 0;
         CurrentStreak = 0;
         BestStreak = 0;
+        History.Clear();
     }
 
-    // Helper methods for streak management
+    // Helper methods for manual score management
     public void IncrementCorrect()
     {
         CorrectAnswers++;
@@ -4629,8 +4587,8 @@ MODIFIED: 12/08/2025 11:14:16
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
-SIZE: 27.13 KB
-MODIFIED: 12/14/2025 10:41:05
+SIZE: 30.57 KB
+MODIFIED: 12/14/2025 11:37:29
 ================================================================================
 
 using BlazorApp.Models;
@@ -4646,17 +4604,17 @@ public class CountryComparisonService
     private readonly List<CountryData> _countries;
     private readonly List<CountryComparisonQuestion> _questions;
     private readonly Random _random = new();
-    
+
     public CountryGameScore Score { get; } = new();
     public IReadOnlyList<CountryData> Countries => _countries;
     public IReadOnlyList<CountryComparisonQuestion> AvailableQuestions => _questions;
-    
+
     public CountryComparisonService()
     {
         _countries = CountryDataStore.GetAllCountries();
         _questions = InitializeQuestions();
     }
-    
+
     /// <summary>
     /// Gets two random countries that both have data for the specified question.
     /// </summary>
@@ -4664,22 +4622,16 @@ public class CountryComparisonService
     {
         var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
         if (eligible.Count < 2) return null;
-        
+
         var idx1 = _random.Next(eligible.Count);
         int idx2;
         do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
         return (eligible[idx1], eligible[idx2]);
     }
-    
+
     public CountryComparisonQuestion GetRandomQuestion() => _questions[_random.Next(_questions.Count)];
-    
-    public CountryComparisonQuestion GetRandomViableQuestion()
-    {
-        var viable = _questions.Where(q => _countries.Count(c => q.HasDataFor(c)) >= 2).ToList();
-        return viable[_random.Next(viable.Count)];
-    }
-    
-    public int GetCountryCountForQuestion(CountryComparisonQuestion question) 
+
+    public int GetCountryCountForQuestion(CountryComparisonQuestion question)
         => _countries.Count(c => question.HasDataFor(c));
 
     public CountryData GetCorrectAnswer(CountryData c1, CountryData c2, CountryComparisonQuestion question)
@@ -4691,52 +4643,157 @@ public class CountryComparisonService
         return v1 > v2 ? c1 : c2;
     }
 
-    public CountryComparisonResult CheckAnswer(CountryData c1, CountryData c2, 
-        CountryComparisonQuestion question, CountryData userChoice)
-    {
-        var correct = GetCorrectAnswer(c1, c2, question);
-        var result = new CountryComparisonResult
-        {
-            Country1 = c1, Country2 = c2, Question = question,
-            CorrectAnswer = correct, UserChoice = userChoice
-        };
-        Score.RecordAnswer(result);
-        return result;
-    }
-
     /// <summary>
-    /// Gets two random countries that both have data for the specified question
-    /// AND have DIFFERENT values (no ties allowed).
+    /// Gets a random pair of countries where their values for the given question are NOT equal.
     /// This prevents "gotcha" questions where both countries have the same value.
+    /// Returns null if not enough valid pairs exist.
     /// </summary>
     public (CountryData Country1, CountryData Country2)? GetRandomCountryPairWithoutTie(CountryComparisonQuestion question)
     {
-        var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
-        if (eligible.Count < 2) return null;
+        // Filter to countries that have data for this question
+        var validCountries = _countries.Where(c => question.GetValue(c).HasValue).ToList();
 
-        // Try to find a pair with different values (max 100 attempts to avoid infinite loop)
+        if (validCountries.Count < 2)
+        {
+            return null;
+        }
+
+        // Try to find a pair without equal values (max 100 attempts to avoid infinite loop)
         for (int attempt = 0; attempt < 100; attempt++)
         {
-            var idx1 = _random.Next(eligible.Count);
-            int idx2;
-            do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
+            var country1 = validCountries[_random.Next(validCountries.Count)];
+            var country2 = validCountries[_random.Next(validCountries.Count)];
 
-            var country1 = eligible[idx1];
-            var country2 = eligible[idx2];
+            // Ensure different countries
+            if (country1 == country2) continue;
 
             var value1 = question.GetValue(country1);
             var value2 = question.GetValue(country2);
 
-            // If values are different, we have a valid pair (no tie)
-            if (value1.HasValue && value2.HasValue && Math.Abs(value1.Value - value2.Value) > 0.0001)
+            // Ensure values are NOT equal (prevents gotcha questions)
+            if (value1 != value2)
             {
                 return (country1, country2);
             }
         }
 
-        // Fallback: couldn't find a non-tie pair
-        // This is very unlikely with real-world country data
+        // Fallback: try to find any two countries with different values
+        for (int i = 0; i < validCountries.Count; i++)
+        {
+            for (int j = i + 1; j < validCountries.Count; j++)
+            {
+                var value1 = question.GetValue(validCountries[i]);
+                var value2 = question.GetValue(validCountries[j]);
+                if (value1 != value2)
+                {
+                    return (validCountries[i], validCountries[j]);
+                }
+            }
+        }
+
+        // If all countries have the same value, return null
         return null;
+    }
+
+    /// <summary>
+    /// Gets a random viable question (one that has at least 2 countries with different values).
+    /// </summary>
+    public CountryComparisonQuestion? GetRandomViableQuestion()
+    {
+        var viableQuestions = _questions
+            .Where(q => GetCountryCountForQuestion(q) >= 2)
+            .ToList();
+
+        if (viableQuestions.Count == 0)
+            return null;
+
+        return viableQuestions[_random.Next(viableQuestions.Count)];
+    }
+
+    /// <summary>
+    /// Checks the user's answer and records the result with streak tracking.
+    /// </summary>
+    public CountryComparisonResult CheckAnswer(CountryData country1, CountryData country2,
+        CountryComparisonQuestion question, CountryData userChoice)
+    {
+        var correct = GetCorrectAnswer(country1, country2, question);
+        var isCorrect = correct == userChoice;
+
+        var result = new CountryComparisonResult
+        {
+            Country1 = country1,
+            Country2 = country2,
+            Question = question,
+            CorrectAnswer = correct,
+            UserChoice = userChoice
+        };
+
+        // Update score with streak tracking
+        Score.TotalQuestions++;
+        if (isCorrect)
+        {
+            Score.CorrectAnswers++;
+            Score.CurrentStreak++;
+            if (Score.CurrentStreak > Score.BestStreak)
+            {
+                Score.BestStreak = Score.CurrentStreak;
+            }
+        }
+        else
+        {
+            Score.CurrentStreak = 0;
+        }
+
+        Score.History.Add(result);
+        return result;
+    }
+
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ALSO UPDATE CountryGameScore class (in CountryData.cs) to have public setters:
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    /// <summary>
+    /// Tracks the user's score during a country comparison game session.
+    /// Uses public setters to allow restoration from local storage.
+    /// </summary>
+    public class CountryGameScore
+    {
+        // Use public setters to allow restoration from persisted state
+        public int CorrectAnswers { get; set; }
+        public int TotalQuestions { get; set; }
+        public int CurrentStreak { get; set; }
+        public int BestStreak { get; set; }
+        public List<CountryComparisonResult> History { get; } = [];
+
+        public double PercentageCorrect => TotalQuestions > 0
+            ? (double)CorrectAnswers / TotalQuestions * 100
+            : 0;
+
+        public void RecordAnswer(CountryComparisonResult result)
+        {
+            TotalQuestions++;
+            if (result.IsCorrect)
+            {
+                CorrectAnswers++;
+                CurrentStreak++;
+                if (CurrentStreak > BestStreak) BestStreak = CurrentStreak;
+            }
+            else
+            {
+                CurrentStreak = 0;
+            }
+            History.Add(result);
+        }
+
+        public void Reset()
+        {
+            CorrectAnswers = 0;
+            TotalQuestions = 0;
+            CurrentStreak = 0;
+            BestStreak = 0;
+            History.Clear();
+        }
     }
 
     private static List<CountryComparisonQuestion> InitializeQuestions() =>
@@ -4990,20 +5047,30 @@ public static class CountryDataStore
     private static CountryData C(string name, string iso2, string flag, string cont,
         long? area, long? pop, long? gdp, int? gdpPc, int? gniPpp,
         double? density, double? literacy, double? hdi, double? lifeExp) => new()
-    {
-        Name = name, IsoCode2 = iso2, IsoCode3 = iso2 + "X", FlagEmoji = flag,
-        Continent = cont, AreaSquareKm = area, Population = pop,
-        GdpMillionsUsd = gdp, GdpPerCapitaUsd = gdpPc, GniPerCapitaPpp = gniPpp,
-        PopulationDensity = density, LiteracyRate = literacy, Hdi = hdi, LifeExpectancy = lifeExp
-    };
+        {
+            Name = name,
+            IsoCode2 = iso2,
+            IsoCode3 = iso2 + "X",
+            FlagEmoji = flag,
+            Continent = cont,
+            AreaSquareKm = area,
+            Population = pop,
+            GdpMillionsUsd = gdp,
+            GdpPerCapitaUsd = gdpPc,
+            GniPerCapitaPpp = gniPpp,
+            PopulationDensity = density,
+            LiteracyRate = literacy,
+            Hdi = hdi,
+            LifeExpectancy = lifeExp
+        };
 }
 
 
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
-SIZE: 11.7 KB
-MODIFIED: 12/14/2025 10:41:41
+SIZE: 12.43 KB
+MODIFIED: 12/14/2025 11:38:45
 ================================================================================
 
 using BlazorApp.Models;
@@ -5011,8 +5078,7 @@ using BlazorApp.Models;
 namespace BlazorApp.Services;
 
 /// <summary>
-/// Service that manages state data and comparison game logic.
-/// Registered as a scoped service to maintain score per user session.
+/// Service for managing US state comparison game logic.
 /// </summary>
 public class StateComparisonService
 {
@@ -5020,10 +5086,9 @@ public class StateComparisonService
     private readonly List<ComparisonQuestion> _questions;
     private readonly Random _random = new();
 
-    public GameScore Score { get; } = new();
-
     public IReadOnlyList<StateData> States => _states;
-    public IReadOnlyList<ComparisonQuestion> AvailableQuestions => _questions;
+    public IReadOnlyList<ComparisonQuestion> Questions => _questions;
+    public GameScore Score { get; } = new();
 
     public StateComparisonService()
     {
@@ -5032,57 +5097,61 @@ public class StateComparisonService
     }
 
     /// <summary>
-    /// Gets two random different states for comparison.
-    /// </summary>
-    public (StateData State1, StateData State2) GetRandomStatePair()
-    {
-        var index1 = _random.Next(_states.Count);
-        int index2;
-        do { index2 = _random.Next(_states.Count); }
-        while (index2 == index1);
-
-        return (_states[index1], _states[index2]);
-    }
-
-    /// <summary>
-    /// Gets two random states where the values are NOT equal for the given question.
+    /// Gets a random pair of states where their values for the given question are NOT equal.
     /// This prevents "gotcha" questions where both states have the same value.
     /// </summary>
-    public (StateData State1, StateData State2)? GetRandomStatePairWithoutTie(ComparisonQuestion question)
+    public (StateData State1, StateData State2) GetRandomStatePairWithoutTie(ComparisonQuestion question)
     {
-        // Get all states that have data for this question
-        var eligibleStates = _states.Where(s => question.GetValue(s).HasValue).ToList();
-
-        if (eligibleStates.Count < 2)
-            return null;
-
-        // Try to find a pair with different values (max 50 attempts to avoid infinite loop)
-        for (int attempt = 0; attempt < 50; attempt++)
+        // Filter to states that have data for this question
+        var validStates = _states.Where(s => question.GetValue(s).HasValue).ToList();
+        
+        if (validStates.Count < 2)
         {
-            var idx1 = _random.Next(eligibleStates.Count);
-            int idx2;
-            do { idx2 = _random.Next(eligibleStates.Count); }
-            while (idx2 == idx1);
+            throw new InvalidOperationException($"Not enough states with data for question: {question.Id}");
+        }
 
-            var state1 = eligibleStates[idx1];
-            var state2 = eligibleStates[idx2];
+        // Try to find a pair without equal values (max 100 attempts to avoid infinite loop)
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            var state1 = validStates[_random.Next(validStates.Count)];
+            var state2 = validStates[_random.Next(validStates.Count)];
+
+            // Ensure different states
+            if (state1 == state2) continue;
 
             var value1 = question.GetValue(state1);
             var value2 = question.GetValue(state2);
 
-            // If values are different, we have a valid pair
+            // Ensure values are NOT equal (prevents gotcha questions)
             if (value1 != value2)
             {
                 return (state1, state2);
             }
         }
 
-        // Fallback: couldn't find a non-tie pair (very unlikely with real data)
-        return null;
+        // Fallback: just return any two different states (shouldn't happen often)
+        var fallback1 = validStates[0];
+        var fallback2 = validStates[1];
+        return (fallback1, fallback2);
     }
 
     /// <summary>
-    /// Gets a random question from available questions.
+    /// Gets a random pair of states (original method, may have ties).
+    /// </summary>
+    public (StateData State1, StateData State2) GetRandomStatePair()
+    {
+        var state1 = _states[_random.Next(_states.Count)];
+        StateData state2;
+        do
+        {
+            state2 = _states[_random.Next(_states.Count)];
+        } while (state2 == state1);
+
+        return (state1, state2);
+    }
+
+    /// <summary>
+    /// Gets a random question type.
     /// </summary>
     public ComparisonQuestion GetRandomQuestion()
     {
@@ -5090,13 +5159,12 @@ public class StateComparisonService
     }
 
     /// <summary>
-    /// Determines which state has the higher value for the given question.
+    /// Determines the correct answer for a comparison.
     /// </summary>
     public StateData GetCorrectAnswer(StateData state1, StateData state2, ComparisonQuestion question)
     {
         var value1 = question.GetValue(state1) ?? 0;
         var value2 = question.GetValue(state2) ?? 0;
-        // Note: With GetRandomStatePairWithoutTie, values should never be equal
         return value1 > value2 ? state1 : state2;
     }
 
@@ -5107,6 +5175,8 @@ public class StateComparisonService
         ComparisonQuestion question, StateData userChoice)
     {
         var correct = GetCorrectAnswer(state1, state2, question);
+        var isCorrect = correct == userChoice;
+        
         var result = new ComparisonResult
         {
             State1 = state1,
@@ -5116,7 +5186,23 @@ public class StateComparisonService
             UserChoice = userChoice
         };
 
-        Score.RecordAnswer(result);
+        // Update score with streak tracking
+        Score.TotalQuestions++;
+        if (isCorrect)
+        {
+            Score.CorrectAnswers++;
+            Score.CurrentStreak++;
+            if (Score.CurrentStreak > Score.BestStreak)
+            {
+                Score.BestStreak = Score.CurrentStreak;
+            }
+        }
+        else
+        {
+            Score.CurrentStreak = 0;
+        }
+        
+        Score.History.Add(result);
         return result;
     }
 
@@ -5156,59 +5242,58 @@ public class StateComparisonService
 
     private static List<StateData> InitializeStates()
     {
-        // All 50 US states with area (sq mi), population (2023 est), and House reps (2023)
         return
         [
-            new() { Name = "Alabama", Abbreviation = "AL", AreaSquareMiles = 52420, Population = 5108468, HouseRepresentatives = 7 },
-            new() { Name = "Alaska", Abbreviation = "AK", AreaSquareMiles = 665384, Population = 733391, HouseRepresentatives = 1 },
-            new() { Name = "Arizona", Abbreviation = "AZ", AreaSquareMiles = 113990, Population = 7431344, HouseRepresentatives = 9 },
-            new() { Name = "Arkansas", Abbreviation = "AR", AreaSquareMiles = 53179, Population = 3067732, HouseRepresentatives = 4 },
-            new() { Name = "California", Abbreviation = "CA", AreaSquareMiles = 163695, Population = 38965193, HouseRepresentatives = 52 },
-            new() { Name = "Colorado", Abbreviation = "CO", AreaSquareMiles = 104094, Population = 5877610, HouseRepresentatives = 8 },
-            new() { Name = "Connecticut", Abbreviation = "CT", AreaSquareMiles = 5543, Population = 3617176, HouseRepresentatives = 5 },
-            new() { Name = "Delaware", Abbreviation = "DE", AreaSquareMiles = 2489, Population = 1031890, HouseRepresentatives = 1 },
-            new() { Name = "Florida", Abbreviation = "FL", AreaSquareMiles = 65758, Population = 22610726, HouseRepresentatives = 28 },
-            new() { Name = "Georgia", Abbreviation = "GA", AreaSquareMiles = 59425, Population = 11029227, HouseRepresentatives = 14 },
-            new() { Name = "Hawaii", Abbreviation = "HI", AreaSquareMiles = 10932, Population = 1435138, HouseRepresentatives = 2 },
-            new() { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1978379, HouseRepresentatives = 2 },
-            new() { Name = "Illinois", Abbreviation = "IL", AreaSquareMiles = 57914, Population = 12549689, HouseRepresentatives = 17 },
-            new() { Name = "Indiana", Abbreviation = "IN", AreaSquareMiles = 36420, Population = 6862199, HouseRepresentatives = 9 },
-            new() { Name = "Iowa", Abbreviation = "IA", AreaSquareMiles = 56273, Population = 3207004, HouseRepresentatives = 4 },
-            new() { Name = "Kansas", Abbreviation = "KS", AreaSquareMiles = 82278, Population = 2940546, HouseRepresentatives = 4 },
-            new() { Name = "Kentucky", Abbreviation = "KY", AreaSquareMiles = 40408, Population = 4526154, HouseRepresentatives = 6 },
-            new() { Name = "Louisiana", Abbreviation = "LA", AreaSquareMiles = 52378, Population = 4573749, HouseRepresentatives = 6 },
-            new() { Name = "Maine", Abbreviation = "ME", AreaSquareMiles = 35380, Population = 1395722, HouseRepresentatives = 2 },
-            new() { Name = "Maryland", Abbreviation = "MD", AreaSquareMiles = 12406, Population = 6180253, HouseRepresentatives = 8 },
-            new() { Name = "Massachusetts", Abbreviation = "MA", AreaSquareMiles = 10554, Population = 7001399, HouseRepresentatives = 9 },
-            new() { Name = "Michigan", Abbreviation = "MI", AreaSquareMiles = 96714, Population = 10037261, HouseRepresentatives = 13 },
-            new() { Name = "Minnesota", Abbreviation = "MN", AreaSquareMiles = 86936, Population = 5737915, HouseRepresentatives = 8 },
-            new() { Name = "Mississippi", Abbreviation = "MS", AreaSquareMiles = 48432, Population = 2939690, HouseRepresentatives = 4 },
-            new() { Name = "Missouri", Abbreviation = "MO", AreaSquareMiles = 69707, Population = 6196156, HouseRepresentatives = 8 },
-            new() { Name = "Montana", Abbreviation = "MT", AreaSquareMiles = 147040, Population = 1132812, HouseRepresentatives = 2 },
-            new() { Name = "Nebraska", Abbreviation = "NE", AreaSquareMiles = 77348, Population = 1978379, HouseRepresentatives = 3 },
-            new() { Name = "Nevada", Abbreviation = "NV", AreaSquareMiles = 110572, Population = 3194176, HouseRepresentatives = 4 },
-            new() { Name = "New Hampshire", Abbreviation = "NH", AreaSquareMiles = 9349, Population = 1402054, HouseRepresentatives = 2 },
-            new() { Name = "New Jersey", Abbreviation = "NJ", AreaSquareMiles = 8723, Population = 9290841, HouseRepresentatives = 12 },
-            new() { Name = "New Mexico", Abbreviation = "NM", AreaSquareMiles = 121590, Population = 2114371, HouseRepresentatives = 3 },
-            new() { Name = "New York", Abbreviation = "NY", AreaSquareMiles = 54555, Population = 19571216, HouseRepresentatives = 26 },
-            new() { Name = "North Carolina", Abbreviation = "NC", AreaSquareMiles = 53819, Population = 10835491, HouseRepresentatives = 14 },
-            new() { Name = "North Dakota", Abbreviation = "ND", AreaSquareMiles = 70698, Population = 783926, HouseRepresentatives = 1 },
-            new() { Name = "Ohio", Abbreviation = "OH", AreaSquareMiles = 44826, Population = 11785935, HouseRepresentatives = 15 },
-            new() { Name = "Oklahoma", Abbreviation = "OK", AreaSquareMiles = 69899, Population = 4053824, HouseRepresentatives = 5 },
-            new() { Name = "Oregon", Abbreviation = "OR", AreaSquareMiles = 98379, Population = 4233358, HouseRepresentatives = 6 },
-            new() { Name = "Pennsylvania", Abbreviation = "PA", AreaSquareMiles = 46054, Population = 12961683, HouseRepresentatives = 17 },
-            new() { Name = "Rhode Island", Abbreviation = "RI", AreaSquareMiles = 1545, Population = 1095962, HouseRepresentatives = 2 },
-            new() { Name = "South Carolina", Abbreviation = "SC", AreaSquareMiles = 32020, Population = 5373555, HouseRepresentatives = 7 },
-            new() { Name = "South Dakota", Abbreviation = "SD", AreaSquareMiles = 77116, Population = 919318, HouseRepresentatives = 1 },
-            new() { Name = "Tennessee", Abbreviation = "TN", AreaSquareMiles = 42144, Population = 7126489, HouseRepresentatives = 9 },
-            new() { Name = "Texas", Abbreviation = "TX", AreaSquareMiles = 268596, Population = 30503301, HouseRepresentatives = 38 },
-            new() { Name = "Utah", Abbreviation = "UT", AreaSquareMiles = 84897, Population = 3417734, HouseRepresentatives = 4 },
-            new() { Name = "Vermont", Abbreviation = "VT", AreaSquareMiles = 9616, Population = 647464, HouseRepresentatives = 1 },
-            new() { Name = "Virginia", Abbreviation = "VA", AreaSquareMiles = 42775, Population = 8683619, HouseRepresentatives = 11 },
-            new() { Name = "Washington", Abbreviation = "WA", AreaSquareMiles = 71298, Population = 7812880, HouseRepresentatives = 10 },
-            new() { Name = "West Virginia", Abbreviation = "WV", AreaSquareMiles = 24230, Population = 1770071, HouseRepresentatives = 2 },
-            new() { Name = "Wisconsin", Abbreviation = "WI", AreaSquareMiles = 65496, Population = 5910955, HouseRepresentatives = 8 },
-            new() { Name = "Wyoming", Abbreviation = "WY", AreaSquareMiles = 97813, Population = 584057, HouseRepresentatives = 1 }
+            new StateData { Name = "Alabama", Abbreviation = "AL", AreaSquareMiles = 52420, Population = 5024279, HouseRepresentatives = 7 },
+            new StateData { Name = "Alaska", Abbreviation = "AK", AreaSquareMiles = 665384, Population = 733391, HouseRepresentatives = 1 },
+            new StateData { Name = "Arizona", Abbreviation = "AZ", AreaSquareMiles = 113990, Population = 7151502, HouseRepresentatives = 9 },
+            new StateData { Name = "Arkansas", Abbreviation = "AR", AreaSquareMiles = 53179, Population = 3011524, HouseRepresentatives = 4 },
+            new StateData { Name = "California", Abbreviation = "CA", AreaSquareMiles = 163695, Population = 39538223, HouseRepresentatives = 52 },
+            new StateData { Name = "Colorado", Abbreviation = "CO", AreaSquareMiles = 104094, Population = 5773714, HouseRepresentatives = 8 },
+            new StateData { Name = "Connecticut", Abbreviation = "CT", AreaSquareMiles = 5543, Population = 3605944, HouseRepresentatives = 5 },
+            new StateData { Name = "Delaware", Abbreviation = "DE", AreaSquareMiles = 2489, Population = 989948, HouseRepresentatives = 1 },
+            new StateData { Name = "Florida", Abbreviation = "FL", AreaSquareMiles = 65758, Population = 21538187, HouseRepresentatives = 28 },
+            new StateData { Name = "Georgia", Abbreviation = "GA", AreaSquareMiles = 59425, Population = 10711908, HouseRepresentatives = 14 },
+            new StateData { Name = "Hawaii", Abbreviation = "HI", AreaSquareMiles = 10932, Population = 1455271, HouseRepresentatives = 2 },
+            new StateData { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1839106, HouseRepresentatives = 2 },
+            new StateData { Name = "Illinois", Abbreviation = "IL", AreaSquareMiles = 57914, Population = 12812508, HouseRepresentatives = 17 },
+            new StateData { Name = "Indiana", Abbreviation = "IN", AreaSquareMiles = 36420, Population = 6785528, HouseRepresentatives = 9 },
+            new StateData { Name = "Iowa", Abbreviation = "IA", AreaSquareMiles = 56273, Population = 3190369, HouseRepresentatives = 4 },
+            new StateData { Name = "Kansas", Abbreviation = "KS", AreaSquareMiles = 82278, Population = 2937880, HouseRepresentatives = 4 },
+            new StateData { Name = "Kentucky", Abbreviation = "KY", AreaSquareMiles = 40408, Population = 4505836, HouseRepresentatives = 6 },
+            new StateData { Name = "Louisiana", Abbreviation = "LA", AreaSquareMiles = 52378, Population = 4657757, HouseRepresentatives = 6 },
+            new StateData { Name = "Maine", Abbreviation = "ME", AreaSquareMiles = 35380, Population = 1362359, HouseRepresentatives = 2 },
+            new StateData { Name = "Maryland", Abbreviation = "MD", AreaSquareMiles = 12406, Population = 6177224, HouseRepresentatives = 8 },
+            new StateData { Name = "Massachusetts", Abbreviation = "MA", AreaSquareMiles = 10554, Population = 7029917, HouseRepresentatives = 9 },
+            new StateData { Name = "Michigan", Abbreviation = "MI", AreaSquareMiles = 96714, Population = 10077331, HouseRepresentatives = 13 },
+            new StateData { Name = "Minnesota", Abbreviation = "MN", AreaSquareMiles = 86936, Population = 5706494, HouseRepresentatives = 8 },
+            new StateData { Name = "Mississippi", Abbreviation = "MS", AreaSquareMiles = 48432, Population = 2961279, HouseRepresentatives = 4 },
+            new StateData { Name = "Missouri", Abbreviation = "MO", AreaSquareMiles = 69707, Population = 6154913, HouseRepresentatives = 8 },
+            new StateData { Name = "Montana", Abbreviation = "MT", AreaSquareMiles = 147040, Population = 1084225, HouseRepresentatives = 2 },
+            new StateData { Name = "Nebraska", Abbreviation = "NE", AreaSquareMiles = 77348, Population = 1961504, HouseRepresentatives = 3 },
+            new StateData { Name = "Nevada", Abbreviation = "NV", AreaSquareMiles = 110572, Population = 3104614, HouseRepresentatives = 4 },
+            new StateData { Name = "New Hampshire", Abbreviation = "NH", AreaSquareMiles = 9349, Population = 1377529, HouseRepresentatives = 2 },
+            new StateData { Name = "New Jersey", Abbreviation = "NJ", AreaSquareMiles = 8723, Population = 9288994, HouseRepresentatives = 12 },
+            new StateData { Name = "New Mexico", Abbreviation = "NM", AreaSquareMiles = 121590, Population = 2117522, HouseRepresentatives = 3 },
+            new StateData { Name = "New York", Abbreviation = "NY", AreaSquareMiles = 54555, Population = 20201249, HouseRepresentatives = 26 },
+            new StateData { Name = "North Carolina", Abbreviation = "NC", AreaSquareMiles = 53819, Population = 10439388, HouseRepresentatives = 14 },
+            new StateData { Name = "North Dakota", Abbreviation = "ND", AreaSquareMiles = 70698, Population = 779094, HouseRepresentatives = 1 },
+            new StateData { Name = "Ohio", Abbreviation = "OH", AreaSquareMiles = 44826, Population = 11799448, HouseRepresentatives = 15 },
+            new StateData { Name = "Oklahoma", Abbreviation = "OK", AreaSquareMiles = 69899, Population = 3959353, HouseRepresentatives = 5 },
+            new StateData { Name = "Oregon", Abbreviation = "OR", AreaSquareMiles = 98379, Population = 4237256, HouseRepresentatives = 6 },
+            new StateData { Name = "Pennsylvania", Abbreviation = "PA", AreaSquareMiles = 46054, Population = 13002700, HouseRepresentatives = 17 },
+            new StateData { Name = "Rhode Island", Abbreviation = "RI", AreaSquareMiles = 1545, Population = 1097379, HouseRepresentatives = 2 },
+            new StateData { Name = "South Carolina", Abbreviation = "SC", AreaSquareMiles = 32020, Population = 5118425, HouseRepresentatives = 7 },
+            new StateData { Name = "South Dakota", Abbreviation = "SD", AreaSquareMiles = 77116, Population = 886667, HouseRepresentatives = 1 },
+            new StateData { Name = "Tennessee", Abbreviation = "TN", AreaSquareMiles = 42144, Population = 6910840, HouseRepresentatives = 9 },
+            new StateData { Name = "Texas", Abbreviation = "TX", AreaSquareMiles = 268596, Population = 29145505, HouseRepresentatives = 38 },
+            new StateData { Name = "Utah", Abbreviation = "UT", AreaSquareMiles = 84897, Population = 3271616, HouseRepresentatives = 4 },
+            new StateData { Name = "Vermont", Abbreviation = "VT", AreaSquareMiles = 9616, Population = 643077, HouseRepresentatives = 1 },
+            new StateData { Name = "Virginia", Abbreviation = "VA", AreaSquareMiles = 42775, Population = 8631393, HouseRepresentatives = 11 },
+            new StateData { Name = "Washington", Abbreviation = "WA", AreaSquareMiles = 71298, Population = 7614893, HouseRepresentatives = 10 },
+            new StateData { Name = "West Virginia", Abbreviation = "WV", AreaSquareMiles = 24230, Population = 1793716, HouseRepresentatives = 2 },
+            new StateData { Name = "Wisconsin", Abbreviation = "WI", AreaSquareMiles = 65496, Population = 5893718, HouseRepresentatives = 8 },
+            new StateData { Name = "Wyoming", Abbreviation = "WY", AreaSquareMiles = 97813, Population = 576851, HouseRepresentatives = 1 }
         ];
     }
 }
@@ -65461,7 +65546,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/14/2025 11:23:05
+EXPORT COMPLETED: 12/14/2025 11:40:25
 Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================
