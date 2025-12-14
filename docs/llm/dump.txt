@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/14/2025 10:18:38
+Generated: 12/14/2025 10:44:37
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -862,8 +862,8 @@ async function retryWhenDocumentBecomesVisible() {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
-SIZE: 25.15 KB
-MODIFIED: 12/14/2025 10:01:59
+SIZE: 25.16 KB
+MODIFIED: 12/14/2025 10:43:57
 ================================================================================
 
 @page "/counter"
@@ -883,7 +883,7 @@ MODIFIED: 12/14/2025 10:01:59
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
-<button class="btn btn-primary" @onclick="() => SlowlyIncrement()" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+<button class="btn btn-primary" @onclick="() => SlowlyIncrement()" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">    
     Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
 </button>
 
@@ -1527,25 +1527,28 @@ body {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
-SIZE: 17.65 KB
-MODIFIED: 12/08/2025 19:27:45
+SIZE: 19.62 KB
+MODIFIED: 12/14/2025 10:41:26
 ================================================================================
 
 @page "/country-compare"
 @using System.Diagnostics
 @using System.Diagnostics.Metrics
+@using System.Text.Json
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
 @inject CountryComparisonService ComparisonService
 @inject ILogger<CountryCompare> Logger
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <PageTitle>Country Comparison Game</PageTitle>
 
-<h1>ðŸŒ Country Comparison Game</h1>
+<h1 class="h3 mb-2">ðŸŒ Country Comparison</h1>
 
 <div class="score-display mb-3">
-    <span class="badge bg-primary fs-6 me-2">
+    <span class="badge bg-primary fs-6">
         Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
         @if (ComparisonService.Score.TotalQuestions > 0)
         {
@@ -1554,179 +1557,156 @@ MODIFIED: 12/08/2025 19:27:45
     </span>
     @if (ComparisonService.Score.CurrentStreak > 1)
     {
-        <span class="badge bg-warning text-dark fs-6 me-2">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
+        <span class="badge bg-warning text-dark fs-6 ms-1">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
     }
     @if (ComparisonService.Score.BestStreak > 1)
     {
-        <span class="badge bg-secondary fs-6">Best: @ComparisonService.Score.BestStreak</span>
+        <span class="badge bg-secondary fs-6 ms-1">Best: @ComparisonService.Score.BestStreak</span>
     }
     <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
 </div>
 
 @if (_noDataAvailable)
 {
-    <div class="alert alert-warning">
-        <strong>No data available</strong> for this question type. Please select a different question.
+    <div class="alert alert-warning py-2">
+        <strong>No data available</strong> for this question. Please select a different one.
     </div>
 }
 else if (_currentQuestion is not null && _country1 is not null && _country2 is not null)
 {
-    <div class="question-section mb-4">
-        <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
-        <p class="text-center text-muted small">
-            @ComparisonService.GetCountryCountForQuestion(_currentQuestion) countries have data for this question
+    <div class="question-section mb-3">
+        <h3 class="text-center h5">@_currentQuestion.QuestionTemplate</h3>
+        <p class="text-center text-muted small mb-0">
+            @ComparisonService.GetCountryCountForQuestion(_currentQuestion) countries have data
         </p>
     </div>
-    
-    <div class="row">
-        <div class="col-md-5">
-            <div class="card country-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
-                @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
+
+    <div class="comparison-container">
+        <div class="comparison-card @GetCardClass(_country1)" @onclick="() => SelectCountry(_country1)">
+            @if (_hasAnswered && _lastResult?.CorrectAnswer == _country1)
+            {
+                <span class="correct-indicator">âœ“</span>
+            }
+            <div class="card-content">
+                <div class="flag-display">@_country1.FlagEmoji</div>
+                <h4 class="country-name">@_country1.Name</h4>
+                <p class="continent-name">@_country1.Continent</p>
+                @if (_hasAnswered)
                 {
-                    <span class="correct-indicator">âœ“ Correct</span>
+                    <p class="stat-reveal">@FormatValue(_country1)</p>
                 }
-                <div class="card-body text-center">
-                    <div class="flag-display mb-3">@_country1.FlagEmoji</div>
-                    <h4 class="card-title">@_country1.Name</h4>
-                    <p class="text-muted small mb-2">@_country1.Continent</p>
-                    @if (_hasAnswered)
-                    {
-                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_country1)</p>
-                    }
-                </div>
             </div>
         </div>
-        
-        <div class="col-md-2 d-flex align-items-center justify-content-center">
-            <span class="vs-text">VS</span>
-        </div>
-        
-        <div class="col-md-5">
-            <div class="card country-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
-                @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
+
+        <div class="vs-badge">VS</div>
+
+        <div class="comparison-card @GetCardClass(_country2)" @onclick="() => SelectCountry(_country2)">
+            @if (_hasAnswered && _lastResult?.CorrectAnswer == _country2)
+            {
+                <span class="correct-indicator">âœ“</span>
+            }
+            <div class="card-content">
+                <div class="flag-display">@_country2.FlagEmoji</div>
+                <h4 class="country-name">@_country2.Name</h4>
+                <p class="continent-name">@_country2.Continent</p>
+                @if (_hasAnswered)
                 {
-                    <span class="correct-indicator">âœ“ Correct</span>
+                    <p class="stat-reveal">@FormatValue(_country2)</p>
                 }
-                <div class="card-body text-center">
-                    <div class="flag-display mb-3">@_country2.FlagEmoji</div>
-                    <h4 class="card-title">@_country2.Name</h4>
-                    <p class="text-muted small mb-2">@_country2.Continent</p>
-                    @if (_hasAnswered)
-                    {
-                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_country2)</p>
-                    }
-                </div>
             </div>
         </div>
     </div>
-    
+
     @if (_hasAnswered && _lastResult is not null)
     {
-        <div class="result-section text-center mt-4">
-            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger")">
+        <div class="result-section text-center mt-3">
+            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger") py-2 mb-2">
                 @if (_lastResult.IsCorrect)
                 {
-                    <strong>Correct!</strong>
+                    <strong>âœ“ Correct!</strong>
                 }
                 else
                 {
-                    <strong>Wrong!</strong>
-                    <span>The answer was @_lastResult.CorrectAnswer.Name (@_lastResult.CorrectAnswer.FlagEmoji).</span>
+                    <strong>âœ— Wrong!</strong>
+                    <span>@_lastResult.CorrectAnswer.Name was correct.</span>
                 }
             </div>
-            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question</button>
+            <button class="btn btn-primary" @onclick="StartNewRound">Next Question â†’</button>
         </div>
-    }
-    else
-    {
-        <p class="text-center mt-4 text-muted">Click on a country to make your choice!</p>
     }
 }
 
-<div class="mt-5">
-    <details>
-        <summary><h5 class="d-inline">Question Types</h5></summary>
-        <div class="question-buttons mt-2" role="group">
-            @foreach (var q in ComparisonService.AvailableQuestions)
-            {
-                <button type="button" 
-                        class="btn btn-sm @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
-                        @onclick="() => SetQuestion(q)">
-                    @GetShortQuestionName(q.Id)
-                </button>
-            }
-            <button type="button" 
-                    class="btn btn-sm @(_randomMode ? "btn-warning" : "btn-outline-warning")"
-                    @onclick="ToggleRandomMode">
-                ðŸŽ² Random
+<div class="question-buttons mt-3">
+    <small class="text-muted d-block mb-2">Question Type:</small>
+    <div class="btn-group btn-group-sm flex-wrap" role="group">
+        <button class="btn @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
+            ðŸŽ²
+        </button>
+        @foreach (var q in ComparisonService.AvailableQuestions)
+        {
+            var count = ComparisonService.GetCountryCountForQuestion(q);
+            <button class="btn @(!_randomMode && _currentQuestion?.Id == q.Id ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetQuestion(q)"
+                    disabled="@(count < 2)">
+                @GetShortQuestionName(q.Id)
             </button>
-        </div>
-    </details>
+        }
+    </div>
 </div>
 
+@if (_persistedStats != null)
+{
+    <div class="lifetime-stats mt-3">
+        <small class="text-muted">
+            Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
+            (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
+            | Best Streak: @_persistedStats.BestStreak
+            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
+        </small>
+    </div>
+}
+
 @code {
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // LOCAL STORAGE KEY - NAMESPACED FOR THIS COMPONENT
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    private const string LocalStorageKey = "HelloAspDotnetTen.CountryCompare.Stats";
+
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // OPENTELEMETRY INSTRUMENTATION
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-    // ActivitySource for distributed tracing (spans)
     private static readonly ActivitySource ActivitySource = new("BlazorApp.CountryCompare", "1.0.0");
-
-    // Meter for metrics
     private static readonly Meter Meter = new("BlazorApp.CountryCompare", "1.0.0");
 
-    // â”€â”€ Counters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
-        "countrycompare.rounds",
-        unit: "{rounds}",
-        description: "Total number of comparison rounds started");
-
+        "countrycompare.rounds", unit: "{rounds}", description: "Total rounds started");
     private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.answers",
-        unit: "{answers}",
-        description: "Total number of answers submitted");
-
+        "countrycompare.answers", unit: "{answers}", description: "Total answers given");
     private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.correct_answers",
-        unit: "{answers}",
-        description: "Total number of correct answers");
-
+        "countrycompare.correct_answers", unit: "{answers}", description: "Total correct answers");
     private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
-        "countrycompare.wrong_answers",
-        unit: "{answers}",
-        description: "Total number of wrong answers");
-
+        "countrycompare.wrong_answers", unit: "{answers}", description: "Total wrong answers");
     private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
-        "countrycompare.resets",
-        unit: "{resets}",
-        description: "Total number of game resets");
-
+        "countrycompare.resets", unit: "{resets}", description: "Total game resets");
     private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
-        "countrycompare.question_type_changes",
-        unit: "{changes}",
-        description: "Number of times question type was changed");
-
+        "countrycompare.question_type_changes", unit: "{changes}", description: "Question type changes");
     private static readonly Counter<long> NoDataCounter = Meter.CreateCounter<long>(
-        "countrycompare.no_data_events",
-        unit: "{events}",
-        description: "Number of times no data was available for a question");
+        "countrycompare.no_data_events", unit: "{events}", description: "No data available events");
+    private static readonly Counter<long> TieSkipCounter = Meter.CreateCounter<long>(
+        "countrycompare.tie_skips", unit: "{skips}", description: "Pairs skipped due to equal values");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
+        "countrycompare.localstorage_loads", unit: "{loads}", description: "Local storage loads");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
+        "countrycompare.localstorage_saves", unit: "{saves}", description: "Local storage saves");
 
-    // â”€â”€ Histograms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
-        "countrycompare.streak_length",
-        unit: "{streak}",
-        description: "Distribution of streak lengths when broken");
-
-    // â”€â”€ Gauges (via UpDownCounter for current state) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        "countrycompare.streak_length", unit: "{streak}", description: "Streak lengths when broken");
     private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
-        "countrycompare.current_score",
-        unit: "{score}",
-        description: "Current score (correct answers)");
-
+        "countrycompare.current_score", unit: "{score}", description: "Current session score");
     private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
-        "countrycompare.current_streak",
-        unit: "{streak}",
-        description: "Current winning streak");
+        "countrycompare.current_streak", unit: "{streak}", description: "Current streak");
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // COMPONENT STATE
@@ -1740,6 +1720,27 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     private bool _randomMode = true;
     private bool _noDataAvailable;
 
+    // Local storage state
+    private ComparePersistedStats? _persistedStats;
+    private bool _isJsRuntimeAvailable = false;
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // PERSISTED STATS MODEL
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    private class ComparePersistedStats
+    {
+        public int TotalQuestions { get; set; }
+        public int TotalCorrect { get; set; }
+        public int BestStreak { get; set; }
+        public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+    }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // LIFECYCLE METHODS
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
     protected override void OnInitialized()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.Initialize");
@@ -1747,12 +1748,96 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         StartNewRound();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isJsRuntimeAvailable = true;
+            await LoadPersistedStatsAsync();
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_persistedStats != null && ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
+        {
+            _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
+            await SavePersistedStatsAsync();
+        }
+    }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // LOCAL STORAGE OPERATIONS
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    private async Task LoadPersistedStatsAsync()
+    {
+        using var activity = ActivitySource.StartActivity("CountryCompare.LoadPersistedStats");
+
+        try
+        {
+            var json = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                _persistedStats = JsonSerializer.Deserialize<ComparePersistedStats>(json);
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
+            }
+            else
+            {
+                _persistedStats = new ComparePersistedStats();
+                await SavePersistedStatsAsync();
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to load CountryCompare persisted stats");
+            _persistedStats = new ComparePersistedStats();
+        }
+    }
+
+    private async Task SavePersistedStatsAsync()
+    {
+        if (!_isJsRuntimeAvailable || _persistedStats == null) return;
+
+        try
+        {
+            _persistedStats.LastPlayedUtc = DateTime.UtcNow;
+            var json = JsonSerializer.Serialize(_persistedStats);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
+            LocalStorageSaveCounter.Add(1);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to save CountryCompare persisted stats");
+        }
+    }
+
+    private async Task ClearPersistedStats()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+            _persistedStats = new ComparePersistedStats();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to clear CountryCompare persisted stats");
+        }
+    }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // GAME LOGIC
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
     private void StartNewRound()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.StartNewRound");
-        
+
         _noDataAvailable = false;
-        
+
         if (_randomMode)
         {
             _currentQuestion = ComparisonService.GetRandomViableQuestion();
@@ -1761,161 +1846,100 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
         {
             _currentQuestion ??= ComparisonService.AvailableQuestions[0];
         }
-        
-        var pair = ComparisonService.GetRandomCountryPair(_currentQuestion);
+
+        // Get a pair where values are NOT equal (no ties)
+        var pair = ComparisonService.GetRandomCountryPairWithoutTie(_currentQuestion);
         if (pair is null)
         {
             _noDataAvailable = true;
             NoDataCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion?.Id));
-            
-            activity?.SetTag("error", "no_data_available");
-            activity?.SetTag("question.type", _currentQuestion?.Id);
-            activity?.SetStatus(ActivityStatusCode.Error, "No data available for question");
-            
-            Logger.LogWarning("No data available for question type: {QuestionType}", _currentQuestion?.Id);
             return;
         }
-        
+
         (_country1, _country2) = pair.Value;
         _hasAnswered = false;
         _lastResult = null;
 
-        // Record metrics
         RoundCounter.Add(1);
-        
+
         activity?.SetTag("country1.name", _country1.Name);
-        activity?.SetTag("country1.continent", _country1.Continent);
         activity?.SetTag("country2.name", _country2.Name);
-        activity?.SetTag("country2.continent", _country2.Continent);
         activity?.SetTag("question.type", _currentQuestion?.Id);
-        activity?.SetTag("mode", _randomMode ? "random" : "fixed");
-        
-        Logger.LogInformation(
-            "New round started: {Country1} ({Continent1}) vs {Country2} ({Continent2}), Question: {QuestionType}",
-            _country1.Name, _country1.Continent, _country2.Name, _country2.Continent, _currentQuestion?.Id);
     }
 
-    private void SelectCountry(CountryData selected)
+    private async Task SelectCountry(CountryData selected)
     {
-        if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null) 
+        if (_hasAnswered || _currentQuestion is null || _country1 is null || _country2 is null)
             return;
-        
+
         using var activity = ActivitySource.StartActivity("CountryCompare.SelectCountry");
-        activity?.SetTag("selected.country", selected.Name);
-        activity?.SetTag("selected.continent", selected.Continent);
-        
+
         var previousStreak = ComparisonService.Score.CurrentStreak;
         _lastResult = ComparisonService.CheckAnswer(_country1, _country2, _currentQuestion, selected);
         _hasAnswered = true;
 
-        // Record metrics
-        AnswerCounter.Add(1, 
-            new KeyValuePair<string, object?>("question.type", _currentQuestion.Id),
-            new KeyValuePair<string, object?>("continent", selected.Continent ?? "Unknown"));
-        
+        AnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
+
         if (_lastResult.IsCorrect)
         {
-            CorrectAnswerCounter.Add(1, 
-                new KeyValuePair<string, object?>("question.type", _currentQuestion.Id),
-                new KeyValuePair<string, object?>("continent", selected.Continent ?? "Unknown"));
+            CorrectAnswerCounter.Add(1);
             CurrentScoreGauge.Add(1);
             CurrentStreakGauge.Add(1);
-            
-            activity?.SetTag("result", "correct");
-            Logger.LogInformation(
-                "Correct answer! Selected: {Selected}, Question: {QuestionType}, Score: {Score}/{Total}, Streak: {Streak}",
-                selected.Name, _currentQuestion.Id, 
-                ComparisonService.Score.CorrectAnswers, ComparisonService.Score.TotalQuestions,
-                ComparisonService.Score.CurrentStreak);
+
+            if (_persistedStats != null)
+            {
+                _persistedStats.TotalQuestions++;
+                _persistedStats.TotalCorrect++;
+                if (ComparisonService.Score.CurrentStreak > _persistedStats.BestStreak)
+                    _persistedStats.BestStreak = ComparisonService.Score.CurrentStreak;
+                await SavePersistedStatsAsync();
+            }
         }
         else
         {
-            WrongAnswerCounter.Add(1, 
-                new KeyValuePair<string, object?>("question.type", _currentQuestion.Id),
-                new KeyValuePair<string, object?>("continent", selected.Continent ?? "Unknown"));
-            
-            // Record broken streak if it was > 0
+            WrongAnswerCounter.Add(1);
             if (previousStreak > 0)
             {
                 StreakHistogram.Record(previousStreak);
-                CurrentStreakGauge.Add(-previousStreak); // Reset streak gauge
+                CurrentStreakGauge.Add(-previousStreak);
             }
-            
-            activity?.SetTag("result", "wrong");
-            activity?.SetTag("correct.answer", _lastResult.CorrectAnswer.Name);
-            activity?.SetTag("streak.broken", previousStreak);
-            
-            Logger.LogInformation(
-                "Wrong answer. Selected: {Selected}, Correct: {Correct}, Question: {QuestionType}, Streak broken: {Streak}",
-                selected.Name, _lastResult.CorrectAnswer.Name, _currentQuestion.Id, previousStreak);
-        }
-        
-        activity?.SetStatus(ActivityStatusCode.Ok);
-    }
 
-    private void NextRound() => StartNewRound();
+            if (_persistedStats != null)
+            {
+                _persistedStats.TotalQuestions++;
+                await SavePersistedStatsAsync();
+            }
+        }
+
+        activity?.SetTag("result", _lastResult.IsCorrect ? "correct" : "wrong");
+    }
 
     private void ResetGame()
     {
         using var activity = ActivitySource.StartActivity("CountryCompare.ResetGame");
-        
+
         var finalScore = ComparisonService.Score.CorrectAnswers;
-        var totalQuestions = ComparisonService.Score.TotalQuestions;
-        var bestStreak = ComparisonService.Score.BestStreak;
-        
-        // Reset gauges to 0
+
         CurrentScoreGauge.Add(-finalScore);
         CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
-        
+
         ComparisonService.Score.Reset();
         ResetCounter.Add(1);
-        
-        activity?.SetTag("final.score", finalScore);
-        activity?.SetTag("final.total", totalQuestions);
-        activity?.SetTag("final.best_streak", bestStreak);
-        activity?.SetTag("final.percentage", totalQuestions > 0 ? (double)finalScore / totalQuestions * 100 : 0);
-        
-        Logger.LogInformation(
-            "Game reset. Final score: {Score}/{Total} ({Percentage:F1}%), Best streak: {BestStreak}",
-            finalScore, totalQuestions, 
-            totalQuestions > 0 ? (double)finalScore / totalQuestions * 100 : 0,
-            bestStreak);
-        
+
         StartNewRound();
     }
 
     private void SetQuestion(CountryComparisonQuestion question)
     {
-        using var activity = ActivitySource.StartActivity("CountryCompare.SetQuestion");
-        
-        var previousQuestion = _currentQuestion?.Id;
         _randomMode = false;
         _currentQuestion = question;
-        
-        QuestionTypeChangeCounter.Add(1, 
-            new KeyValuePair<string, object?>("from", previousQuestion ?? "none"),
-            new KeyValuePair<string, object?>("to", question.Id));
-        
-        activity?.SetTag("previous.question", previousQuestion);
-        activity?.SetTag("new.question", question.Id);
-        activity?.SetTag("countries_with_data", ComparisonService.GetCountryCountForQuestion(question));
-        
-        Logger.LogInformation(
-            "Question type changed from {Previous} to {New} ({CountryCount} countries with data)", 
-            previousQuestion, question.Id, ComparisonService.GetCountryCountForQuestion(question));
-        
+        QuestionTypeChangeCounter.Add(1);
         StartNewRound();
     }
 
     private void ToggleRandomMode()
     {
-        using var activity = ActivitySource.StartActivity("CountryCompare.ToggleRandomMode");
-        
         _randomMode = true;
-        
-        activity?.SetTag("mode", "random");
-        Logger.LogInformation("Switched to random question mode");
-        
         StartNewRound();
     }
 
@@ -1923,25 +1947,52 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
     {
         if (!_hasAnswered) return "clickable";
         if (_lastResult is null) return "";
-        
+
         if (country == _lastResult.CorrectAnswer)
             return "correct-answer";
         if (country == _lastResult.UserChoice && !_lastResult.IsCorrect)
             return "wrong-answer";
         return "";
     }
-    
+
+    /// <summary>
+    /// Custom formatting for GDP to show in billions instead of millions with "M" suffix.
+    /// Also handles other question types appropriately.
+    /// </summary>
+    private string FormatValue(CountryData country)
+    {
+        if (_currentQuestion == null) return "N/A";
+
+        var value = _currentQuestion.GetValue(country);
+        if (!value.HasValue) return "N/A";
+
+        // Special handling for GDP - convert from millions to billions for readability
+        if (_currentQuestion.Id == "gdp")
+        {
+            var billions = value.Value / 1000.0;
+            if (billions >= 1000)
+                return $"${billions / 1000:N2}T"; // Trillions
+            else if (billions >= 1)
+                return $"${billions:N1}B"; // Billions
+            else
+                return $"${value.Value:N0}M"; // Keep millions for small values
+        }
+
+        // Use default formatting for all other question types
+        return _currentQuestion.GetFormattedValue(country);
+    }
+
     private string GetShortQuestionName(string id) => id switch
     {
-        "population" => "Population",
+        "population" => "Pop",
         "area" => "Area",
         "gdp" => "GDP",
-        "gdp_per_capita" => "GDP/capita",
-        "gni_ppp" => "GNI PPP",
+        "gdp_per_capita" => "GDP/cap",
+        "gni_ppp" => "GNI",
         "density" => "Density",
         "literacy" => "Literacy",
         "hdi" => "HDI",
-        "life_expectancy" => "Life Exp.",
+        "life_expectancy" => "Life",
         _ => id
     };
 }
@@ -1950,107 +2001,211 @@ else if (_currentQuestion is not null && _country1 is not null && _country2 is n
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
-SIZE: 1.71 KB
-MODIFIED: 12/08/2025 18:38:20
+SIZE: 4.38 KB
+MODIFIED: 12/14/2025 10:38:51
 ================================================================================
 
-.country-card {
-    cursor: default;
-    transition: all 0.3s ease;
+/* ═══════════════════════════════════════════════════════════════════════════
+   COUNTRY COMPARE - RESPONSIVE LAYOUT
+   Designed to fit on iPhone SE (375x667) and all larger screens
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.comparison-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+}
+
+.comparison-card {
+    flex: 1;
+    max-width: 200px;
+    min-width: 120px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    color: white;
     position: relative;
-    min-height: 220px;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.country-card.clickable {
-    cursor: pointer;
-}
+    .comparison-card.clickable {
+        cursor: pointer;
+    }
 
-.country-card.clickable:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #0d6efd;
-}
+        .comparison-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
 
-.country-card.correct-answer {
-    border: 3px solid #198754;
-    background-color: rgba(25, 135, 84, 0.1);
-}
+    .comparison-card.correct-answer {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+    }
 
-.country-card.wrong-answer {
-    border: 3px solid #dc3545;
-    background-color: rgba(220, 53, 69, 0.1);
-}
-
-.flag-display {
-    font-size: 4rem;
-    line-height: 1;
-}
-
-.vs-text {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #6c757d;
-}
+    .comparison-card.wrong-answer {
+        background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+        box-shadow: 0 0 20px rgba(239, 71, 58, 0.5);
+    }
 
 .correct-indicator {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #198754;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
     color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
+    font-size: 0.875rem;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.flag-display {
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
+    line-height: 1;
+}
+
+.country-name {
     font-size: 0.9rem;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.continent-name {
+    font-size: 0.7rem;
+    margin: 0.25rem 0 0 0;
+    opacity: 0.8;
 }
 
 .stat-reveal {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    padding: 8px;
-    background-color: #f8f9fa;
+    font-size: 0.8rem;
+    margin: 0.5rem 0 0 0;
+    background: rgba(0,0,0,0.2);
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
-    animation: fadeIn 0.3s ease-out;
+    word-break: break-word;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.vs-badge {
+    background: #343a40;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
 .score-display {
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .question-section h3 {
-    color: #212529;
-    font-weight: 600;
+    margin: 0;
 }
 
-.result-section .alert {
-    font-size: 1.1rem;
+.question-section p {
+    margin: 0;
 }
 
-.question-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+.question-buttons .btn-group {
+    gap: 2px;
 }
 
 .question-buttons .btn {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
 }
 
-details summary {
-    cursor: pointer;
+.lifetime-stats {
+    text-align: center;
 }
 
-details summary:hover {
-    color: #0d6efd;
+.result-section .alert {
+    margin-bottom: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE OPTIMIZATIONS (iPhone SE: 375px width)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 1.25rem !important;
+    }
+
+    .comparison-card {
+        padding: 0.75rem;
+        min-width: 100px;
+    }
+
+    .flag-display {
+        font-size: 2rem;
+    }
+
+    .country-name {
+        font-size: 0.8rem;
+    }
+
+    .continent-name {
+        font-size: 0.65rem;
+    }
+
+    .stat-reveal {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .vs-badge {
+        padding: 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    .score-display .badge {
+        font-size: 0.7rem !important;
+    }
+
+    .question-buttons .btn {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+
+    .question-section h3 {
+        font-size: 1rem !important;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+    .comparison-card {
+        min-width: 85px;
+        padding: 0.5rem;
+    }
+
+    .flag-display {
+        font-size: 1.75rem;
+    }
+
+    .country-name {
+        font-size: 0.7rem;
+    }
 }
 
 
@@ -2131,24 +2286,27 @@ MODIFIED: 12/08/2025 11:14:15
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
-SIZE: 14.65 KB
-MODIFIED: 12/08/2025 19:27:19
+SIZE: 18.59 KB
+MODIFIED: 12/14/2025 10:42:21
 ================================================================================
 
 @page "/state-compare"
 @using System.Diagnostics
 @using System.Diagnostics.Metrics
+@using System.Text.Json
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using BlazorApp.Services
 @inject StateComparisonService ComparisonService
 @inject ILogger<StateCompare> Logger
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <PageTitle>State Comparison Game</PageTitle>
 
-<h1>State Comparison Game</h1>
+<h1 class="h3 mb-2">State Comparison Game</h1>
 
-<div class="score-display mb-4">
+<div class="score-display mb-3">
     <span class="badge bg-primary fs-6">
         Score: @ComparisonService.Score.CorrectAnswers / @ComparisonService.Score.TotalQuestions
         @if (ComparisonService.Score.TotalQuestions > 0)
@@ -2158,165 +2316,141 @@ MODIFIED: 12/08/2025 19:27:19
     </span>
     @if (ComparisonService.Score.CurrentStreak > 1)
     {
-        <span class="badge bg-warning text-dark fs-6 me-2">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
+        <span class="badge bg-warning text-dark fs-6 ms-1">ðŸ”¥ @ComparisonService.Score.CurrentStreak streak</span>
     }
     @if (ComparisonService.Score.BestStreak > 1)
     {
-        <span class="badge bg-secondary fs-6">Best: @ComparisonService.Score.BestStreak</span>
+        <span class="badge bg-secondary fs-6 ms-1">Best: @ComparisonService.Score.BestStreak</span>
     }
     <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ResetGame">Reset</button>
 </div>
 
 @if (_currentQuestion is not null && _state1 is not null && _state2 is not null)
 {
-    <div class="question-section mb-4">
-        <h3 class="text-center">@_currentQuestion.QuestionTemplate</h3>
+    <div class="question-section mb-3">
+        <h3 class="text-center h5">@_currentQuestion.QuestionTemplate</h3>
     </div>
-    
-    <div class="row">
-        <div class="col-md-5">
-            <div class="card state-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
-                @if (_hasAnswered && _lastResult?.CorrectAnswer == _state1)
+
+    <div class="comparison-container">
+        <div class="comparison-card @GetCardClass(_state1)" @onclick="() => SelectState(_state1)">
+            @if (_hasAnswered && _lastResult?.CorrectAnswer == _state1)
+            {
+                <span class="correct-indicator">âœ“</span>
+            }
+            <div class="card-content">
+                <div class="state-abbrev">@_state1.Abbreviation</div>
+                <h4 class="state-name">@_state1.Name</h4>
+                @if (_hasAnswered)
                 {
-                    <span class="correct-indicator">âœ“ Correct</span>
+                    <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state1)</p>
                 }
-                <div class="card-body text-center">
-                    <div class="state-image-placeholder mb-3">
-                        <span class="state-abbrev-fallback">@_state1.Abbreviation</span>
-                    </div>
-                    <h4 class="card-title">@_state1.Name</h4>
-                    @if (_hasAnswered)
-                    {
-                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state1)</p>
-                    }
-                </div>
             </div>
         </div>
-        
-        <div class="col-md-2 d-flex align-items-center justify-content-center">
-            <span class="vs-text">VS</span>
-        </div>
-        
-        <div class="col-md-5">
-            <div class="card state-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
-                @if (_hasAnswered && _lastResult?.CorrectAnswer == _state2)
+
+        <div class="vs-badge">VS</div>
+
+        <div class="comparison-card @GetCardClass(_state2)" @onclick="() => SelectState(_state2)">
+            @if (_hasAnswered && _lastResult?.CorrectAnswer == _state2)
+            {
+                <span class="correct-indicator">âœ“</span>
+            }
+            <div class="card-content">
+                <div class="state-abbrev">@_state2.Abbreviation</div>
+                <h4 class="state-name">@_state2.Name</h4>
+                @if (_hasAnswered)
                 {
-                    <span class="correct-indicator">âœ“ Correct</span>
+                    <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state2)</p>
                 }
-                <div class="card-body text-center">
-                    <div class="state-image-placeholder mb-3">
-                        <span class="state-abbrev-fallback">@_state2.Abbreviation</span>
-                    </div>
-                    <h4 class="card-title">@_state2.Name</h4>
-                    @if (_hasAnswered)
-                    {
-                        <p class="stat-reveal">@_currentQuestion.GetFormattedValue(_state2)</p>
-                    }
-                </div>
             </div>
         </div>
     </div>
-    
+
     @if (_hasAnswered && _lastResult is not null)
     {
-        <div class="result-section text-center mt-4">
-            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger")">
+        <div class="result-section text-center mt-3">
+            <div class="alert @(_lastResult.IsCorrect ? "alert-success" : "alert-danger") py-2 mb-2">
                 @if (_lastResult.IsCorrect)
                 {
-                    <strong>Correct!</strong>
+                    <strong>âœ“ Correct!</strong>
                 }
                 else
                 {
-                    <strong>Wrong!</strong>
-                    <span>The answer was @_lastResult.CorrectAnswer.Name.</span>
+                    <strong>âœ— Wrong!</strong>
+                    <span>@_lastResult.CorrectAnswer.Name was correct.</span>
                 }
             </div>
-            <button class="btn btn-primary btn-lg" @onclick="NextRound">Next Question</button>
+            <button class="btn btn-primary" @onclick="StartNewRound">Next Question â†’</button>
         </div>
-    }
-    else
-    {
-        <p class="text-center mt-4 text-muted">Click on a state to make your choice!</p>
     }
 }
 
-<div class="mt-5">
-    <h5>Question Types</h5>
-    <div class="btn-group" role="group">
-        @foreach (var q in ComparisonService.AvailableQuestions)
-        {
-            <button type="button" 
-                    class="btn @(q == _currentQuestion ? "btn-primary" : "btn-outline-primary")"
-                    @onclick="() => SetQuestion(q)">
-                @q.QuestionTemplate.Replace("Which state ", "").Replace("?", "")
-            </button>
-        }
-        <button type="button" 
-                class="btn @(_randomMode ? "btn-warning" : "btn-outline-warning")"
-                @onclick="ToggleRandomMode">
+<div class="question-buttons mt-3">
+    <small class="text-muted d-block mb-2">Question Type:</small>
+    <div class="btn-group btn-group-sm flex-wrap" role="group">
+        <button class="btn @(_randomMode ? "btn-primary" : "btn-outline-primary")" @onclick="ToggleRandomMode">
             ðŸŽ² Random
         </button>
+        @foreach (var q in ComparisonService.AvailableQuestions)
+        {
+            <button class="btn @(!_randomMode && _currentQuestion?.Id == q.Id ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetQuestion(q)">
+                @GetShortQuestionName(q.Id)
+            </button>
+        }
     </div>
 </div>
 
+@if (_persistedStats != null)
+{
+    <div class="lifetime-stats mt-3">
+        <small class="text-muted">
+            Lifetime: @_persistedStats.TotalCorrect/@_persistedStats.TotalQuestions
+            (@(_persistedStats.TotalQuestions > 0 ? $"{(double)_persistedStats.TotalCorrect / _persistedStats.TotalQuestions:P0}" : "N/A"))
+            | Best Streak: @_persistedStats.BestStreak
+            <button class="btn btn-link btn-sm p-0 ms-2" @onclick="ClearPersistedStats">Clear</button>
+        </small>
+    </div>
+}
+
 @code {
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // LOCAL STORAGE KEY - NAMESPACED FOR THIS COMPONENT
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    private const string LocalStorageKey = "HelloAspDotnetTen.StateCompare.Stats";
+
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // OPENTELEMETRY INSTRUMENTATION
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-    // ActivitySource for distributed tracing (spans)
     private static readonly ActivitySource ActivitySource = new("BlazorApp.StateCompare", "1.0.0");
-
-    // Meter for metrics
     private static readonly Meter Meter = new("BlazorApp.StateCompare", "1.0.0");
 
-    // â”€â”€ Counters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static readonly Counter<long> RoundCounter = Meter.CreateCounter<long>(
-        "statecompare.rounds",
-        unit: "{rounds}",
-        description: "Total number of comparison rounds started");
-
+        "statecompare.rounds", unit: "{rounds}", description: "Total rounds started");
     private static readonly Counter<long> AnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.answers",
-        unit: "{answers}",
-        description: "Total number of answers submitted");
-
+        "statecompare.answers", unit: "{answers}", description: "Total answers given");
     private static readonly Counter<long> CorrectAnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.correct_answers",
-        unit: "{answers}",
-        description: "Total number of correct answers");
-
+        "statecompare.correct_answers", unit: "{answers}", description: "Total correct answers");
     private static readonly Counter<long> WrongAnswerCounter = Meter.CreateCounter<long>(
-        "statecompare.wrong_answers",
-        unit: "{answers}",
-        description: "Total number of wrong answers");
-
+        "statecompare.wrong_answers", unit: "{answers}", description: "Total wrong answers");
     private static readonly Counter<long> ResetCounter = Meter.CreateCounter<long>(
-        "statecompare.resets",
-        unit: "{resets}",
-        description: "Total number of game resets");
-
+        "statecompare.resets", unit: "{resets}", description: "Total game resets");
     private static readonly Counter<long> QuestionTypeChangeCounter = Meter.CreateCounter<long>(
-        "statecompare.question_type_changes",
-        unit: "{changes}",
-        description: "Number of times question type was changed");
+        "statecompare.question_type_changes", unit: "{changes}", description: "Question type changes");
+    private static readonly Counter<long> TieSkipCounter = Meter.CreateCounter<long>(
+        "statecompare.tie_skips", unit: "{skips}", description: "Pairs skipped due to equal values");
+    private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
+        "statecompare.localstorage_loads", unit: "{loads}", description: "Local storage loads");
+    private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
+        "statecompare.localstorage_saves", unit: "{saves}", description: "Local storage saves");
 
-    // â”€â”€ Histograms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static readonly Histogram<int> StreakHistogram = Meter.CreateHistogram<int>(
-        "statecompare.streak_length",
-        unit: "{streak}",
-        description: "Distribution of streak lengths when broken");
-
-    // â”€â”€ Gauges (via UpDownCounter for current state) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        "statecompare.streak_length", unit: "{streak}", description: "Streak lengths when broken");
     private static readonly UpDownCounter<int> CurrentScoreGauge = Meter.CreateUpDownCounter<int>(
-        "statecompare.current_score",
-        unit: "{score}",
-        description: "Current score (correct answers)");
-
+        "statecompare.current_score", unit: "{score}", description: "Current session score");
     private static readonly UpDownCounter<int> CurrentStreakGauge = Meter.CreateUpDownCounter<int>(
-        "statecompare.current_streak",
-        unit: "{streak}",
-        description: "Current winning streak");
+        "statecompare.current_streak", unit: "{streak}", description: "Current streak");
 
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // COMPONENT STATE
@@ -2328,7 +2462,27 @@ MODIFIED: 12/08/2025 19:27:19
     private ComparisonResult? _lastResult;
     private bool _hasAnswered;
     private bool _randomMode = true;
-    private int _previousStreak = 0;
+
+    // Local storage state
+    private ComparePersistedStats? _persistedStats;
+    private bool _isJsRuntimeAvailable = false;
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // PERSISTED STATS MODEL (shared pattern for StateCompare/CountryCompare)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    private class ComparePersistedStats
+    {
+        public int TotalQuestions { get; set; }
+        public int TotalCorrect { get; set; }
+        public int BestStreak { get; set; }
+        public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
+        public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
+    }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // LIFECYCLE METHODS
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     protected override void OnInitialized()
     {
@@ -2337,12 +2491,100 @@ MODIFIED: 12/08/2025 19:27:19
         StartNewRound();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isJsRuntimeAvailable = true;
+            await LoadPersistedStatsAsync();
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Save final stats on dispose
+        if (_persistedStats != null && ComparisonService.Score.BestStreak > _persistedStats.BestStreak)
+        {
+            _persistedStats.BestStreak = ComparisonService.Score.BestStreak;
+            await SavePersistedStatsAsync();
+        }
+    }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // LOCAL STORAGE OPERATIONS
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    private async Task LoadPersistedStatsAsync()
+    {
+        using var activity = ActivitySource.StartActivity("StateCompare.LoadPersistedStats");
+
+        try
+        {
+            var json = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                _persistedStats = JsonSerializer.Deserialize<ComparePersistedStats>(json);
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
+                Logger.LogInformation("Loaded StateCompare stats: {Total} questions, {Correct} correct",
+                    _persistedStats?.TotalQuestions ?? 0, _persistedStats?.TotalCorrect ?? 0);
+            }
+            else
+            {
+                _persistedStats = new ComparePersistedStats();
+                await SavePersistedStatsAsync();
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to load StateCompare persisted stats");
+            _persistedStats = new ComparePersistedStats();
+        }
+    }
+
+    private async Task SavePersistedStatsAsync()
+    {
+        if (!_isJsRuntimeAvailable || _persistedStats == null) return;
+
+        try
+        {
+            _persistedStats.LastPlayedUtc = DateTime.UtcNow;
+            var json = JsonSerializer.Serialize(_persistedStats);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
+            LocalStorageSaveCounter.Add(1);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to save StateCompare persisted stats");
+        }
+    }
+
+    private async Task ClearPersistedStats()
+    {
+        using var activity = ActivitySource.StartActivity("StateCompare.ClearPersistedStats");
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+            _persistedStats = new ComparePersistedStats();
+            Logger.LogInformation("Cleared StateCompare persisted stats");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to clear StateCompare persisted stats");
+        }
+    }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // GAME LOGIC
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
     private void StartNewRound()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.StartNewRound");
-        
-        (_state1, _state2) = ComparisonService.GetRandomStatePair();
-        
+
         if (_randomMode)
         {
             _currentQuestion = ComparisonService.GetRandomQuestion();
@@ -2351,133 +2593,116 @@ MODIFIED: 12/08/2025 19:27:19
         {
             _currentQuestion ??= ComparisonService.AvailableQuestions[0];
         }
-        
+
+        // Get a pair where values are NOT equal (no ties)
+        var pair = ComparisonService.GetRandomStatePairWithoutTie(_currentQuestion);
+        if (pair == null)
+        {
+            // Fallback if somehow no valid pairs exist
+            (_state1, _state2) = ComparisonService.GetRandomStatePair();
+            TieSkipCounter.Add(1);
+        }
+        else
+        {
+            (_state1, _state2) = pair.Value;
+        }
+
         _hasAnswered = false;
         _lastResult = null;
 
-        // Record metrics
         RoundCounter.Add(1);
-        
-        activity?.SetTag("state1.name", _state1.Name);
-        activity?.SetTag("state2.name", _state2.Name);
+
+        activity?.SetTag("state1.name", _state1?.Name);
+        activity?.SetTag("state2.name", _state2?.Name);
         activity?.SetTag("question.type", _currentQuestion?.Id);
-        activity?.SetTag("mode", _randomMode ? "random" : "fixed");
-        
-        Logger.LogInformation(
-            "New round started: {State1} vs {State2}, Question: {QuestionType}",
-            _state1.Name, _state2.Name, _currentQuestion?.Id);
+
+        Logger.LogInformation("New round: {State1} vs {State2}, Question: {QuestionType}",
+            _state1?.Name, _state2?.Name, _currentQuestion?.Id);
     }
 
-    private void SelectState(StateData selectedState)
+    private async Task SelectState(StateData selectedState)
     {
-        if (_hasAnswered || _currentQuestion is null || _state1 is null || _state2 is null) 
+        if (_hasAnswered || _currentQuestion is null || _state1 is null || _state2 is null)
             return;
-        
+
         using var activity = ActivitySource.StartActivity("StateCompare.SelectState");
-        activity?.SetTag("selected.state", selectedState.Name);
-        
+
         var previousStreak = ComparisonService.Score.CurrentStreak;
         _lastResult = ComparisonService.CheckAnswer(_state1, _state2, _currentQuestion, selectedState);
         _hasAnswered = true;
 
-        // Record metrics
         AnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
-        
+
         if (_lastResult.IsCorrect)
         {
-            CorrectAnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
+            CorrectAnswerCounter.Add(1);
             CurrentScoreGauge.Add(1);
             CurrentStreakGauge.Add(1);
-            
-            activity?.SetTag("result", "correct");
-            Logger.LogInformation(
-                "Correct answer! Selected: {Selected}, Question: {QuestionType}, Score: {Score}/{Total}",
-                selectedState.Name, _currentQuestion.Id, 
-                ComparisonService.Score.CorrectAnswers, ComparisonService.Score.TotalQuestions);
+
+            // Update persisted stats
+            if (_persistedStats != null)
+            {
+                _persistedStats.TotalQuestions++;
+                _persistedStats.TotalCorrect++;
+                if (ComparisonService.Score.CurrentStreak > _persistedStats.BestStreak)
+                    _persistedStats.BestStreak = ComparisonService.Score.CurrentStreak;
+                await SavePersistedStatsAsync();
+            }
         }
         else
         {
-            WrongAnswerCounter.Add(1, new KeyValuePair<string, object?>("question.type", _currentQuestion.Id));
-            
-            // Record broken streak if it was > 0
+            WrongAnswerCounter.Add(1);
             if (previousStreak > 0)
             {
                 StreakHistogram.Record(previousStreak);
-                CurrentStreakGauge.Add(-previousStreak); // Reset streak gauge
+                CurrentStreakGauge.Add(-previousStreak);
             }
-            
-            activity?.SetTag("result", "wrong");
-            activity?.SetTag("correct.answer", _lastResult.CorrectAnswer.Name);
-            activity?.SetTag("streak.broken", previousStreak);
-            
-            Logger.LogInformation(
-                "Wrong answer. Selected: {Selected}, Correct: {Correct}, Question: {QuestionType}, Streak broken: {Streak}",
-                selectedState.Name, _lastResult.CorrectAnswer.Name, _currentQuestion.Id, previousStreak);
-        }
-        
-        activity?.SetStatus(ActivityStatusCode.Ok);
-    }
 
-    private void NextRound()
-    {
-        StartNewRound();
+            if (_persistedStats != null)
+            {
+                _persistedStats.TotalQuestions++;
+                await SavePersistedStatsAsync();
+            }
+        }
+
+        activity?.SetTag("result", _lastResult.IsCorrect ? "correct" : "wrong");
     }
 
     private void ResetGame()
     {
         using var activity = ActivitySource.StartActivity("StateCompare.ResetGame");
-        
+
         var finalScore = ComparisonService.Score.CorrectAnswers;
-        var totalQuestions = ComparisonService.Score.TotalQuestions;
         var bestStreak = ComparisonService.Score.BestStreak;
-        
-        // Reset gauges to 0
+
         CurrentScoreGauge.Add(-finalScore);
         CurrentStreakGauge.Add(-ComparisonService.Score.CurrentStreak);
-        
+
         ComparisonService.Score.Reset();
         ResetCounter.Add(1);
-        
+
         activity?.SetTag("final.score", finalScore);
-        activity?.SetTag("final.total", totalQuestions);
         activity?.SetTag("final.best_streak", bestStreak);
-        
-        Logger.LogInformation(
-            "Game reset. Final score: {Score}/{Total}, Best streak: {BestStreak}",
-            finalScore, totalQuestions, bestStreak);
-        
+
+        Logger.LogInformation("Game reset. Final score: {Score}, Best streak: {BestStreak}", finalScore, bestStreak);
+
         StartNewRound();
     }
 
     private void SetQuestion(ComparisonQuestion question)
     {
         using var activity = ActivitySource.StartActivity("StateCompare.SetQuestion");
-        
-        var previousQuestion = _currentQuestion?.Id;
+
         _randomMode = false;
         _currentQuestion = question;
-        
-        QuestionTypeChangeCounter.Add(1, 
-            new KeyValuePair<string, object?>("from", previousQuestion ?? "none"),
-            new KeyValuePair<string, object?>("to", question.Id));
-        
-        activity?.SetTag("previous.question", previousQuestion);
-        activity?.SetTag("new.question", question.Id);
-        
-        Logger.LogInformation("Question type changed from {Previous} to {New}", previousQuestion, question.Id);
-        
+        QuestionTypeChangeCounter.Add(1);
+
         StartNewRound();
     }
 
     private void ToggleRandomMode()
     {
-        using var activity = ActivitySource.StartActivity("StateCompare.ToggleRandomMode");
-        
         _randomMode = true;
-        
-        activity?.SetTag("mode", "random");
-        Logger.LogInformation("Switched to random question mode");
-        
         StartNewRound();
     }
 
@@ -2485,136 +2710,211 @@ MODIFIED: 12/08/2025 19:27:19
     {
         if (!_hasAnswered) return "clickable";
         if (_lastResult is null) return "";
-        
+
         if (state == _lastResult.CorrectAnswer)
             return "correct-answer";
         if (state == _lastResult.UserChoice && !_lastResult.IsCorrect)
             return "wrong-answer";
         return "";
     }
+
+    private string GetShortQuestionName(string id) => id switch
+    {
+        "area" => "Area",
+        "population" => "Population",
+        "representatives" => "House Reps",
+        _ => id
+    };
 }
 
 
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
-SIZE: 2.12 KB
-MODIFIED: 12/08/2025 17:33:10
+SIZE: 4.12 KB
+MODIFIED: 12/14/2025 10:42:07
 ================================================================================
 
-.state-card {
-    cursor: default;
-    transition: all 0.3s ease;
-    position: relative;
-    min-height: 280px;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATE COMPARE - RESPONSIVE LAYOUT
+   Designed to fit on iPhone SE (375x667) and all larger screens
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-.state-card.clickable {
-    cursor: pointer;
-}
-
-.state-card.clickable:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #0d6efd;
-}
-
-.state-card.correct-answer {
-    border: 3px solid #198754;
-    background-color: rgba(25, 135, 84, 0.1);
-}
-
-.state-card.wrong-answer {
-    border: 3px solid #dc3545;
-    background-color: rgba(220, 53, 69, 0.1);
-}
-
-.state-image-placeholder {
-    height: 120px;
+.comparison-container {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+}
+
+.comparison-card {
+    flex: 1;
+    max-width: 200px;
+    min-width: 120px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    position: relative;
-}
-
-.state-image {
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain;
-}
-
-.state-abbrev-fallback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: bold;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
     color: white;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.vs-text {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #6c757d;
-}
+    .comparison-card.clickable {
+        cursor: pointer;
+    }
+
+        .comparison-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+    .comparison-card.correct-answer {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+    }
+
+    .comparison-card.wrong-answer {
+        background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+        box-shadow: 0 0 20px rgba(239, 71, 58, 0.5);
+    }
 
 .correct-indicator {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #198754;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
     color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.state-abbrev {
+    font-size: 2rem;
+    font-weight: bold;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.state-name {
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 600;
 }
 
 .stat-reveal {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    margin-top: 10px;
-    padding: 8px;
-    background-color: #f8f9fa;
+    font-size: 0.875rem;
+    margin: 0.5rem 0 0 0;
+    background: rgba(0,0,0,0.2);
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
+}
+
+.vs-badge {
+    background: #343a40;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
 .score-display {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 0.25rem;
 }
 
 .question-section h3 {
-    color: #212529;
-    font-weight: 600;
+    margin: 0;
+}
+
+.question-buttons .btn-group {
+    gap: 2px;
+}
+
+.question-buttons .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.lifetime-stats {
+    text-align: center;
 }
 
 .result-section .alert {
-    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
 }
 
-/* Animation for revealing answers */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE OPTIMIZATIONS (iPhone SE: 375px width)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 1.25rem !important;
+    }
+
+    .comparison-card {
+        padding: 0.75rem;
+        min-width: 100px;
+    }
+
+    .state-abbrev {
+        font-size: 1.5rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .state-name {
+        font-size: 0.875rem;
+    }
+
+    .stat-reveal {
+        font-size: 0.75rem;
+    }
+
+    .vs-badge {
+        padding: 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    .score-display .badge {
+        font-size: 0.75rem !important;
+    }
+
+    .question-buttons .btn {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.35rem;
+    }
 }
 
-.stat-reveal {
-    animation: fadeIn 0.3s ease-out;
-}
+/* Extra small screens */
+@media (max-width: 360px) {
+    .comparison-card {
+        min-width: 90px;
+        padding: 0.5rem;
+    }
 
-/* Button group styling */
-.btn-group {
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.btn-group .btn {
-    margin-bottom: 4px;
+    .state-abbrev {
+        font-size: 1.25rem;
+    }
 }
 
 
@@ -4329,8 +4629,8 @@ MODIFIED: 12/08/2025 11:14:16
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
-SIZE: 25.58 KB
-MODIFIED: 12/08/2025 18:37:40
+SIZE: 27.13 KB
+MODIFIED: 12/14/2025 10:41:05
 ================================================================================
 
 using BlazorApp.Models;
@@ -4381,14 +4681,16 @@ public class CountryComparisonService
     
     public int GetCountryCountForQuestion(CountryComparisonQuestion question) 
         => _countries.Count(c => question.HasDataFor(c));
-    
+
     public CountryData GetCorrectAnswer(CountryData c1, CountryData c2, CountryComparisonQuestion question)
     {
         var v1 = question.GetValue(c1) ?? 0;
         var v2 = question.GetValue(c2) ?? 0;
-        return v1 >= v2 ? c1 : c2;
+        // With GetRandomCountryPairWithoutTie, values should never be equal
+        // Using strict > instead of >= since ties are now prevented
+        return v1 > v2 ? c1 : c2;
     }
-    
+
     public CountryComparisonResult CheckAnswer(CountryData c1, CountryData c2, 
         CountryComparisonQuestion question, CountryData userChoice)
     {
@@ -4401,7 +4703,42 @@ public class CountryComparisonService
         Score.RecordAnswer(result);
         return result;
     }
-    
+
+    /// <summary>
+    /// Gets two random countries that both have data for the specified question
+    /// AND have DIFFERENT values (no ties allowed).
+    /// This prevents "gotcha" questions where both countries have the same value.
+    /// </summary>
+    public (CountryData Country1, CountryData Country2)? GetRandomCountryPairWithoutTie(CountryComparisonQuestion question)
+    {
+        var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
+        if (eligible.Count < 2) return null;
+
+        // Try to find a pair with different values (max 100 attempts to avoid infinite loop)
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            var idx1 = _random.Next(eligible.Count);
+            int idx2;
+            do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
+
+            var country1 = eligible[idx1];
+            var country2 = eligible[idx2];
+
+            var value1 = question.GetValue(country1);
+            var value2 = question.GetValue(country2);
+
+            // If values are different, we have a valid pair (no tie)
+            if (value1.HasValue && value2.HasValue && Math.Abs(value1.Value - value2.Value) > 0.0001)
+            {
+                return (country1, country2);
+            }
+        }
+
+        // Fallback: couldn't find a non-tie pair
+        // This is very unlikely with real-world country data
+        return null;
+    }
+
     private static List<CountryComparisonQuestion> InitializeQuestions() =>
     [
         new() { Id = "population", QuestionTemplate = "Which country has a larger population?",
@@ -4665,8 +5002,8 @@ public static class CountryDataStore
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
-SIZE: 10.48 KB
-MODIFIED: 12/08/2025 17:34:09
+SIZE: 11.7 KB
+MODIFIED: 12/14/2025 10:41:41
 ================================================================================
 
 using BlazorApp.Models;
@@ -4682,18 +5019,18 @@ public class StateComparisonService
     private readonly List<StateData> _states;
     private readonly List<ComparisonQuestion> _questions;
     private readonly Random _random = new();
-    
+
     public GameScore Score { get; } = new();
-    
+
     public IReadOnlyList<StateData> States => _states;
     public IReadOnlyList<ComparisonQuestion> AvailableQuestions => _questions;
-    
+
     public StateComparisonService()
     {
         _states = InitializeStates();
         _questions = InitializeQuestions();
     }
-    
+
     /// <summary>
     /// Gets two random different states for comparison.
     /// </summary>
@@ -4701,12 +5038,49 @@ public class StateComparisonService
     {
         var index1 = _random.Next(_states.Count);
         int index2;
-        do { index2 = _random.Next(_states.Count); } 
+        do { index2 = _random.Next(_states.Count); }
         while (index2 == index1);
-        
+
         return (_states[index1], _states[index2]);
     }
-    
+
+    /// <summary>
+    /// Gets two random states where the values are NOT equal for the given question.
+    /// This prevents "gotcha" questions where both states have the same value.
+    /// </summary>
+    public (StateData State1, StateData State2)? GetRandomStatePairWithoutTie(ComparisonQuestion question)
+    {
+        // Get all states that have data for this question
+        var eligibleStates = _states.Where(s => question.GetValue(s).HasValue).ToList();
+
+        if (eligibleStates.Count < 2)
+            return null;
+
+        // Try to find a pair with different values (max 50 attempts to avoid infinite loop)
+        for (int attempt = 0; attempt < 50; attempt++)
+        {
+            var idx1 = _random.Next(eligibleStates.Count);
+            int idx2;
+            do { idx2 = _random.Next(eligibleStates.Count); }
+            while (idx2 == idx1);
+
+            var state1 = eligibleStates[idx1];
+            var state2 = eligibleStates[idx2];
+
+            var value1 = question.GetValue(state1);
+            var value2 = question.GetValue(state2);
+
+            // If values are different, we have a valid pair
+            if (value1 != value2)
+            {
+                return (state1, state2);
+            }
+        }
+
+        // Fallback: couldn't find a non-tie pair (very unlikely with real data)
+        return null;
+    }
+
     /// <summary>
     /// Gets a random question from available questions.
     /// </summary>
@@ -4714,7 +5088,7 @@ public class StateComparisonService
     {
         return _questions[_random.Next(_questions.Count)];
     }
-    
+
     /// <summary>
     /// Determines which state has the higher value for the given question.
     /// </summary>
@@ -4722,13 +5096,14 @@ public class StateComparisonService
     {
         var value1 = question.GetValue(state1) ?? 0;
         var value2 = question.GetValue(state2) ?? 0;
-        return value1 >= value2 ? state1 : state2;
+        // Note: With GetRandomStatePairWithoutTie, values should never be equal
+        return value1 > value2 ? state1 : state2;
     }
-    
+
     /// <summary>
     /// Checks the user's answer and records the result.
     /// </summary>
-    public ComparisonResult CheckAnswer(StateData state1, StateData state2, 
+    public ComparisonResult CheckAnswer(StateData state1, StateData state2,
         ComparisonQuestion question, StateData userChoice)
     {
         var correct = GetCorrectAnswer(state1, state2, question);
@@ -4740,10 +5115,11 @@ public class StateComparisonService
             CorrectAnswer = correct,
             UserChoice = userChoice
         };
+
         Score.RecordAnswer(result);
         return result;
     }
-    
+
     private static List<ComparisonQuestion> InitializeQuestions()
     {
         return
@@ -4751,10 +5127,10 @@ public class StateComparisonService
             new ComparisonQuestion
             {
                 Id = "area",
-                QuestionTemplate = "Which state is bigger by area?",
+                QuestionTemplate = "Which state is larger by area?",
                 PropertyName = nameof(StateData.AreaSquareMiles),
                 GetValue = s => s.AreaSquareMiles,
-                Unit = "square miles",
+                Unit = "sq mi",
                 FormatString = "{0:N0} sq mi"
             },
             new ComparisonQuestion
@@ -4777,7 +5153,7 @@ public class StateComparisonService
             }
         ];
     }
-    
+
     private static List<StateData> InitializeStates()
     {
         // All 50 US states with area (sq mi), population (2023 est), and House reps (2023)
@@ -4794,7 +5170,7 @@ public class StateComparisonService
             new() { Name = "Florida", Abbreviation = "FL", AreaSquareMiles = 65758, Population = 22610726, HouseRepresentatives = 28 },
             new() { Name = "Georgia", Abbreviation = "GA", AreaSquareMiles = 59425, Population = 11029227, HouseRepresentatives = 14 },
             new() { Name = "Hawaii", Abbreviation = "HI", AreaSquareMiles = 10932, Population = 1435138, HouseRepresentatives = 2 },
-            new() { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1964726, HouseRepresentatives = 2 },
+            new() { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1978379, HouseRepresentatives = 2 },
             new() { Name = "Illinois", Abbreviation = "IL", AreaSquareMiles = 57914, Population = 12549689, HouseRepresentatives = 17 },
             new() { Name = "Indiana", Abbreviation = "IN", AreaSquareMiles = 36420, Population = 6862199, HouseRepresentatives = 9 },
             new() { Name = "Iowa", Abbreviation = "IA", AreaSquareMiles = 56273, Population = 3207004, HouseRepresentatives = 4 },
@@ -65085,7 +65461,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/14/2025 10:18:39
+EXPORT COMPLETED: 12/14/2025 10:44:38
 Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================
