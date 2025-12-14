@@ -1928,3 +1928,83 @@ The lambda wraps the call so Blazor can properly bind it as an `EventCallback`.
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+that looks good to me. lets add this score persistence to state compare and country compare 
+there are a few other defects that I want to fix while we update to add persistent scores via local storage to state compare and country compare 
+1. when asking which state has more representatives, if two are equal, we should not have asked that question at all. we know the data ahead of time so it is inexcusable to ask gotcha questions like this. this applies to all state compare and country compare questions. 
+2. when asking `Which country has a higher GDP?` we are showing `M` for example, `$107,352M` but this `M` shouldn't be there. 
+3. the whole question including the next button should fit in the browser window on desktop and on mobile even if you have a small phone like the iPhone SE 2020. 
+4. use your best judgment and explain all the logic you used as well as the changes you made. 
+
+
+
+
