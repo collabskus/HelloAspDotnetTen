@@ -11,18 +11,18 @@ public class StateComparisonService
     private readonly List<StateData> _states;
     private readonly List<ComparisonQuestion> _questions;
     private readonly Random _random = new();
-    
+
     public GameScore Score { get; } = new();
-    
+
     public IReadOnlyList<StateData> States => _states;
     public IReadOnlyList<ComparisonQuestion> AvailableQuestions => _questions;
-    
+
     public StateComparisonService()
     {
         _states = InitializeStates();
         _questions = InitializeQuestions();
     }
-    
+
     /// <summary>
     /// Gets two random different states for comparison.
     /// </summary>
@@ -30,12 +30,49 @@ public class StateComparisonService
     {
         var index1 = _random.Next(_states.Count);
         int index2;
-        do { index2 = _random.Next(_states.Count); } 
+        do { index2 = _random.Next(_states.Count); }
         while (index2 == index1);
-        
+
         return (_states[index1], _states[index2]);
     }
-    
+
+    /// <summary>
+    /// Gets two random states where the values are NOT equal for the given question.
+    /// This prevents "gotcha" questions where both states have the same value.
+    /// </summary>
+    public (StateData State1, StateData State2)? GetRandomStatePairWithoutTie(ComparisonQuestion question)
+    {
+        // Get all states that have data for this question
+        var eligibleStates = _states.Where(s => question.GetValue(s).HasValue).ToList();
+
+        if (eligibleStates.Count < 2)
+            return null;
+
+        // Try to find a pair with different values (max 50 attempts to avoid infinite loop)
+        for (int attempt = 0; attempt < 50; attempt++)
+        {
+            var idx1 = _random.Next(eligibleStates.Count);
+            int idx2;
+            do { idx2 = _random.Next(eligibleStates.Count); }
+            while (idx2 == idx1);
+
+            var state1 = eligibleStates[idx1];
+            var state2 = eligibleStates[idx2];
+
+            var value1 = question.GetValue(state1);
+            var value2 = question.GetValue(state2);
+
+            // If values are different, we have a valid pair
+            if (value1 != value2)
+            {
+                return (state1, state2);
+            }
+        }
+
+        // Fallback: couldn't find a non-tie pair (very unlikely with real data)
+        return null;
+    }
+
     /// <summary>
     /// Gets a random question from available questions.
     /// </summary>
@@ -43,7 +80,7 @@ public class StateComparisonService
     {
         return _questions[_random.Next(_questions.Count)];
     }
-    
+
     /// <summary>
     /// Determines which state has the higher value for the given question.
     /// </summary>
@@ -51,13 +88,14 @@ public class StateComparisonService
     {
         var value1 = question.GetValue(state1) ?? 0;
         var value2 = question.GetValue(state2) ?? 0;
-        return value1 >= value2 ? state1 : state2;
+        // Note: With GetRandomStatePairWithoutTie, values should never be equal
+        return value1 > value2 ? state1 : state2;
     }
-    
+
     /// <summary>
     /// Checks the user's answer and records the result.
     /// </summary>
-    public ComparisonResult CheckAnswer(StateData state1, StateData state2, 
+    public ComparisonResult CheckAnswer(StateData state1, StateData state2,
         ComparisonQuestion question, StateData userChoice)
     {
         var correct = GetCorrectAnswer(state1, state2, question);
@@ -69,10 +107,11 @@ public class StateComparisonService
             CorrectAnswer = correct,
             UserChoice = userChoice
         };
+
         Score.RecordAnswer(result);
         return result;
     }
-    
+
     private static List<ComparisonQuestion> InitializeQuestions()
     {
         return
@@ -80,10 +119,10 @@ public class StateComparisonService
             new ComparisonQuestion
             {
                 Id = "area",
-                QuestionTemplate = "Which state is bigger by area?",
+                QuestionTemplate = "Which state is larger by area?",
                 PropertyName = nameof(StateData.AreaSquareMiles),
                 GetValue = s => s.AreaSquareMiles,
-                Unit = "square miles",
+                Unit = "sq mi",
                 FormatString = "{0:N0} sq mi"
             },
             new ComparisonQuestion
@@ -106,7 +145,7 @@ public class StateComparisonService
             }
         ];
     }
-    
+
     private static List<StateData> InitializeStates()
     {
         // All 50 US states with area (sq mi), population (2023 est), and House reps (2023)
@@ -123,7 +162,7 @@ public class StateComparisonService
             new() { Name = "Florida", Abbreviation = "FL", AreaSquareMiles = 65758, Population = 22610726, HouseRepresentatives = 28 },
             new() { Name = "Georgia", Abbreviation = "GA", AreaSquareMiles = 59425, Population = 11029227, HouseRepresentatives = 14 },
             new() { Name = "Hawaii", Abbreviation = "HI", AreaSquareMiles = 10932, Population = 1435138, HouseRepresentatives = 2 },
-            new() { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1964726, HouseRepresentatives = 2 },
+            new() { Name = "Idaho", Abbreviation = "ID", AreaSquareMiles = 83569, Population = 1978379, HouseRepresentatives = 2 },
             new() { Name = "Illinois", Abbreviation = "IL", AreaSquareMiles = 57914, Population = 12549689, HouseRepresentatives = 17 },
             new() { Name = "Indiana", Abbreviation = "IN", AreaSquareMiles = 36420, Population = 6862199, HouseRepresentatives = 9 },
             new() { Name = "Iowa", Abbreviation = "IA", AreaSquareMiles = 56273, Population = 3207004, HouseRepresentatives = 4 },

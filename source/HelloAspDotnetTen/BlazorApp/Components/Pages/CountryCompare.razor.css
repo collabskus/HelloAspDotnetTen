@@ -1,98 +1,202 @@
-.country-card {
-    cursor: default;
-    transition: all 0.3s ease;
+﻿/* ═══════════════════════════════════════════════════════════════════════════
+   COUNTRY COMPARE - RESPONSIVE LAYOUT
+   Designed to fit on iPhone SE (375x667) and all larger screens
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.comparison-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+}
+
+.comparison-card {
+    flex: 1;
+    max-width: 200px;
+    min-width: 120px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    color: white;
     position: relative;
-    min-height: 220px;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.country-card.clickable {
-    cursor: pointer;
-}
+    .comparison-card.clickable {
+        cursor: pointer;
+    }
 
-.country-card.clickable:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #0d6efd;
-}
+        .comparison-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
 
-.country-card.correct-answer {
-    border: 3px solid #198754;
-    background-color: rgba(25, 135, 84, 0.1);
-}
+    .comparison-card.correct-answer {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+    }
 
-.country-card.wrong-answer {
-    border: 3px solid #dc3545;
-    background-color: rgba(220, 53, 69, 0.1);
-}
-
-.flag-display {
-    font-size: 4rem;
-    line-height: 1;
-}
-
-.vs-text {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #6c757d;
-}
+    .comparison-card.wrong-answer {
+        background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+        box-shadow: 0 0 20px rgba(239, 71, 58, 0.5);
+    }
 
 .correct-indicator {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #198754;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
     color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
+    font-size: 0.875rem;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.flag-display {
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
+    line-height: 1;
+}
+
+.country-name {
     font-size: 0.9rem;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.continent-name {
+    font-size: 0.7rem;
+    margin: 0.25rem 0 0 0;
+    opacity: 0.8;
 }
 
 .stat-reveal {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    padding: 8px;
-    background-color: #f8f9fa;
+    font-size: 0.8rem;
+    margin: 0.5rem 0 0 0;
+    background: rgba(0,0,0,0.2);
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
-    animation: fadeIn 0.3s ease-out;
+    word-break: break-word;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.vs-badge {
+    background: #343a40;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
 .score-display {
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .question-section h3 {
-    color: #212529;
-    font-weight: 600;
+    margin: 0;
 }
 
-.result-section .alert {
-    font-size: 1.1rem;
+.question-section p {
+    margin: 0;
 }
 
-.question-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+.question-buttons .btn-group {
+    gap: 2px;
 }
 
 .question-buttons .btn {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
 }
 
-details summary {
-    cursor: pointer;
+.lifetime-stats {
+    text-align: center;
 }
 
-details summary:hover {
-    color: #0d6efd;
+.result-section .alert {
+    margin-bottom: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE OPTIMIZATIONS (iPhone SE: 375px width)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 1.25rem !important;
+    }
+
+    .comparison-card {
+        padding: 0.75rem;
+        min-width: 100px;
+    }
+
+    .flag-display {
+        font-size: 2rem;
+    }
+
+    .country-name {
+        font-size: 0.8rem;
+    }
+
+    .continent-name {
+        font-size: 0.65rem;
+    }
+
+    .stat-reveal {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .vs-badge {
+        padding: 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    .score-display .badge {
+        font-size: 0.7rem !important;
+    }
+
+    .question-buttons .btn {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+
+    .question-section h3 {
+        font-size: 1rem !important;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+    .comparison-card {
+        min-width: 85px;
+        padding: 0.5rem;
+    }
+
+    .flag-display {
+        font-size: 1.75rem;
+    }
+
+    .country-name {
+        font-size: 0.7rem;
+    }
 }

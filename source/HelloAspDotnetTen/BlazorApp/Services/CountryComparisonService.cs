@@ -46,14 +46,16 @@ public class CountryComparisonService
     
     public int GetCountryCountForQuestion(CountryComparisonQuestion question) 
         => _countries.Count(c => question.HasDataFor(c));
-    
+
     public CountryData GetCorrectAnswer(CountryData c1, CountryData c2, CountryComparisonQuestion question)
     {
         var v1 = question.GetValue(c1) ?? 0;
         var v2 = question.GetValue(c2) ?? 0;
-        return v1 >= v2 ? c1 : c2;
+        // With GetRandomCountryPairWithoutTie, values should never be equal
+        // Using strict > instead of >= since ties are now prevented
+        return v1 > v2 ? c1 : c2;
     }
-    
+
     public CountryComparisonResult CheckAnswer(CountryData c1, CountryData c2, 
         CountryComparisonQuestion question, CountryData userChoice)
     {
@@ -66,7 +68,42 @@ public class CountryComparisonService
         Score.RecordAnswer(result);
         return result;
     }
-    
+
+    /// <summary>
+    /// Gets two random countries that both have data for the specified question
+    /// AND have DIFFERENT values (no ties allowed).
+    /// This prevents "gotcha" questions where both countries have the same value.
+    /// </summary>
+    public (CountryData Country1, CountryData Country2)? GetRandomCountryPairWithoutTie(CountryComparisonQuestion question)
+    {
+        var eligible = _countries.Where(c => question.HasDataFor(c)).ToList();
+        if (eligible.Count < 2) return null;
+
+        // Try to find a pair with different values (max 100 attempts to avoid infinite loop)
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            var idx1 = _random.Next(eligible.Count);
+            int idx2;
+            do { idx2 = _random.Next(eligible.Count); } while (idx2 == idx1);
+
+            var country1 = eligible[idx1];
+            var country2 = eligible[idx2];
+
+            var value1 = question.GetValue(country1);
+            var value2 = question.GetValue(country2);
+
+            // If values are different, we have a valid pair (no tie)
+            if (value1.HasValue && value2.HasValue && Math.Abs(value1.Value - value2.Value) > 0.0001)
+            {
+                return (country1, country2);
+            }
+        }
+
+        // Fallback: couldn't find a non-tie pair
+        // This is very unlikely with real-world country data
+        return null;
+    }
+
     private static List<CountryComparisonQuestion> InitializeQuestions() =>
     [
         new() { Id = "population", QuestionTemplate = "Which country has a larger population?",
