@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/14/2025 11:50:57
+Generated: 12/14/2025 11:53:22
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -65475,7 +65475,7 @@ MODIFIED: 12/08/2025 11:25:26
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Packages.props
 SIZE: 3.58 KB
-MODIFIED: 12/05/2025 16:06:38
+MODIFIED: 12/14/2025 11:52:32
 ================================================================================
 
 <Project>
@@ -65487,10 +65487,10 @@ MODIFIED: 12/05/2025 16:06:38
   </PropertyGroup>
   <ItemGroup>
     <!-- OpenTelemetry -->
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.1" />
     <PackageVersion Include="OpenTelemetry" Version="1.14.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.14.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.14.0" />
@@ -65519,7 +65519,7 @@ MODIFIED: 12/05/2025 16:06:38
     <PackageVersion Include="Humanizer.Core" Version="3.0.1" />
     <PackageVersion Include="Microsoft.OpenApi" Version="2.3.5" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageVersion Include="System.CodeDom" Version="10.0.0" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="10.0.0" />
     <PackageVersion Include="System.Formats.Nrbf" Version="10.0.0" />
@@ -65546,7 +65546,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/14/2025 11:50:57
+EXPORT COMPLETED: 12/14/2025 11:53:23
 Total Files Exported: 71
 Output File: .\docs\llm\dump.txt
 ===============================================================================
