@@ -1,7 +1,302 @@
 ﻿@page "/"
+@using BlazorApp.Services
+@using BlazorApp.Models
+@inject StateComparisonService StateService
+@inject CountryComparisonService CountryService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>HelloAspDotnetTen - Data Explorer</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="hero-section">
+    <h1>🌍 HelloAspDotnetTen</h1>
+    <p class="lead">Explore data from <strong>@StateService.States.Count U.S. States</strong> and <strong>@CountryService.Countries.Count Countries</strong></p>
+    <div class="hero-stats">
+        <div class="stat-pill">
+            <span class="stat-icon">🇺🇸</span>
+            <span class="stat-value">@StateService.States.Count</span>
+            <span class="stat-label">States</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-icon">🌐</span>
+            <span class="stat-value">@CountryService.Countries.Count</span>
+            <span class="stat-label">Countries</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-icon">📊</span>
+            <span class="stat-value">@(StateService.Questions.Count + CountryService.AvailableQuestions.Count)</span>
+            <span class="stat-label">Quiz Types</span>
+        </div>
+    </div>
+</div>
 
-Welcome to your new app.
+<div class="quick-links">
+    <a href="/counter" class="quick-link-card">
+        <span class="card-icon">🎲</span>
+        <span class="card-title">Counter Game</span>
+        <span class="card-desc">Test your luck with fair tosses</span>
+    </a>
+    <a href="/statecompare" class="quick-link-card">
+        <span class="card-icon">🗺️</span>
+        <span class="card-title">State Quiz</span>
+        <span class="card-desc">Compare U.S. states</span>
+    </a>
+    <a href="/countrycompare" class="quick-link-card">
+        <span class="card-icon">🌍</span>
+        <span class="card-title">Country Quiz</span>
+        <span class="card-desc">Compare world nations</span>
+    </a>
+</div>
+
+<section class="data-section">
+    <h2>🇺🇸 United States Data</h2>
+    <p class="section-desc">All @StateService.States.Count states with population, area, and congressional representation</p>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>State</th>
+                    <th class="text-end">Population</th>
+                    <th class="text-end">Area (sq mi)</th>
+                    <th class="text-end">Representatives</th>
+                    <th class="text-end">Pop. Density</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var state in StateService.States.OrderByDescending(s => s.Population))
+                {
+                    <tr>
+                        <td><strong>@state.Name</strong> <span class="text-muted">(@state.Abbreviation)</span></td>
+                        <td class="text-end">@state.Population.ToString("N0")</td>
+                        <td class="text-end">@state.AreaSquareMiles.ToString("N0")</td>
+                        <td class="text-end">@state.HouseRepresentatives</td>
+                        <td class="text-end">@((state.Population / (double)state.AreaSquareMiles).ToString("N1"))/mi²</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td><strong>Total</strong></td>
+                    <td class="text-end"><strong>@StateService.States.Sum(s => s.Population).ToString("N0")</strong></td>
+                    <td class="text-end"><strong>@StateService.States.Sum(s => s.AreaSquareMiles).ToString("N0")</strong></td>
+                    <td class="text-end"><strong>@StateService.States.Sum(s => s.HouseRepresentatives)</strong></td>
+                    <td class="text-end">—</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</section>
+
+<section class="data-section">
+    <h2>🌍 World Countries Data</h2>
+    <p class="section-desc">@CountryService.Countries.Count countries across @CountryService.Countries.Select(c => c.Continent).Distinct().Count() continents</p>
+
+    <div class="continent-tabs">
+        @foreach (var continent in GetContinents())
+        {
+            <button class="continent-tab @(continent == _selectedContinent ? "active" : "")"
+                    @onclick="() => SelectContinent(continent)">
+                @GetContinentEmoji(continent) @continent
+                <span class="badge">@CountryService.Countries.Count(c => c.Continent == continent)</span>
+            </button>
+        }
+    </div>
+
+    <div class="table-container">
+        <table class="data-table country-table">
+            <thead>
+                <tr>
+                    <th>Country</th>
+                    <th class="text-end">Population</th>
+                    <th class="text-end">Area (km²)</th>
+                    <th class="text-end">GDP</th>
+                    <th class="text-end">GDP/Cap</th>
+                    <th class="text-end">Life Exp.</th>
+                    <th class="text-end">HDI</th>
+                    <th class="text-end">Literacy</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var country in GetFilteredCountries())
+                {
+                    <tr>
+                        <td>
+                            <span class="flag-emoji">@country.FlagEmoji</span>
+                            <strong>@country.Name</strong>
+                        </td>
+                        <td class="text-end">@FormatPopulation(country.Population)</td>
+                        <td class="text-end">@FormatArea(country.AreaSquareKm)</td>
+                        <td class="text-end">@FormatGdp(country.GdpMillionsUsd)</td>
+                        <td class="text-end">@FormatCurrency(country.GdpPerCapitaUsd)</td>
+                        <td class="text-end">@FormatDecimal(country.LifeExpectancy, "N1", "yrs")</td>
+                        <td class="text-end">@FormatHdi(country.Hdi)</td>
+                        <td class="text-end">@FormatPercent(country.LiteracyRate)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="continent-summary">
+        <h4>@GetContinentEmoji(_selectedContinent) @_selectedContinent Summary</h4>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">Countries</span>
+                <span class="summary-value">@GetFilteredCountries().Count()</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Total Population</span>
+                <span class="summary-value">@FormatPopulation(GetFilteredCountries().Sum(c => c.Population ?? 0))</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Total GDP</span>
+                <span class="summary-value">@FormatGdp(GetFilteredCountries().Sum(c => c.GdpMillionsUsd ?? 0))</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Avg. Life Expectancy</span>
+                <span class="summary-value">@GetFilteredCountries().Where(c => c.LifeExpectancy.HasValue).Average(c => c.LifeExpectancy!.Value).ToString("N1") yrs</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Avg. HDI</span>
+                <span class="summary-value">@GetFilteredCountries().Where(c => c.Hdi.HasValue).Average(c => c.Hdi!.Value).ToString("N3")</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="data-section">
+    <h2>📊 Global Rankings</h2>
+    <p class="section-desc">Top 10 countries by various metrics</p>
+
+    <div class="rankings-grid">
+        <div class="ranking-card">
+            <h4>🏆 Largest by Population</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.Population.HasValue).OrderByDescending(c => c.Population).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatPopulation(country.Population)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>🗺️ Largest by Area</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.AreaSquareKm.HasValue).OrderByDescending(c => c.AreaSquareKm).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatArea(country.AreaSquareKm)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>💰 Highest GDP</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.GdpMillionsUsd.HasValue).OrderByDescending(c => c.GdpMillionsUsd).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatGdp(country.GdpMillionsUsd)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>💵 Highest GDP per Capita</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.GdpPerCapitaUsd.HasValue).OrderByDescending(c => c.GdpPerCapitaUsd).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatCurrency(country.GdpPerCapitaUsd)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>❤️ Highest Life Expectancy</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.LifeExpectancy.HasValue).OrderByDescending(c => c.LifeExpectancy).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@country.LifeExpectancy?.ToString("N1") yrs</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>📈 Highest HDI</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.Hdi.HasValue).OrderByDescending(c => c.Hdi).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@country.Hdi?.ToString("N3")</span></li>
+                }
+            </ol>
+        </div>
+    </div>
+</section>
+
+<footer class="home-footer">
+    <p>Data sources: U.S. Census Bureau, World Bank, UN, IMF, UNDP (2023/2024 estimates)</p>
+    <p>Built with .NET 10 Blazor • <a href="https://github.com/collabskus/HelloAspDotnetTen" target="_blank">GitHub</a></p>
+</footer>
+
+@code {
+    private string _selectedContinent = "Africa";
+
+    private IEnumerable<string> GetContinents() =>
+        CountryService.Countries
+            .Where(c => !string.IsNullOrEmpty(c.Continent))
+            .Select(c => c.Continent!)
+            .Distinct()
+            .OrderBy(c => c);
+
+    private void SelectContinent(string continent) => _selectedContinent = continent;
+
+    private IEnumerable<CountryData> GetFilteredCountries() =>
+        CountryService.Countries
+            .Where(c => c.Continent == _selectedContinent)
+            .OrderByDescending(c => c.Population ?? 0);
+
+    private string GetContinentEmoji(string continent) => continent switch
+    {
+        "Africa" => "🌍",
+        "Asia" => "🌏",
+        "Europe" => "🌍",
+        "North America" => "🌎",
+        "South America" => "🌎",
+        "Oceania" => "🌏",
+        _ => "🌐"
+    };
+
+    private string FormatPopulation(long? value)
+    {
+        if (!value.HasValue) return "—";
+        if (value >= 1_000_000_000) return $"{value.Value / 1_000_000_000.0:N2}B";
+        if (value >= 1_000_000) return $"{value.Value / 1_000_000.0:N1}M";
+        if (value >= 1_000) return $"{value.Value / 1_000.0:N1}K";
+        return value.Value.ToString("N0");
+    }
+
+    private string FormatArea(long? value)
+    {
+        if (!value.HasValue) return "—";
+        if (value >= 1_000_000) return $"{value.Value / 1_000_000.0:N2}M km²";
+        return $"{value.Value:N0} km²";
+    }
+
+    private string FormatGdp(long? value)
+    {
+        if (!value.HasValue) return "—";
+        var billions = value.Value / 1000.0;
+        if (billions >= 1000) return $"${billions / 1000:N2}T";
+        if (billions >= 1) return $"${billions:N1}B";
+        return $"${value.Value:N0}M";
+    }
+
+    private string FormatCurrency(int? value) =>
+        value.HasValue ? $"${value.Value:N0}" : "—";
+
+    private string FormatDecimal(double? value, string format, string suffix) =>
+        value.HasValue ? $"{value.Value.ToString(format)} {suffix}" : "—";
+
+    private string FormatPercent(double? value) =>
+        value.HasValue ? $"{value.Value:N1}%" : "—";
+
+    private string FormatHdi(double? value) =>
+        value.HasValue ? value.Value.ToString("N3") : "—";
+}

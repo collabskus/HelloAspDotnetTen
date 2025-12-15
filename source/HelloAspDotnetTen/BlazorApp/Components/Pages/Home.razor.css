@@ -1,0 +1,430 @@
+﻿/* ═══════════════════════════════════════════════════════════════════════════
+   HOME PAGE - BEAUTIFUL DATA SHOWCASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+    .hero-section h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .hero-section .lead {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        margin-bottom: 1.5rem;
+    }
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.25rem;
+    border-radius: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Quick Links */
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.quick-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 1rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+    .quick-link-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: #667eea;
+        text-decoration: none;
+        color: inherit;
+    }
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-desc {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Data Sections */
+.data-section {
+    margin-bottom: 3rem;
+}
+
+    .data-section h2 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+.section-desc {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* Tables */
+.table-container {
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: white;
+    margin-bottom: 1.5rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+    .data-table th {
+        background: #f8f9fa;
+        padding: 0.875rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #555;
+        border-bottom: 2px solid #e9ecef;
+        position: sticky;
+        top: 0;
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+
+    .data-table .text-end {
+        text-align: right;
+    }
+
+    .data-table .text-muted {
+        color: #888;
+        font-size: 0.85em;
+    }
+
+.total-row {
+    background: #f0f4ff !important;
+}
+
+    .total-row td {
+        border-top: 2px solid #667eea;
+    }
+
+.flag-emoji {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+/* Continent Tabs */
+.continent-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.continent-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+    .continent-tab:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .continent-tab.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+
+    .continent-tab .badge {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+    }
+
+    .continent-tab.active .badge {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+/* Continent Summary */
+.continent-summary {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+}
+
+    .continent-summary h4 {
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.summary-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Rankings Grid */
+.rankings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.ranking-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+    .ranking-card h4 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+        color: #333;
+    }
+
+.ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: ranking;
+}
+
+    .ranking-list li {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f5f5f5;
+        counter-increment: ranking;
+    }
+
+        .ranking-list li:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-list li::before {
+            content: counter(ranking);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.75rem;
+            color: #666;
+        }
+
+        .ranking-list li:nth-child(1)::before {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #8b6914;
+        }
+
+        .ranking-list li:nth-child(2)::before {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #666;
+        }
+
+        .ranking-list li:nth-child(3)::before {
+            background: linear-gradient(135deg, #cd7f32, #e8a855);
+            color: #5c3a1a;
+        }
+
+    .ranking-list .flag-emoji {
+        font-size: 1.1rem;
+        margin-right: 0.5rem;
+    }
+
+.ranking-value {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Footer */
+.home-footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+    .home-footer p {
+        margin-bottom: 0.5rem;
+    }
+
+    .home-footer a {
+        color: #667eea;
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+
+    .hero-stats {
+        gap: 0.75rem;
+    }
+
+    .stat-pill {
+        padding: 0.5rem 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .data-table {
+        font-size: 0.8rem;
+    }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.5rem;
+        }
+
+    .rankings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .continent-tabs {
+        justify-content: center;
+    }
+}
+
+/* Country Table Specific */
+.country-table {
+    min-width: 900px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .quick-link-card,
+    .data-table,
+    .table-container,
+    .ranking-card,
+    .summary-item {
+        background: #1e1e1e;
+        color: #e0e0e0;
+    }
+
+        .data-table th {
+            background: #2d2d2d;
+            color: #ccc;
+        }
+
+        .data-table tbody tr:hover {
+            background: #2a2a2a;
+        }
+
+    .continent-summary {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+    }
+
+    .card-desc,
+    .summary-label,
+    .ranking-value {
+        color: #999;
+    }
+}
