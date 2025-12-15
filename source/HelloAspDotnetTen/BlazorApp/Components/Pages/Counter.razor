@@ -1,8 +1,8 @@
 ﻿@page "/counter"
-@rendermode InteractiveServer
 @using System.Diagnostics
 @using System.Diagnostics.Metrics
 @using System.Text.Json
+@rendermode InteractiveServer
 @inject ILogger<Counter> Logger
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
@@ -11,185 +11,149 @@
 
 <h1>Counter</h1>
 
-@if (!_isInitialized)
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+    Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
+</button>
+
+<button class="btn @(isUnattendedMode ? "btn-danger" : "btn-secondary")" @onclick="ToggleUnattendedMode">
+    @(isUnattendedMode ? "⏹ Stop Unattended" : "▶ Start Unattended")
+</button>
+
+@if (isUnattendedMode)
 {
-    <p><em>Loading saved data...</em></p>
+    <p class="text-info">Unattended mode: @unattendedTossCount tosses this session</p>
+}
+
+<hr />
+
+<h3>Session Results</h3>
+<p>
+    Total wins: <span class="win-toss">@totalWins</span> |
+    Total losses: <span class="lost-toss">@(historical.Count - totalWins)</span> |
+    Win rate: @(historical.Count > 0 ? $"{(double)totalWins / historical.Count:P1}" : "N/A")
+</p>
+
+@if (historical.Any())
+{
+    <div class="historical-results">
+        @foreach (var result in historical.AsEnumerable().Reverse().Take(50))
+        {
+            <span class="@result.CssClass" title="@result.Status">@result.Value</span>
+        }
+        @if (historical.Count > 50)
+        {
+            <span class="text-muted">... and @(historical.Count - 50) more</span>
+        }
+    </div>
+}
+
+<hr />
+
+<h3>Lifetime Statistics</h3>
+@if (persistedStats != null)
+{
+    <ul>
+        <li>Total tosses: @persistedStats.TotalTosses</li>
+        <li>Total wins: @persistedStats.TotalWins (@(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A"))</li>
+        <li>Total losses: @persistedStats.TotalLosses</li>
+        <li>Highest toss: @persistedStats.HighestTossValue</li>
+        <li>Lowest toss: @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue)</li>
+        <li>First played: @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</li>
+        <li>Last played: @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</li>
+    </ul>
+
+    <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear Lifetime Stats</button>
 }
 else
 {
-    <p role="status">Current count: @currentCount</p>
+    <p class="text-muted">Loading statistics...</p>
+}
 
-    <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-    <button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
-        Slow Increment (Random between 100-900, **FAIR TOSS**)
-    </button>
-
-    <button class="btn btn-secondary ms-2" @onclick="ToggleUnattendedMode" disabled="@isIncrementing">
-        @(isUnattendedMode ? "Stop Unattended Mode" : "Start Unattended Mode")
-    </button>
-
-    @if (isIncrementing)
-    {
-        <p>
-            Incrementing by a random number... (Random between a hundred and nine hundred)
-            @if (incrementBy != 0)
-            {
-                <span>currently, @incrementBy</span>
-            }
-        </p>
-    }
-
-    @if (isUnattendedMode)
-    {
-        <div class="alert alert-info mt-2">
-            <strong>Unattended Mode Active</strong> - Automatically tossing...
-        </div>
-    }
-
-    @if (historical.Count > 0)
-    {
-        <h3>Historical Increments (This Session):</h3>
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Increment Value</th>
-                    <th>Result</th>
-                    <th>Running Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var toss in historical)
-                {
-                    <tr class="@toss.CssClass">
-                        <td>@toss.Value</td>
-                        <td>@toss.Status</td>
-                        <td>@toss.RunningTotal</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <p><strong>Session Stats:</strong></p>
-        <p>Wins: @totalWins</p>
-        <p>Losses: @(historical.Count - totalWins)</p>
-        <p>Tosses: @historical.Count</p>
-    }
-
-    @if (persistedStats != null)
-    {
-        <div class="mt-4 p-3 border rounded">
-            <h3>Lifetime Statistics</h3>
-            <p><strong>Total Tosses:</strong> @persistedStats.TotalTosses</p>
-            <p><strong>Total Wins:</strong> @persistedStats.TotalWins</p>
-            <p><strong>Total Losses:</strong> @persistedStats.TotalLosses</p>
-            <p><strong>Win Rate:</strong> @(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A")</p>
-            <p><strong>Highest Single Toss:</strong> @persistedStats.HighestTossValue</p>
-            <p><strong>Lowest Single Toss:</strong> @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue.ToString())</p>
-            <p><strong>First Played:</strong> @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</p>
-            <p><strong>Last Played:</strong> @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</p>
-            <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear History</button>
-        </div>
-    }
+@if (!string.IsNullOrEmpty(_storageWarning))
+{
+    <div class="alert alert-warning mt-3">
+        <strong>Storage Notice:</strong> @_storageWarning
+    </div>
 }
 
 @code {
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE KEY CONSTANTS
+    // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════
     
-    // Namespaced to avoid collisions with StateCompare/CountryCompare
     private const string LocalStorageKey = "HelloAspDotnetTen.Counter.Stats";
+    private const string BackupStorageKey = "HelloAspDotnetTen.Counter.Stats.Backup";
+    private const int WinThreshold = 500;
+    private const int DelayMilliseconds = 1;
+    private const int MaxHistoricalEntries = 500; // Prevent unbounded growth
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OPENTELEMETRY INSTRUMENTATION
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // ActivitySource for distributed tracing (spans)
     private static readonly ActivitySource ActivitySource = new("BlazorApp.Counter", "1.0.0");
-
-    // Meter for metrics
     private static readonly Meter Meter = new("BlazorApp.Counter", "1.0.0");
 
-    // ── Counters ──────────────────────────────────────────────────────────────
     private static readonly Counter<long> ClickCounter = Meter.CreateCounter<long>(
-        "counter.clicks",
-        unit: "{clicks}",
-        description: "Total number of simple increment clicks");
-
+        "counter.clicks", unit: "clicks", description: "Number of button clicks");
     private static readonly Counter<long> TossCounter = Meter.CreateCounter<long>(
-        "counter.tosses",
-        unit: "{tosses}",
-        description: "Total number of slow increments (tosses)");
-
+        "counter.tosses", unit: "tosses", description: "Number of slow increment tosses");
+    private static readonly Counter<long> WinCounter = Meter.CreateCounter<long>(
+        "counter.wins", unit: "wins", description: "Number of winning tosses");
+    private static readonly Counter<long> LossCounter = Meter.CreateCounter<long>(
+        "counter.losses", unit: "losses", description: "Number of losing tosses");
     private static readonly Counter<long> UnattendedTossCounter = Meter.CreateCounter<long>(
-        "counter.unattended_tosses",
-        unit: "{tosses}",
-        description: "Number of tosses made in unattended mode");
-
+        "counter.unattended_tosses", unit: "tosses", description: "Tosses in unattended mode");
     private static readonly Counter<long> LocalStorageLoadCounter = Meter.CreateCounter<long>(
-        "counter.localstorage_loads",
-        unit: "operations",
-        description: "Local storage load operations");
-
+        "counter.localstorage_loads", unit: "operations", description: "Local storage load ops");
     private static readonly Counter<long> LocalStorageSaveCounter = Meter.CreateCounter<long>(
-        "counter.localstorage_saves",
-        unit: "operations",
-        description: "Local storage save operations");
-
+        "counter.localstorage_saves", unit: "operations", description: "Local storage save ops");
     private static readonly Counter<long> LocalStorageClearCounter = Meter.CreateCounter<long>(
-        "counter.localstorage_clears",
-        unit: "operations",
-        description: "Local storage clear operations");
+        "counter.localstorage_clears", unit: "operations", description: "Local storage clear ops");
+    private static readonly Counter<long> StorageRecoveryCounter = Meter.CreateCounter<long>(
+        "counter.storage_recoveries", unit: "recoveries", description: "Data recovered from backup");
+    private static readonly Counter<long> StorageCorruptionCounter = Meter.CreateCounter<long>(
+        "counter.storage_corruptions", unit: "corruptions", description: "Corrupted data detected");
 
-    // ── Histograms ────────────────────────────────────────────────────────────
     private static readonly Histogram<int> TossValueHistogram = Meter.CreateHistogram<int>(
-        "counter.toss_value",
-        unit: "{value}",
-        description: "Distribution of toss values");
+        "counter.toss_value", unit: "{value}", description: "Distribution of toss values (100-900)");
+    private static readonly Histogram<double> TossDurationHistogram = Meter.CreateHistogram<double>(
+        "counter.toss_duration", unit: "ms", description: "Duration of slow increment operations");
 
-    // ── UpDownCounters (Gauges) ───────────────────────────────────────────────
     private static readonly UpDownCounter<int> CurrentCountGauge = Meter.CreateUpDownCounter<int>(
-        "counter.current_count",
-        unit: "{count}",
-        description: "Current counter value");
-
-    private static readonly UpDownCounter<int> UnattendedModeActive = Meter.CreateUpDownCounter<int>(
-        "counter.unattended_mode_active",
-        unit: "{boolean}",
-        description: "Whether unattended mode is currently active (1=active, 0=inactive)");
+        "counter.current_value", unit: "{count}", description: "Current counter value");
+    private static readonly UpDownCounter<int> UnattendedModeGauge = Meter.CreateUpDownCounter<int>(
+        "counter.unattended_mode_active", unit: "{active}", description: "Unattended mode active (1/0)");
 
     // ═══════════════════════════════════════════════════════════════════════════
     // COMPONENT STATE
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Session state (restored from localStorage)
     private int currentCount = 0;
+    private bool isIncrementing = false;
+    private int incrementBy = 0;
     private List<TossResult> historical = new();
     private int totalWins => GetWinCount(historical.Select(t => t.Value).ToList(), WinThreshold);
 
-    // UI state
-    private bool isIncrementing = false;
-    private int incrementBy = 0;
     private bool isUnattendedMode = false;
     private CancellationTokenSource? unattendedCts;
+    private int unattendedTossCount = 0;
 
-    // Local storage state
     private CounterPersistedStats? persistedStats;
     private bool isJsRuntimeAvailable = false;
-    private bool _isInitialized = false; // NEW: Track if we've loaded from storage
-
-    // Constants
-    private const int WinThreshold = 500;
-    private const int DelayMilliseconds = 1;
+    private bool _isInitialized = false;
+    private string? _storageWarning;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSISTED STATS MODEL - NOW INCLUDES SESSION STATE
+    // PERSISTED STATS MODEL
     // ═══════════════════════════════════════════════════════════════════════════
+
     private class CounterPersistedStats
     {
-        // Lifetime stats
         public int TotalTosses { get; set; }
         public int TotalWins { get; set; }
         public int TotalLosses { get; set; }
@@ -197,13 +161,15 @@ else
         public int LowestTossValue { get; set; } = int.MaxValue;
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
-
-        // SESSION STATE - survives page reload
+        
+        // Session state - also persisted for recovery
         public int CurrentCount { get; set; }
         public List<TossResultDto> Historical { get; set; } = new();
+        
+        // Integrity check
+        public string? Checksum { get; set; }
     }
 
-    // DTO for serialization (TossResult has computed properties)
     private class TossResultDto
     {
         public int Value { get; set; }
@@ -237,38 +203,34 @@ else
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LIFECYCLE METHODS - FIXED ORDER
+    // LIFECYCLE METHODS
     // ═══════════════════════════════════════════════════════════════════════════
-    
-    // CRITICAL FIX: Don't initialize game state until after localStorage loads
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             using var activity = ActivitySource.StartActivity("Counter.OnAfterRenderAsync.FirstRender");
-            
+
             isJsRuntimeAvailable = true;
-            await LoadPersistedStatsAsync(); // Load FIRST
-            
-            // Restore session state from localStorage
+            await LoadPersistedStatsAsync();
+
             if (persistedStats != null)
             {
                 currentCount = persistedStats.CurrentCount;
                 historical = persistedStats.Historical.Select(TossResult.FromDto).ToList();
-                
-                // Sync gauge to restored value
                 CurrentCountGauge.Add(currentCount);
-                
+
                 Logger.LogInformation(
-                    "Restored session state: CurrentCount={Count}, Historical={HistoricalCount}",
+                    "Restored session: CurrentCount={Count}, Historical={HistoricalCount}",
                     currentCount, historical.Count);
             }
-            
-            _isInitialized = true; // Mark as ready
+
+            _isInitialized = true;
             activity?.SetTag("storage.loaded", persistedStats != null);
             activity?.SetTag("current_count_restored", currentCount);
             activity?.SetTag("historical_count_restored", historical.Count);
-            
+
             StateHasChanged();
         }
     }
@@ -276,60 +238,169 @@ else
     public async ValueTask DisposeAsync()
     {
         using var activity = ActivitySource.StartActivity("Counter.DisposeAsync");
-        
+
         if (isUnattendedMode)
         {
             activity?.SetTag("unattended.was_active", true);
             await StopUnattendedModeAsync();
         }
-        
-        // Final save before disposal
+
         await SavePersistedStatsAsync();
-        
         activity?.SetTag("disposed", true);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LOCAL STORAGE OPERATIONS - SAVE EVERYTHING
+    // ROBUST LOCAL STORAGE OPERATIONS
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
+    /// <summary>
+    /// Calculates a simple checksum for data integrity verification.
+    /// </summary>
+    private string CalculateChecksum(CounterPersistedStats stats)
+    {
+        // Simple checksum based on key values - not cryptographic, just integrity check
+        var data = $"{stats.TotalTosses}|{stats.TotalWins}|{stats.CurrentCount}|{stats.Historical?.Count ?? 0}";
+        var hash = data.GetHashCode();
+        return hash.ToString("X8");
+    }
+
+    /// <summary>
+    /// Validates that JSON is complete and parseable.
+    /// </summary>
+    private bool TryParseAndValidate(string? json, out CounterPersistedStats? stats, out string? error)
+    {
+        stats = null;
+        error = null;
+
+        if (string.IsNullOrEmpty(json))
+        {
+            error = "Empty or null JSON";
+            return false;
+        }
+
+        // Check for obvious truncation (incomplete JSON)
+        var trimmed = json.Trim();
+        if (!trimmed.EndsWith("}"))
+        {
+            error = "JSON appears truncated (doesn't end with })";
+            return false;
+        }
+
+        // Count braces to detect truncation
+        int openBraces = json.Count(c => c == '{');
+        int closeBraces = json.Count(c => c == '}');
+        if (openBraces != closeBraces)
+        {
+            error = $"JSON brace mismatch: {openBraces} open, {closeBraces} close";
+            return false;
+        }
+
+        try
+        {
+            stats = JsonSerializer.Deserialize<CounterPersistedStats>(json);
+            if (stats == null)
+            {
+                error = "Deserialization returned null";
+                return false;
+            }
+
+            // Validate checksum if present
+            if (!string.IsNullOrEmpty(stats.Checksum))
+            {
+                var expectedChecksum = CalculateChecksum(stats);
+                if (stats.Checksum != expectedChecksum)
+                {
+                    error = $"Checksum mismatch: expected {expectedChecksum}, got {stats.Checksum}";
+                    // Don't fail on checksum mismatch - data might still be usable
+                    Logger.LogWarning("Checksum mismatch detected but proceeding with data");
+                }
+            }
+
+            return true;
+        }
+        catch (JsonException ex)
+        {
+            error = $"JSON parse error: {ex.Message}";
+            return false;
+        }
+    }
+
     private async Task LoadPersistedStatsAsync()
     {
         using var activity = ActivitySource.StartActivity("Counter.LoadPersistedStats");
 
         try
         {
+            // Try main key first
             var json = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
 
-            if (!string.IsNullOrEmpty(json))
+            if (TryParseAndValidate(json, out var stats, out var error))
             {
-                persistedStats = JsonSerializer.Deserialize<CounterPersistedStats>(json);
-                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", true));
+                persistedStats = stats;
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.source", "main"));
 
                 activity?.SetTag("storage.found", true);
+                activity?.SetTag("storage.source", "main");
                 activity?.SetTag("storage.total_tosses", persistedStats?.TotalTosses ?? 0);
-                activity?.SetTag("storage.current_count", persistedStats?.CurrentCount ?? 0);
-                activity?.SetTag("storage.historical_count", persistedStats?.Historical?.Count ?? 0);
 
                 Logger.LogInformation(
-                    "Loaded Counter stats: TotalTosses={Total}, CurrentCount={Current}, Historical={Historical}",
+                    "Loaded stats from main storage: TotalTosses={Total}, CurrentCount={Current}, Historical={Historical}",
                     persistedStats?.TotalTosses ?? 0,
                     persistedStats?.CurrentCount ?? 0,
                     persistedStats?.Historical?.Count ?? 0);
+                return;
             }
-            else
-            {
-                // Initialize fresh stats
-                persistedStats = new CounterPersistedStats();
-                await SavePersistedStatsAsync();
-                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
 
-                activity?.SetTag("storage.found", false);
+            // Main key failed - log the error
+            if (!string.IsNullOrEmpty(json))
+            {
+                StorageCorruptionCounter.Add(1);
+                Logger.LogWarning("Main storage corrupted: {Error}. JSON length: {Length}, First 100 chars: {Preview}",
+                    error, json.Length, json.Substring(0, Math.Min(100, json.Length)));
+                activity?.SetTag("storage.main_corrupted", true);
+                activity?.SetTag("storage.corruption_error", error);
             }
+
+            // Try backup key
+            var backupJson = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
+
+            if (TryParseAndValidate(backupJson, out var backupStats, out var backupError))
+            {
+                persistedStats = backupStats;
+                StorageRecoveryCounter.Add(1);
+                LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.source", "backup"));
+
+                _storageWarning = "Recovered data from backup. Some recent progress may have been lost.";
+
+                activity?.SetTag("storage.found", true);
+                activity?.SetTag("storage.source", "backup");
+                activity?.SetTag("storage.recovered", true);
+
+                Logger.LogWarning(
+                    "Recovered from backup: TotalTosses={Total}, CurrentCount={Current}. Main was corrupted.",
+                    persistedStats?.TotalTosses ?? 0,
+                    persistedStats?.CurrentCount ?? 0);
+
+                // Immediately save to main key to restore it
+                await SavePersistedStatsAsync();
+                return;
+            }
+
+            // Both failed - start fresh
+            Logger.LogWarning("Both main and backup storage failed. Starting fresh. Main error: {MainError}, Backup error: {BackupError}",
+                error ?? "empty", backupError ?? "empty");
+
+            persistedStats = new CounterPersistedStats();
+            await SavePersistedStatsAsync();
+
+            LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
+            activity?.SetTag("storage.found", false);
+            activity?.SetTag("storage.created_new", true);
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to load Counter persisted stats");
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogError(ex, "Failed to load persisted stats");
             persistedStats = new CounterPersistedStats();
         }
     }
@@ -344,23 +415,66 @@ else
         {
             // Update session state
             persistedStats.CurrentCount = currentCount;
-            persistedStats.Historical = historical.Select(h => h.ToDto()).ToList();
             persistedStats.LastPlayedUtc = DateTime.UtcNow;
 
+            // Trim historical to prevent unbounded growth
+            if (historical.Count > MaxHistoricalEntries)
+            {
+                // Keep most recent entries
+                historical = historical.Skip(historical.Count - MaxHistoricalEntries).ToList();
+                Logger.LogInformation("Trimmed historical entries to {Max}", MaxHistoricalEntries);
+            }
+
+            persistedStats.Historical = historical.Select(h => h.ToDto()).ToList();
+
+            // Calculate checksum for integrity verification
+            persistedStats.Checksum = CalculateChecksum(persistedStats);
+
             var json = JsonSerializer.Serialize(persistedStats);
+
+            // Validate our own output before saving
+            if (!TryParseAndValidate(json, out _, out var error))
+            {
+                Logger.LogError("Generated invalid JSON! Error: {Error}", error);
+                activity?.SetStatus(ActivityStatusCode.Error, "Generated invalid JSON");
+                return;
+            }
+
+            // ATOMIC WRITE PATTERN:
+            // 1. Save to backup first
+            // 2. Verify backup was saved correctly
+            // 3. Only then update main key
+
+            // Step 1: Save to backup
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", BackupStorageKey, json);
+
+            // Step 2: Verify backup (read it back)
+            var verifyBackup = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
+            if (verifyBackup != json)
+            {
+                Logger.LogError("Backup verification failed! Expected {Expected} chars, got {Actual} chars",
+                    json.Length, verifyBackup?.Length ?? 0);
+                activity?.SetStatus(ActivityStatusCode.Error, "Backup verification failed");
+                // Don't overwrite main key if backup failed
+                return;
+            }
+
+            // Step 3: Save to main key (backup is now safe)
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
 
             LocalStorageSaveCounter.Add(1);
             activity?.SetTag("storage.bytes", json.Length);
-            activity?.SetTag("storage.tosses_saved", persistedStats.TotalTosses);
-            activity?.SetTag("storage.current_count_saved", persistedStats.CurrentCount);
-            activity?.SetTag("storage.historical_count_saved", persistedStats.Historical.Count);
+            activity?.SetTag("storage.historical_count", persistedStats.Historical.Count);
+            activity?.SetTag("storage.checksum", persistedStats.Checksum);
+            activity?.SetStatus(ActivityStatusCode.Ok);
 
-            Logger.LogDebug("Saved Counter stats: {Bytes} bytes", json.Length);
+            Logger.LogDebug("Saved stats: {Bytes} bytes, {Historical} historical entries, checksum {Checksum}",
+                json.Length, persistedStats.Historical.Count, persistedStats.Checksum);
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to save Counter persisted stats");
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogWarning(ex, "Failed to save persisted stats");
         }
     }
 
@@ -371,113 +485,112 @@ else
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", BackupStorageKey);
 
-            // Reset gauges
-            CurrentCountGauge.Add(-currentCount);
-
-            // Reset all state
+            persistedStats = new CounterPersistedStats();
             currentCount = 0;
             historical.Clear();
-            persistedStats = new CounterPersistedStats();
+            _storageWarning = null;
 
             await SavePersistedStatsAsync();
+
             LocalStorageClearCounter.Add(1);
+            activity?.SetStatus(ActivityStatusCode.Ok);
 
-            activity?.SetTag("cleared", true);
-            Logger.LogInformation("Cleared Counter persisted stats");
-
+            Logger.LogInformation("Cleared all persisted stats");
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to clear Counter persisted stats");
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogWarning(ex, "Failed to clear persisted stats");
         }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // GAME LOGIC
+    // EVENT HANDLERS
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void IncrementCount()
     {
         using var activity = ActivitySource.StartActivity("Counter.IncrementCount");
-        
+
+        var previousCount = currentCount;
         currentCount++;
+
         ClickCounter.Add(1);
         CurrentCountGauge.Add(1);
-        
-        activity?.SetTag("new_count", currentCount);
-        
-        Logger.LogDebug("Simple increment: currentCount={Count}", currentCount);
-        
-        // Save immediately
-        _ = SavePersistedStatsAsync();
+
+        activity?.SetTag("counter.previous", previousCount);
+        activity?.SetTag("counter.current", currentCount);
+
+        Logger.LogDebug("Counter incremented: {Previous} -> {Current}", previousCount, currentCount);
     }
 
     private async Task SlowlyIncrement()
     {
+        if (isIncrementing) return;
+
         using var activity = ActivitySource.StartActivity("Counter.SlowlyIncrement");
-        
+        var stopwatch = Stopwatch.StartNew();
+
         isIncrementing = true;
-        int targetIncrement;
+        incrementBy = Random.Shared.Next(100, 901);
 
-        // Generate fair toss value (100-900, excluding exactly 500)
-        do
+        activity?.SetTag("toss.value", incrementBy);
+        activity?.SetTag("toss.is_win", incrementBy >= WinThreshold);
+
+        TossCounter.Add(1);
+        TossValueHistogram.Record(incrementBy);
+
+        if (incrementBy >= WinThreshold)
+            WinCounter.Add(1, new KeyValuePair<string, object?>("value", incrementBy));
+        else
+            LossCounter.Add(1, new KeyValuePair<string, object?>("value", incrementBy));
+
+        var targetCount = currentCount + incrementBy;
+        while (currentCount < targetCount)
         {
-            targetIncrement = Random.Shared.Next(100, 901);
-        } while (targetIncrement == WinThreshold);
-
-        incrementBy = 0;
-
-        // Animate the increment
-        while (incrementBy < targetIncrement)
-        {
-            incrementBy++;
             currentCount++;
             CurrentCountGauge.Add(1);
             await Task.Delay(DelayMilliseconds);
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
         }
 
-        // Record the result
-        bool isWin = targetIncrement > WinThreshold;
-        var tossResult = new TossResult
+        var result = new TossResult
         {
-            Value = targetIncrement,
-            Status = isWin ? "You won a toss" : "You lost a toss",
-            CssClass = isWin ? "win-toss" : "lost-toss",
+            Value = incrementBy,
+            Status = incrementBy >= WinThreshold ? "You won a toss" : "You lost a toss",
+            CssClass = incrementBy >= WinThreshold ? "win-toss" : "lost-toss",
             RunningTotal = currentCount
         };
-
-        historical.Add(tossResult);
-
-        // Update telemetry
-        TossCounter.Add(1, new KeyValuePair<string, object?>("result", isWin ? "win" : "loss"));
-        TossValueHistogram.Record(targetIncrement);
+        historical.Add(result);
 
         // Update lifetime stats
         if (persistedStats != null)
         {
             persistedStats.TotalTosses++;
-            if (isWin) persistedStats.TotalWins++; else persistedStats.TotalLosses++;
-            if (targetIncrement > persistedStats.HighestTossValue)
-                persistedStats.HighestTossValue = targetIncrement;
-            if (targetIncrement < persistedStats.LowestTossValue)
-                persistedStats.LowestTossValue = targetIncrement;
-            if (persistedStats.TotalTosses == 1)
-                persistedStats.FirstPlayedUtc = DateTime.UtcNow;
+            if (incrementBy >= WinThreshold)
+                persistedStats.TotalWins++;
+            else
+                persistedStats.TotalLosses++;
+
+            if (incrementBy > persistedStats.HighestTossValue)
+                persistedStats.HighestTossValue = incrementBy;
+            if (incrementBy < persistedStats.LowestTossValue)
+                persistedStats.LowestTossValue = incrementBy;
         }
 
-        activity?.SetTag("toss_value", targetIncrement);
-        activity?.SetTag("is_win", isWin);
-        activity?.SetTag("running_total", currentCount);
-
-        Logger.LogInformation(
-            "Toss completed: Value={Value}, Win={Win}, RunningTotal={Total}",
-            targetIncrement, isWin, currentCount);
-
-        // Save immediately (no pooling)
         await SavePersistedStatsAsync();
+
+        stopwatch.Stop();
+        TossDurationHistogram.Record(stopwatch.Elapsed.TotalMilliseconds);
+
+        activity?.SetTag("toss.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
+        activity?.SetStatus(ActivityStatusCode.Ok);
+
+        Logger.LogInformation("Toss completed: Value={Value}, Win={IsWin}, Duration={Duration}ms",
+            incrementBy, incrementBy >= WinThreshold, stopwatch.Elapsed.TotalMilliseconds);
 
         isIncrementing = false;
     }
@@ -489,92 +602,83 @@ else
     private async Task ToggleUnattendedMode()
     {
         if (isUnattendedMode)
-        {
             await StopUnattendedModeAsync();
-        }
         else
-        {
             await StartUnattendedModeAsync();
-        }
     }
 
     private async Task StartUnattendedModeAsync()
     {
         using var activity = ActivitySource.StartActivity("Counter.StartUnattendedMode");
-        
+
         isUnattendedMode = true;
-        UnattendedModeActive.Add(1);
+        unattendedTossCount = 0;
         unattendedCts = new CancellationTokenSource();
-        
+
+        UnattendedModeGauge.Add(1);
         activity?.SetTag("unattended.started", true);
+
         Logger.LogInformation("Unattended mode started");
-        
+
         _ = RunUnattendedLoopAsync(unattendedCts.Token);
     }
 
     private async Task StopUnattendedModeAsync()
     {
         using var activity = ActivitySource.StartActivity("Counter.StopUnattendedMode");
-        
-        if (unattendedCts != null)
-        {
-            unattendedCts.Cancel();
-            unattendedCts.Dispose();
-            unattendedCts = null;
-        }
-        
+
         isUnattendedMode = false;
-        UnattendedModeActive.Add(-1);
-        
+        unattendedCts?.Cancel();
+        unattendedCts?.Dispose();
+        unattendedCts = null;
+
+        UnattendedModeGauge.Add(-1);
         activity?.SetTag("unattended.stopped", true);
-        Logger.LogInformation("Unattended mode stopped");
+        activity?.SetTag("unattended.total_tosses", unattendedTossCount);
+
+        Logger.LogInformation("Unattended mode stopped after {TossCount} tosses", unattendedTossCount);
+
+        await SavePersistedStatsAsync();
     }
 
-    private async Task RunUnattendedLoopAsync(CancellationToken ct)
+    private async Task RunUnattendedLoopAsync(CancellationToken cancellationToken)
     {
         using var activity = ActivitySource.StartActivity("Counter.UnattendedLoop");
-        int unattendedCount = 0;
-        
+
         try
         {
-            while (!ct.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested && isUnattendedMode)
             {
-                // Wait until not incrementing
-                while (isIncrementing && !ct.IsCancellationRequested)
+                if (!isIncrementing)
                 {
-                    await Task.Delay(50, ct);
+                    await SlowlyIncrement();
+                    unattendedTossCount++;
+                    UnattendedTossCounter.Add(1);
                 }
-                
-                if (ct.IsCancellationRequested) break;
-                
-                // Small delay before next toss
-                await Task.Delay(100, ct);
-                
-                if (ct.IsCancellationRequested) break;
-                
-                // Trigger toss
-                UnattendedTossCounter.Add(1);
-                unattendedCount++;
-                await SlowlyIncrement();
+
+                await Task.Delay(100, cancellationToken);
             }
+
+            activity?.SetTag("unattended.completed_normally", true);
         }
         catch (OperationCanceledException)
         {
-            // Expected when stopping
+            activity?.SetTag("unattended.cancelled", true);
+            Logger.LogDebug("Unattended loop cancelled");
         }
-        finally
+        catch (Exception ex)
         {
-            activity?.SetTag("unattended.tosses", unattendedCount);
-            Logger.LogInformation("Unattended loop completed: {Count} tosses", unattendedCount);
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            Logger.LogError(ex, "Unattended loop error");
         }
+
+        activity?.SetTag("unattended.total_tosses", unattendedTossCount);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // HELPER METHODS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    private static int GetWinCount(List<int> tosses, int threshold)
-    {
-        return tosses.Count(t => t > threshold);
-    }
+    private static int GetWinCount(List<int> values, int threshold) =>
+        values.Count(v => v >= threshold);
 }

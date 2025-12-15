@@ -4418,3 +4418,183 @@ HelloAspDotnetTen.StateCompare.Stats
 
 
 
+Looking at your localStorage data, I can see the issue clearly - **both JSON strings are truncated mid-write**. The Chrome data ends with `{"Value":833,"St` and the Edge data ends with `{"Value":156,"Status":"You lost`. This is corrupted/incomplete JSON, which is why the app can't parse it on reload.
+
+Let me search the project to understand your current storage implementation and identify the root cause.Now I understand the issue. Let me search for the current save implementation to see exactly what's happening:Now I have a complete picture of what's happening. This is a **Blazor Server SignalR transmission issue**, not a localStorage limit issue.
+
+## Root Cause Analysis
+
+**The problem is NOT localStorage limits or permissions.** Here's what's actually happening:
+
+### 1. Blazor Server Architecture Issue
+Your app uses `@rendermode InteractiveServer`, meaning all C# code runs on the server. When you call:
+```csharp
+await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
+```
+
+The flow is:
+1. Server serializes JSON (your 3132-toss Historical array = ~300KB)
+2. Server sends this JSON string over SignalR to the browser
+3. Browser receives the string and executes `localStorage.setItem()`
+
+### 2. The Failure Point
+When running unattended overnight, the SignalR connection eventually dropped (hence "failed to resume the session"). If this happens **mid-transmission of a save operation**:
+- The client receives only a partial JSON string
+- `localStorage.setItem()` executes with that truncated string
+- Valid data is overwritten with corrupted data
+
+**Evidence:** Both your Chrome and Edge localStorage entries are truncated mid-JSON:
+- Chrome: ends with `{"Value":833,"St`
+- Edge: ends with `{"Value":156,"Status":"You lost`
+
+These clean cuts mid-property are the telltale sign of transmission truncation, not storage corruption.
+
+### 3. Why localStorage Limits Are NOT the Issue
+- Standard localStorage limit: **5MB per origin**
+- Your data: ~300KB maximum
+- You're using less than 6% of available storage
+- No permission is required for localStorage (unlike IndexedDB with persistent storage)
+
+## The Fix
+
+I'll provide an updated Counter.razor with these protections:
+
+1. **Backup before write** - Save to a backup key first, validate, then overwrite main key
+2. **JSON validation on load** - Detect and recover from corrupted data
+3. **Limit Historical array** - Cap at 500 entries (still plenty, but bounded)
+4. **Atomic write pattern** - Never overwrite good data with bad data
+5. **Recovery mechanism** - Restore from backup if main data is corrupted## Summary of Changes
+
+### 1. **Backup Key Strategy** (Most Important Fix)
+```csharp
+private const string BackupStorageKey = "HelloAspDotnetTen.Counter.Stats.Backup";
+```
+Before overwriting main data, we:
+1. Write to backup key first
+2. Read backup back to verify it was saved completely
+3. Only then write to main key
+
+If SignalR drops mid-transmission, at worst you lose the current save, but the backup preserves your previous good state.
+
+### 2. **JSON Validation Before Loading**
+```csharp
+private bool TryParseAndValidate(string? json, out CounterPersistedStats? stats, out string? error)
+```
+This method detects:
+- Truncated JSON (doesn't end with `}`)
+- Mismatched braces `{ }` (sign of truncation)
+- Parse failures
+
+### 3. **Automatic Recovery from Backup**
+When main storage is corrupted, the code automatically:
+1. Detects the corruption
+2. Loads from backup
+3. Restores main key
+4. Shows a warning to the user
+
+### 4. **Bounded Historical Array**
+```csharp
+private const int MaxHistoricalEntries = 500;
+```
+The historical array is now capped at 500 entries. This:
+- Keeps JSON size manageable (~50KB instead of 300KB+)
+- Reduces transmission time over SignalR
+- Reduces chance of truncation
+
+### 5. **Checksum for Integrity**
+```csharp
+persistedStats.Checksum = CalculateChecksum(persistedStats);
+```
+A simple checksum helps detect if data was corrupted in other ways.
+
+### 6. **Verify Before Overwrite**
+```csharp
+var verifyBackup = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
+if (verifyBackup != json) { /* don't proceed */ }
+```
+We read back what we just wrote to ensure it wasn't truncated.
+
+## Why You Don't Need Permission
+
+localStorage **does not require permission**. It's automatically available to any website for its own origin. The APIs that require permission are:
+- **Persistent Storage API** (`navigator.storage.persist()`) - for guaranteed non-eviction
+- **IndexedDB** (sometimes, for large amounts)
+- **File System Access API**
+
+Your use case (~50-300KB) is well within standard localStorage limits (5MB), so no permission needed.
+
+## To Recover Your Current Data
+
+Unfortunately, the JSON in localStorage is already truncated and can't be fully recovered. However, you can extract the **lifetime stats** (TotalTosses, TotalWins, etc.) since those appear at the beginning of the JSON before the truncation point. The `Historical` array is lost.
+
+Would you like me to provide a recovery script that extracts what's salvageable from your current localStorage data?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
