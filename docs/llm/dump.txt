@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/15/2025 07:37:44
+Generated: 12/15/2025 07:43:28
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -2434,11 +2434,12 @@ MODIFIED: 12/08/2025 11:14:15
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor
-SIZE: 13.01 KB
-MODIFIED: 12/15/2025 07:37:09
+SIZE: 13.04 KB
+MODIFIED: 12/15/2025 07:42:34
 ================================================================================
 
 @page "/"
+@rendermode InteractiveServer
 @using BlazorApp.Services
 @using BlazorApp.Models
 @inject StateComparisonService StateService
@@ -66564,7 +66565,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/15/2025 07:37:44
+EXPORT COMPLETED: 12/15/2025 07:43:28
 Total Files Exported: 73
 Output File: .\docs\llm\dump.txt
 ===============================================================================
