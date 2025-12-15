@@ -4203,3 +4203,98 @@ HelloAspDotnetTen.Counter.Stats
 {"TotalTosses":3132,"TotalWins":1586,"TotalLosses":1546,"HighestTossValue":900,"LowestTossValue":100,"FirstPlayedUtc":"2025-12-15T02:07:46.299674Z","LastPlayedUtc":"2025-12-15T09:12:21.9752007Z","CurrentCount":1566418,"Historical":[{"Value":290,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":290},{"Value":820,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":1110},{"Value":706,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":1816},{"Value":636,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":2452},{"Value":437,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":2889},{"Value":109,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":2998},{"Value":873,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":3871},{"Value":889,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":4760},{"Value":526,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":5286},{"Value":190,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":5476},{"Value":721,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":6197},{"Value":611,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":6808},{"Value":858,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":7666},{"Value":357,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":8023},{"Value":311,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":8334},{"Value":859,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":9193},{"Value":802,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":9995},{"Value":271,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":10266},{"Value":356,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":10622},{"Value":605,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":11227},{"Value":143,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":11370},{"Value":284,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":11654},{"Value":613,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":12267},{"Value":207,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":12474},{"Value":568,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":13042},{"Value":186,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":13228},{"Value":137,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":13365},{"Value":105,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":13470},{"Value":712,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":14182},{"Value":486,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":14668},{"Value":171,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":14839},{"Value":338,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":15177},{"Value":162,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":15339},{"Value":810,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":16149},{"Value":734,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":16883},{"Value":333,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":17216},{"Value":415,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":17631},{"Value":129,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":17760},{"Value":737,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":18497},{"Value":501,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":18998},{"Value":496,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":19494},{"Value":827,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":20321},{"Value":279,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":20600},{"Value":683,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":21283},{"Value":197,"Status":"You lost a toss","CssClass":"lost-toss","RunningTotal":21480},{"Value":588,"Status":"You won a toss","CssClass":"win-toss","RunningTotal":22068},{"Value":833,"St
 
 
+
+
+
+
+
+I can see the issue! The localStorage data is there (and it's quite large - 3,132 tosses!), but the Counter component isn't loading it properly after the SignalR session fails. Let me search for the current Counter.razor code to identify the problem:Now I can see the problem! Looking at the code and your localStorage data, the issue is clear:
+
+## The Problem
+
+When you reload the page after a SignalR session failure:
+
+1. **The data IS in localStorage** (you can see it with `CurrentCount: 1566418` and a huge `Historical` array)
+2. **BUT** the component loads the data in `OnAfterRenderAsync(firstRender)` 
+3. **THEN** `OnInitialized()` calls `StartNewRound()` BEFORE the async load completes
+4. **Result**: The restored data gets immediately overwritten by new empty data
+
+## The Fix
+
+The Counter component needs to wait for localStorage to load before initializing the game. Here's the corrected Counter.razor:## Key Changes to Fix the Bug
+
+### 1. **Added Initialization Flag**
+```csharp
+private bool _isInitialized = false; // Track if we've loaded from storage
+```
+
+### 2. **Loading Indicator in UI**
+```razor
+@if (!_isInitialized)
+{
+    <p><em>Loading saved data...</em></p>
+}
+else
+{
+    <!-- All the normal UI -->
+}
+```
+
+### 3. **Fixed Load Order in `OnAfterRenderAsync`**
+```csharp
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender)
+    {
+        isJsRuntimeAvailable = true;
+        await LoadPersistedStatsAsync(); // Load FIRST
+        
+        // THEN restore session state
+        if (persistedStats != null)
+        {
+            currentCount = persistedStats.CurrentCount;
+            historical = persistedStats.Historical.Select(TossResult.FromDto).ToList();
+            CurrentCountGauge.Add(currentCount); // Sync gauge
+        }
+        
+        _isInitialized = true; // Mark as ready
+        StateHasChanged();
+    }
+}
+```
+
+### 4. **Removed Competing Initialization**
+The old code had both:
+- `OnInitialized()` initializing state
+- `OnAfterRenderAsync()` trying to restore state
+
+This created a race condition where the wrong one could win.
+
+## What This Fixes
+
+✅ **After SignalR session failure and page reload**:
+1. Component shows "Loading saved data..." briefly
+2. localStorage is loaded (with your 3,132 tosses!)
+3. `currentCount` is restored to `1566418`
+4. `historical` array is restored with all 3,132 entries
+5. UI shows the restored data
+6. Everything continues working
+
+✅ **Immediate saves still work**: Every toss saves immediately to localStorage
+
+✅ **Gauges sync correctly**: The OpenTelemetry gauge now syncs to the restored value
+
+## Why the Old Code Failed
+
+The localStorage JSON you showed was **perfect** - it had everything:
+- `CurrentCount: 1566418` ✅
+- `Historical: [...]` with all tosses ✅
+- All lifetime stats ✅
+
+**But** the component was discarding this data because it wasn't waiting for the async load to complete before initializing. The fix ensures localStorage loads **before** any UI renders.
+
+---
+
+Now when unattended mode runs overnight and SignalR fails, reloading the page will restore all your hard-earned tosses! 🎲
+
+
