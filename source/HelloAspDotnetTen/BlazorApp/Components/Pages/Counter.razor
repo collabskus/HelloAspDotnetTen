@@ -15,68 +15,88 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
-<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
     Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
 </button>
 
 <button class="btn @(isUnattendedMode ? "btn-danger" : "btn-secondary")" @onclick="ToggleUnattendedMode">
-    @(isUnattendedMode ? "⏹ Stop Unattended" : "▶ Start Unattended")
+    @(isUnattendedMode ? "Stop Unattended Mode" : "Start Unattended Mode")
 </button>
+
+@if (isIncrementing)
+{
+    <p>
+        Incrementing by a random number... (Random between a hundred and nine hundred)
+        @if (incrementBy != 0)
+        {
+            <span>currently, @incrementBy</span>
+        }
+    </p>
+}
 
 @if (isUnattendedMode)
 {
-    <p class="text-info">Unattended mode: @unattendedTossCount tosses this session</p>
-}
-
-<hr />
-
-<h3>Session Results</h3>
-<p>
-    Total wins: <span class="win-toss">@totalWins</span> |
-    Total losses: <span class="lost-toss">@(historical.Count - totalWins)</span> |
-    Win rate: @(historical.Count > 0 ? $"{(double)totalWins / historical.Count:P1}" : "N/A")
-</p>
-
-@if (historical.Any())
-{
-    <div class="historical-results">
-        @foreach (var result in historical.AsEnumerable().Reverse().Take(50))
+    <div class="alert alert-info mt-2">
+        <strong>Unattended Mode Active</strong> - Automatically clicking "Slow Increment" when available.
+        @if (unattendedTossCount > 0)
         {
-            <span class="@result.CssClass" title="@result.Status">@result.Value</span>
-        }
-        @if (historical.Count > 50)
-        {
-            <span class="text-muted">... and @(historical.Count - 50) more</span>
+            <span>Unattended tosses this session: @unattendedTossCount</span>
         }
     </div>
 }
 
-<hr />
-
-<h3>Lifetime Statistics</h3>
-@if (persistedStats != null)
-{
-    <ul>
-        <li>Total tosses: @persistedStats.TotalTosses</li>
-        <li>Total wins: @persistedStats.TotalWins (@(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A"))</li>
-        <li>Total losses: @persistedStats.TotalLosses</li>
-        <li>Highest toss: @persistedStats.HighestTossValue</li>
-        <li>Lowest toss: @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue)</li>
-        <li>First played: @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</li>
-        <li>Last played: @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</li>
-    </ul>
-
-    <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear Lifetime Stats</button>
-}
-else
-{
-    <p class="text-muted">Loading statistics...</p>
-}
-
 @if (!string.IsNullOrEmpty(_storageWarning))
 {
-    <div class="alert alert-warning mt-3">
+    <div class="alert alert-warning mt-2">
         <strong>Storage Notice:</strong> @_storageWarning
+    </div>
+}
+
+@if (historical.Count > 0)
+{
+    <h3>Historical Increments:</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Increment Value</th>
+                <th>Result</th>
+                <th>Running Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var toss in historical)
+            {
+                <tr class="@toss.CssClass">
+                    <td>@toss.Value</td>
+                    <td>@toss.Status</td>
+                    <td>@toss.RunningTotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Wins: @totalWins</p>
+    <p>Losses: @(historical.Count - totalWins)</p>
+    <p>Tosses: @historical.Count</p>
+}
+
+@if (persistedStats != null)
+{
+    <hr />
+    <h4>Lifetime Statistics (from Local Storage)</h4>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Total Tosses:</strong> @persistedStats.TotalTosses</p>
+            <p><strong>Total Wins:</strong> @persistedStats.TotalWins</p>
+            <p><strong>Total Losses:</strong> @persistedStats.TotalLosses</p>
+            <p><strong>Win Rate:</strong> @(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A")</p>
+            <p><strong>Highest Single Toss:</strong> @persistedStats.HighestTossValue</p>
+            <p><strong>Lowest Single Toss:</strong> @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue.ToString())</p>
+            <p><strong>First Played:</strong> @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</p>
+            <p><strong>Last Played:</strong> @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</p>
+            <button class="btn btn-outline-danger btn-sm mt-2" @onclick="ClearPersistedStats">Clear Lifetime Stats</button>
+        </div>
     </div>
 }
 
@@ -84,7 +104,7 @@ else
     // ═══════════════════════════════════════════════════════════════════════════
     // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
     private const string LocalStorageKey = "HelloAspDotnetTen.Counter.Stats";
     private const string BackupStorageKey = "HelloAspDotnetTen.Counter.Stats.Backup";
     private const int WinThreshold = 500;
@@ -149,11 +169,12 @@ else
     private string? _storageWarning;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSISTED STATS MODEL
+    // PERSISTED STATS MODEL - NOW INCLUDES SESSION STATE
     // ═══════════════════════════════════════════════════════════════════════════
 
     private class CounterPersistedStats
     {
+        // Lifetime stats
         public int TotalTosses { get; set; }
         public int TotalWins { get; set; }
         public int TotalLosses { get; set; }
@@ -161,11 +182,11 @@ else
         public int LowestTossValue { get; set; } = int.MaxValue;
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
-        
-        // Session state - also persisted for recovery
+
+        // SESSION STATE - survives page reload
         public int CurrentCount { get; set; }
         public List<TossResultDto> Historical { get; set; } = new();
-        
+
         // Integrity check
         public string? Checksum { get; set; }
     }
@@ -253,20 +274,12 @@ else
     // ROBUST LOCAL STORAGE OPERATIONS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Calculates a simple checksum for data integrity verification.
-    /// </summary>
     private string CalculateChecksum(CounterPersistedStats stats)
     {
-        // Simple checksum based on key values - not cryptographic, just integrity check
         var data = $"{stats.TotalTosses}|{stats.TotalWins}|{stats.CurrentCount}|{stats.Historical?.Count ?? 0}";
-        var hash = data.GetHashCode();
-        return hash.ToString("X8");
+        return data.GetHashCode().ToString("X8");
     }
 
-    /// <summary>
-    /// Validates that JSON is complete and parseable.
-    /// </summary>
     private bool TryParseAndValidate(string? json, out CounterPersistedStats? stats, out string? error)
     {
         stats = null;
@@ -278,7 +291,6 @@ else
             return false;
         }
 
-        // Check for obvious truncation (incomplete JSON)
         var trimmed = json.Trim();
         if (!trimmed.EndsWith("}"))
         {
@@ -286,7 +298,6 @@ else
             return false;
         }
 
-        // Count braces to detect truncation
         int openBraces = json.Count(c => c == '{');
         int closeBraces = json.Count(c => c == '}');
         if (openBraces != closeBraces)
@@ -304,14 +315,11 @@ else
                 return false;
             }
 
-            // Validate checksum if present
             if (!string.IsNullOrEmpty(stats.Checksum))
             {
                 var expectedChecksum = CalculateChecksum(stats);
                 if (stats.Checksum != expectedChecksum)
                 {
-                    error = $"Checksum mismatch: expected {expectedChecksum}, got {stats.Checksum}";
-                    // Don't fail on checksum mismatch - data might still be usable
                     Logger.LogWarning("Checksum mismatch detected but proceeding with data");
                 }
             }
@@ -331,7 +339,6 @@ else
 
         try
         {
-            // Try main key first
             var json = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
 
             if (TryParseAndValidate(json, out var stats, out var error))
@@ -341,27 +348,23 @@ else
 
                 activity?.SetTag("storage.found", true);
                 activity?.SetTag("storage.source", "main");
-                activity?.SetTag("storage.total_tosses", persistedStats?.TotalTosses ?? 0);
 
                 Logger.LogInformation(
-                    "Loaded stats from main storage: TotalTosses={Total}, CurrentCount={Current}, Historical={Historical}",
+                    "Loaded stats: TotalTosses={Total}, CurrentCount={Current}, Historical={Historical}",
                     persistedStats?.TotalTosses ?? 0,
                     persistedStats?.CurrentCount ?? 0,
                     persistedStats?.Historical?.Count ?? 0);
                 return;
             }
 
-            // Main key failed - log the error
             if (!string.IsNullOrEmpty(json))
             {
                 StorageCorruptionCounter.Add(1);
-                Logger.LogWarning("Main storage corrupted: {Error}. JSON length: {Length}, First 100 chars: {Preview}",
-                    error, json.Length, json.Substring(0, Math.Min(100, json.Length)));
+                Logger.LogWarning("Main storage corrupted: {Error}. JSON length: {Length}",
+                    error, json.Length);
                 activity?.SetTag("storage.main_corrupted", true);
-                activity?.SetTag("storage.corruption_error", error);
             }
 
-            // Try backup key
             var backupJson = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
 
             if (TryParseAndValidate(backupJson, out var backupStats, out var backupError))
@@ -374,28 +377,23 @@ else
 
                 activity?.SetTag("storage.found", true);
                 activity?.SetTag("storage.source", "backup");
-                activity?.SetTag("storage.recovered", true);
 
                 Logger.LogWarning(
-                    "Recovered from backup: TotalTosses={Total}, CurrentCount={Current}. Main was corrupted.",
+                    "Recovered from backup: TotalTosses={Total}, CurrentCount={Current}",
                     persistedStats?.TotalTosses ?? 0,
                     persistedStats?.CurrentCount ?? 0);
 
-                // Immediately save to main key to restore it
                 await SavePersistedStatsAsync();
                 return;
             }
 
-            // Both failed - start fresh
-            Logger.LogWarning("Both main and backup storage failed. Starting fresh. Main error: {MainError}, Backup error: {BackupError}",
-                error ?? "empty", backupError ?? "empty");
+            Logger.LogWarning("Both main and backup storage failed. Starting fresh.");
 
             persistedStats = new CounterPersistedStats();
             await SavePersistedStatsAsync();
 
             LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
             activity?.SetTag("storage.found", false);
-            activity?.SetTag("storage.created_new", true);
         }
         catch (Exception ex)
         {
@@ -413,63 +411,42 @@ else
 
         try
         {
-            // Update session state
             persistedStats.CurrentCount = currentCount;
             persistedStats.LastPlayedUtc = DateTime.UtcNow;
 
             // Trim historical to prevent unbounded growth
             if (historical.Count > MaxHistoricalEntries)
             {
-                // Keep most recent entries
                 historical = historical.Skip(historical.Count - MaxHistoricalEntries).ToList();
                 Logger.LogInformation("Trimmed historical entries to {Max}", MaxHistoricalEntries);
             }
 
             persistedStats.Historical = historical.Select(h => h.ToDto()).ToList();
-
-            // Calculate checksum for integrity verification
             persistedStats.Checksum = CalculateChecksum(persistedStats);
 
             var json = JsonSerializer.Serialize(persistedStats);
 
-            // Validate our own output before saving
             if (!TryParseAndValidate(json, out _, out var error))
             {
                 Logger.LogError("Generated invalid JSON! Error: {Error}", error);
-                activity?.SetStatus(ActivityStatusCode.Error, "Generated invalid JSON");
                 return;
             }
 
-            // ATOMIC WRITE PATTERN:
-            // 1. Save to backup first
-            // 2. Verify backup was saved correctly
-            // 3. Only then update main key
-
-            // Step 1: Save to backup
+            // ATOMIC WRITE: backup first, verify, then main
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", BackupStorageKey, json);
 
-            // Step 2: Verify backup (read it back)
             var verifyBackup = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
             if (verifyBackup != json)
             {
-                Logger.LogError("Backup verification failed! Expected {Expected} chars, got {Actual} chars",
-                    json.Length, verifyBackup?.Length ?? 0);
-                activity?.SetStatus(ActivityStatusCode.Error, "Backup verification failed");
-                // Don't overwrite main key if backup failed
+                Logger.LogError("Backup verification failed!");
                 return;
             }
 
-            // Step 3: Save to main key (backup is now safe)
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
 
             LocalStorageSaveCounter.Add(1);
             activity?.SetTag("storage.bytes", json.Length);
-            activity?.SetTag("storage.historical_count", persistedStats.Historical.Count);
-            activity?.SetTag("storage.checksum", persistedStats.Checksum);
             activity?.SetStatus(ActivityStatusCode.Ok);
-
-            Logger.LogDebug("Saved stats: {Bytes} bytes, {Historical} historical entries, checksum {Checksum}",
-                json.Length, persistedStats.Historical.Count, persistedStats.Checksum);
         }
         catch (Exception ex)
         {
@@ -523,8 +500,6 @@ else
 
         activity?.SetTag("counter.previous", previousCount);
         activity?.SetTag("counter.current", currentCount);
-
-        Logger.LogDebug("Counter incremented: {Previous} -> {Current}", previousCount, currentCount);
     }
 
     private async Task SlowlyIncrement()
@@ -535,42 +510,53 @@ else
         var stopwatch = Stopwatch.StartNew();
 
         isIncrementing = true;
-        incrementBy = Random.Shared.Next(100, 901);
+
+        int targetIncrement;
+        do
+        {
+            targetIncrement = Random.Shared.Next(100, 901);
+        } while (targetIncrement == WinThreshold);
+
+        incrementBy = targetIncrement;
 
         activity?.SetTag("toss.value", incrementBy);
-        activity?.SetTag("toss.is_win", incrementBy >= WinThreshold);
+        activity?.SetTag("toss.is_win", incrementBy > WinThreshold);
 
         TossCounter.Add(1);
         TossValueHistogram.Record(incrementBy);
 
-        if (incrementBy >= WinThreshold)
+        if (incrementBy > WinThreshold)
             WinCounter.Add(1, new KeyValuePair<string, object?>("value", incrementBy));
         else
             LossCounter.Add(1, new KeyValuePair<string, object?>("value", incrementBy));
 
-        var targetCount = currentCount + incrementBy;
-        while (currentCount < targetCount)
+        string status = incrementBy > WinThreshold ? "You won a toss" : "You lost a toss";
+        string cssClass = incrementBy > WinThreshold ? "win-toss" : "lost-toss";
+        int runningTotal = currentCount + targetIncrement;
+
+        historical.Add(new TossResult
+        {
+            Value = targetIncrement,
+            Status = status,
+            CssClass = cssClass,
+            RunningTotal = runningTotal
+        });
+
+        StateHasChanged();
+
+        for (int i = 0; i < targetIncrement; i++)
         {
             currentCount++;
             CurrentCountGauge.Add(1);
             await Task.Delay(DelayMilliseconds);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
-
-        var result = new TossResult
-        {
-            Value = incrementBy,
-            Status = incrementBy >= WinThreshold ? "You won a toss" : "You lost a toss",
-            CssClass = incrementBy >= WinThreshold ? "win-toss" : "lost-toss",
-            RunningTotal = currentCount
-        };
-        historical.Add(result);
 
         // Update lifetime stats
         if (persistedStats != null)
         {
             persistedStats.TotalTosses++;
-            if (incrementBy >= WinThreshold)
+            if (incrementBy > WinThreshold)
                 persistedStats.TotalWins++;
             else
                 persistedStats.TotalLosses++;
@@ -589,10 +575,8 @@ else
         activity?.SetTag("toss.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
         activity?.SetStatus(ActivityStatusCode.Ok);
 
-        Logger.LogInformation("Toss completed: Value={Value}, Win={IsWin}, Duration={Duration}ms",
-            incrementBy, incrementBy >= WinThreshold, stopwatch.Elapsed.TotalMilliseconds);
-
         isIncrementing = false;
+        StateHasChanged();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -664,7 +648,6 @@ else
         catch (OperationCanceledException)
         {
             activity?.SetTag("unattended.cancelled", true);
-            Logger.LogDebug("Unattended loop cancelled");
         }
         catch (Exception ex)
         {
@@ -680,5 +663,5 @@ else
     // ═══════════════════════════════════════════════════════════════════════════
 
     private static int GetWinCount(List<int> values, int threshold) =>
-        values.Count(v => v >= threshold);
+        values.Count(v => v > threshold);
 }
