@@ -1,7 +1,7 @@
 ﻿
 ===============================================================================
 PROJECT EXPORT
-Generated: 12/15/2025 07:08:43
+Generated: 12/15/2025 07:28:11
 Project Path: C:\Users\kushal\source\repos\HelloAspDotnetTen
 ===============================================================================
 
@@ -65,6 +65,7 @@ C:\USERS\KUSHAL\SOURCE\REPOS\HELLOASPDOTNETTEN
         |   |           CountryCompare.razor.css
         |   |           Error.razor
         |   |           Home.razor
+        |   |           Home.razor.css
         |   |           NotFound.razor
         |   |           StateCompare.razor
         |   |           StateCompare.razor.css
@@ -914,8 +915,8 @@ async function retryWhenDocumentBecomesVisible() {
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
-SIZE: 28.69 KB
-MODIFIED: 12/15/2025 07:07:37
+SIZE: 26.82 KB
+MODIFIED: 12/15/2025 07:22:52
 ================================================================================
 
 @page "/counter"
@@ -935,68 +936,88 @@ MODIFIED: 12/15/2025 07:07:37
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
-<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing" id="slowly-increment-jsdlfasjlfjsl">
+<button class="btn btn-primary" @onclick="SlowlyIncrement" disabled="@isIncrementing">
     Slow Increment (Random between a hundred and nine hundred, **FAIR TOSS**)
 </button>
 
 <button class="btn @(isUnattendedMode ? "btn-danger" : "btn-secondary")" @onclick="ToggleUnattendedMode">
-    @(isUnattendedMode ? "⏹ Stop Unattended" : "▶ Start Unattended")
+    @(isUnattendedMode ? "Stop Unattended Mode" : "Start Unattended Mode")
 </button>
+
+@if (isIncrementing)
+{
+    <p>
+        Incrementing by a random number... (Random between a hundred and nine hundred)
+        @if (incrementBy != 0)
+        {
+            <span>currently, @incrementBy</span>
+        }
+    </p>
+}
 
 @if (isUnattendedMode)
 {
-    <p class="text-info">Unattended mode: @unattendedTossCount tosses this session</p>
-}
-
-<hr />
-
-<h3>Session Results</h3>
-<p>
-    Total wins: <span class="win-toss">@totalWins</span> |
-    Total losses: <span class="lost-toss">@(historical.Count - totalWins)</span> |
-    Win rate: @(historical.Count > 0 ? $"{(double)totalWins / historical.Count:P1}" : "N/A")
-</p>
-
-@if (historical.Any())
-{
-    <div class="historical-results">
-        @foreach (var result in historical.AsEnumerable().Reverse().Take(50))
+    <div class="alert alert-info mt-2">
+        <strong>Unattended Mode Active</strong> - Automatically clicking "Slow Increment" when available.
+        @if (unattendedTossCount > 0)
         {
-            <span class="@result.CssClass" title="@result.Status">@result.Value</span>
-        }
-        @if (historical.Count > 50)
-        {
-            <span class="text-muted">... and @(historical.Count - 50) more</span>
+            <span>Unattended tosses this session: @unattendedTossCount</span>
         }
     </div>
 }
 
-<hr />
-
-<h3>Lifetime Statistics</h3>
-@if (persistedStats != null)
-{
-    <ul>
-        <li>Total tosses: @persistedStats.TotalTosses</li>
-        <li>Total wins: @persistedStats.TotalWins (@(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A"))</li>
-        <li>Total losses: @persistedStats.TotalLosses</li>
-        <li>Highest toss: @persistedStats.HighestTossValue</li>
-        <li>Lowest toss: @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue)</li>
-        <li>First played: @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</li>
-        <li>Last played: @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</li>
-    </ul>
-
-    <button class="btn btn-outline-danger btn-sm" @onclick="ClearPersistedStats">Clear Lifetime Stats</button>
-}
-else
-{
-    <p class="text-muted">Loading statistics...</p>
-}
-
 @if (!string.IsNullOrEmpty(_storageWarning))
 {
-    <div class="alert alert-warning mt-3">
+    <div class="alert alert-warning mt-2">
         <strong>Storage Notice:</strong> @_storageWarning
+    </div>
+}
+
+@if (historical.Count > 0)
+{
+    <h3>Historical Increments:</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Increment Value</th>
+                <th>Result</th>
+                <th>Running Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var toss in historical)
+            {
+                <tr class="@toss.CssClass">
+                    <td>@toss.Value</td>
+                    <td>@toss.Status</td>
+                    <td>@toss.RunningTotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Wins: @totalWins</p>
+    <p>Losses: @(historical.Count - totalWins)</p>
+    <p>Tosses: @historical.Count</p>
+}
+
+@if (persistedStats != null)
+{
+    <hr />
+    <h4>Lifetime Statistics (from Local Storage)</h4>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Total Tosses:</strong> @persistedStats.TotalTosses</p>
+            <p><strong>Total Wins:</strong> @persistedStats.TotalWins</p>
+            <p><strong>Total Losses:</strong> @persistedStats.TotalLosses</p>
+            <p><strong>Win Rate:</strong> @(persistedStats.TotalTosses > 0 ? $"{(double)persistedStats.TotalWins / persistedStats.TotalTosses:P1}" : "N/A")</p>
+            <p><strong>Highest Single Toss:</strong> @persistedStats.HighestTossValue</p>
+            <p><strong>Lowest Single Toss:</strong> @(persistedStats.LowestTossValue == int.MaxValue ? "N/A" : persistedStats.LowestTossValue.ToString())</p>
+            <p><strong>First Played:</strong> @persistedStats.FirstPlayedUtc.ToLocalTime().ToString("g")</p>
+            <p><strong>Last Played:</strong> @persistedStats.LastPlayedUtc.ToLocalTime().ToString("g")</p>
+            <button class="btn btn-outline-danger btn-sm mt-2" @onclick="ClearPersistedStats">Clear Lifetime Stats</button>
+        </div>
     </div>
 }
 
@@ -1004,7 +1025,7 @@ else
     // ═══════════════════════════════════════════════════════════════════════════
     // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
     private const string LocalStorageKey = "HelloAspDotnetTen.Counter.Stats";
     private const string BackupStorageKey = "HelloAspDotnetTen.Counter.Stats.Backup";
     private const int WinThreshold = 500;
@@ -1069,11 +1090,12 @@ else
     private string? _storageWarning;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PERSISTED STATS MODEL
+    // PERSISTED STATS MODEL - NOW INCLUDES SESSION STATE
     // ═══════════════════════════════════════════════════════════════════════════
 
     private class CounterPersistedStats
     {
+        // Lifetime stats
         public int TotalTosses { get; set; }
         public int TotalWins { get; set; }
         public int TotalLosses { get; set; }
@@ -1081,11 +1103,11 @@ else
         public int LowestTossValue { get; set; } = int.MaxValue;
         public DateTime FirstPlayedUtc { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedUtc { get; set; } = DateTime.UtcNow;
-        
-        // Session state - also persisted for recovery
+
+        // SESSION STATE - survives page reload
         public int CurrentCount { get; set; }
         public List<TossResultDto> Historical { get; set; } = new();
-        
+
         // Integrity check
         public string? Checksum { get; set; }
     }
@@ -1173,20 +1195,12 @@ else
     // ROBUST LOCAL STORAGE OPERATIONS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Calculates a simple checksum for data integrity verification.
-    /// </summary>
     private string CalculateChecksum(CounterPersistedStats stats)
     {
-        // Simple checksum based on key values - not cryptographic, just integrity check
         var data = $"{stats.TotalTosses}|{stats.TotalWins}|{stats.CurrentCount}|{stats.Historical?.Count ?? 0}";
-        var hash = data.GetHashCode();
-        return hash.ToString("X8");
+        return data.GetHashCode().ToString("X8");
     }
 
-    /// <summary>
-    /// Validates that JSON is complete and parseable.
-    /// </summary>
     private bool TryParseAndValidate(string? json, out CounterPersistedStats? stats, out string? error)
     {
         stats = null;
@@ -1198,7 +1212,6 @@ else
             return false;
         }
 
-        // Check for obvious truncation (incomplete JSON)
         var trimmed = json.Trim();
         if (!trimmed.EndsWith("}"))
         {
@@ -1206,7 +1219,6 @@ else
             return false;
         }
 
-        // Count braces to detect truncation
         int openBraces = json.Count(c => c == '{');
         int closeBraces = json.Count(c => c == '}');
         if (openBraces != closeBraces)
@@ -1224,14 +1236,11 @@ else
                 return false;
             }
 
-            // Validate checksum if present
             if (!string.IsNullOrEmpty(stats.Checksum))
             {
                 var expectedChecksum = CalculateChecksum(stats);
                 if (stats.Checksum != expectedChecksum)
                 {
-                    error = $"Checksum mismatch: expected {expectedChecksum}, got {stats.Checksum}";
-                    // Don't fail on checksum mismatch - data might still be usable
                     Logger.LogWarning("Checksum mismatch detected but proceeding with data");
                 }
             }
@@ -1251,7 +1260,6 @@ else
 
         try
         {
-            // Try main key first
             var json = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
 
             if (TryParseAndValidate(json, out var stats, out var error))
@@ -1261,27 +1269,23 @@ else
 
                 activity?.SetTag("storage.found", true);
                 activity?.SetTag("storage.source", "main");
-                activity?.SetTag("storage.total_tosses", persistedStats?.TotalTosses ?? 0);
 
                 Logger.LogInformation(
-                    "Loaded stats from main storage: TotalTosses={Total}, CurrentCount={Current}, Historical={Historical}",
+                    "Loaded stats: TotalTosses={Total}, CurrentCount={Current}, Historical={Historical}",
                     persistedStats?.TotalTosses ?? 0,
                     persistedStats?.CurrentCount ?? 0,
                     persistedStats?.Historical?.Count ?? 0);
                 return;
             }
 
-            // Main key failed - log the error
             if (!string.IsNullOrEmpty(json))
             {
                 StorageCorruptionCounter.Add(1);
-                Logger.LogWarning("Main storage corrupted: {Error}. JSON length: {Length}, First 100 chars: {Preview}",
-                    error, json.Length, json.Substring(0, Math.Min(100, json.Length)));
+                Logger.LogWarning("Main storage corrupted: {Error}. JSON length: {Length}",
+                    error, json.Length);
                 activity?.SetTag("storage.main_corrupted", true);
-                activity?.SetTag("storage.corruption_error", error);
             }
 
-            // Try backup key
             var backupJson = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
 
             if (TryParseAndValidate(backupJson, out var backupStats, out var backupError))
@@ -1294,28 +1298,23 @@ else
 
                 activity?.SetTag("storage.found", true);
                 activity?.SetTag("storage.source", "backup");
-                activity?.SetTag("storage.recovered", true);
 
                 Logger.LogWarning(
-                    "Recovered from backup: TotalTosses={Total}, CurrentCount={Current}. Main was corrupted.",
+                    "Recovered from backup: TotalTosses={Total}, CurrentCount={Current}",
                     persistedStats?.TotalTosses ?? 0,
                     persistedStats?.CurrentCount ?? 0);
 
-                // Immediately save to main key to restore it
                 await SavePersistedStatsAsync();
                 return;
             }
 
-            // Both failed - start fresh
-            Logger.LogWarning("Both main and backup storage failed. Starting fresh. Main error: {MainError}, Backup error: {BackupError}",
-                error ?? "empty", backupError ?? "empty");
+            Logger.LogWarning("Both main and backup storage failed. Starting fresh.");
 
             persistedStats = new CounterPersistedStats();
             await SavePersistedStatsAsync();
 
             LocalStorageLoadCounter.Add(1, new KeyValuePair<string, object?>("storage.found", false));
             activity?.SetTag("storage.found", false);
-            activity?.SetTag("storage.created_new", true);
         }
         catch (Exception ex)
         {
@@ -1333,63 +1332,42 @@ else
 
         try
         {
-            // Update session state
             persistedStats.CurrentCount = currentCount;
             persistedStats.LastPlayedUtc = DateTime.UtcNow;
 
             // Trim historical to prevent unbounded growth
             if (historical.Count > MaxHistoricalEntries)
             {
-                // Keep most recent entries
                 historical = historical.Skip(historical.Count - MaxHistoricalEntries).ToList();
                 Logger.LogInformation("Trimmed historical entries to {Max}", MaxHistoricalEntries);
             }
 
             persistedStats.Historical = historical.Select(h => h.ToDto()).ToList();
-
-            // Calculate checksum for integrity verification
             persistedStats.Checksum = CalculateChecksum(persistedStats);
 
             var json = JsonSerializer.Serialize(persistedStats);
 
-            // Validate our own output before saving
             if (!TryParseAndValidate(json, out _, out var error))
             {
                 Logger.LogError("Generated invalid JSON! Error: {Error}", error);
-                activity?.SetStatus(ActivityStatusCode.Error, "Generated invalid JSON");
                 return;
             }
 
-            // ATOMIC WRITE PATTERN:
-            // 1. Save to backup first
-            // 2. Verify backup was saved correctly
-            // 3. Only then update main key
-
-            // Step 1: Save to backup
+            // ATOMIC WRITE: backup first, verify, then main
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", BackupStorageKey, json);
 
-            // Step 2: Verify backup (read it back)
             var verifyBackup = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", BackupStorageKey);
             if (verifyBackup != json)
             {
-                Logger.LogError("Backup verification failed! Expected {Expected} chars, got {Actual} chars",
-                    json.Length, verifyBackup?.Length ?? 0);
-                activity?.SetStatus(ActivityStatusCode.Error, "Backup verification failed");
-                // Don't overwrite main key if backup failed
+                Logger.LogError("Backup verification failed!");
                 return;
             }
 
-            // Step 3: Save to main key (backup is now safe)
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
 
             LocalStorageSaveCounter.Add(1);
             activity?.SetTag("storage.bytes", json.Length);
-            activity?.SetTag("storage.historical_count", persistedStats.Historical.Count);
-            activity?.SetTag("storage.checksum", persistedStats.Checksum);
             activity?.SetStatus(ActivityStatusCode.Ok);
-
-            Logger.LogDebug("Saved stats: {Bytes} bytes, {Historical} historical entries, checksum {Checksum}",
-                json.Length, persistedStats.Historical.Count, persistedStats.Checksum);
         }
         catch (Exception ex)
         {
@@ -1443,8 +1421,6 @@ else
 
         activity?.SetTag("counter.previous", previousCount);
         activity?.SetTag("counter.current", currentCount);
-
-        Logger.LogDebug("Counter incremented: {Previous} -> {Current}", previousCount, currentCount);
     }
 
     private async Task SlowlyIncrement()
@@ -1455,42 +1431,53 @@ else
         var stopwatch = Stopwatch.StartNew();
 
         isIncrementing = true;
-        incrementBy = Random.Shared.Next(100, 901);
+
+        int targetIncrement;
+        do
+        {
+            targetIncrement = Random.Shared.Next(100, 901);
+        } while (targetIncrement == WinThreshold);
+
+        incrementBy = targetIncrement;
 
         activity?.SetTag("toss.value", incrementBy);
-        activity?.SetTag("toss.is_win", incrementBy >= WinThreshold);
+        activity?.SetTag("toss.is_win", incrementBy > WinThreshold);
 
         TossCounter.Add(1);
         TossValueHistogram.Record(incrementBy);
 
-        if (incrementBy >= WinThreshold)
+        if (incrementBy > WinThreshold)
             WinCounter.Add(1, new KeyValuePair<string, object?>("value", incrementBy));
         else
             LossCounter.Add(1, new KeyValuePair<string, object?>("value", incrementBy));
 
-        var targetCount = currentCount + incrementBy;
-        while (currentCount < targetCount)
+        string status = incrementBy > WinThreshold ? "You won a toss" : "You lost a toss";
+        string cssClass = incrementBy > WinThreshold ? "win-toss" : "lost-toss";
+        int runningTotal = currentCount + targetIncrement;
+
+        historical.Add(new TossResult
+        {
+            Value = targetIncrement,
+            Status = status,
+            CssClass = cssClass,
+            RunningTotal = runningTotal
+        });
+
+        StateHasChanged();
+
+        for (int i = 0; i < targetIncrement; i++)
         {
             currentCount++;
             CurrentCountGauge.Add(1);
             await Task.Delay(DelayMilliseconds);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
-
-        var result = new TossResult
-        {
-            Value = incrementBy,
-            Status = incrementBy >= WinThreshold ? "You won a toss" : "You lost a toss",
-            CssClass = incrementBy >= WinThreshold ? "win-toss" : "lost-toss",
-            RunningTotal = currentCount
-        };
-        historical.Add(result);
 
         // Update lifetime stats
         if (persistedStats != null)
         {
             persistedStats.TotalTosses++;
-            if (incrementBy >= WinThreshold)
+            if (incrementBy > WinThreshold)
                 persistedStats.TotalWins++;
             else
                 persistedStats.TotalLosses++;
@@ -1509,10 +1496,8 @@ else
         activity?.SetTag("toss.duration_ms", stopwatch.Elapsed.TotalMilliseconds);
         activity?.SetStatus(ActivityStatusCode.Ok);
 
-        Logger.LogInformation("Toss completed: Value={Value}, Win={IsWin}, Duration={Duration}ms",
-            incrementBy, incrementBy >= WinThreshold, stopwatch.Elapsed.TotalMilliseconds);
-
         isIncrementing = false;
+        StateHasChanged();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1584,7 +1569,6 @@ else
         catch (OperationCanceledException)
         {
             activity?.SetTag("unattended.cancelled", true);
-            Logger.LogDebug("Unattended loop cancelled");
         }
         catch (Exception ex)
         {
@@ -1600,7 +1584,7 @@ else
     // ═══════════════════════════════════════════════════════════════════════════
 
     private static int GetWinCount(List<int> values, int threshold) =>
-        values.Count(v => v >= threshold);
+        values.Count(v => v > threshold);
 }
 
 
@@ -2450,17 +2434,750 @@ MODIFIED: 12/08/2025 11:14:15
 
 ================================================================================
 FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor
-SIZE: 0.1 KB
-MODIFIED: 12/08/2025 11:14:15
+SIZE: 13.01 KB
+MODIFIED: 12/15/2025 07:26:49
 ================================================================================
 
 @page "/"
+@using BlazorApp.Services
+@using BlazorApp.Models
+@inject StateComparisonService StateService
+@inject CountryComparisonService CountryService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>HelloAspDotnetTen - Data Explorer</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="hero-section">
+    <h1>🌍 HelloAspDotnetTen</h1>
+    <p class="lead">Explore data from <strong>@StateService.States.Count U.S. States</strong> and <strong>@CountryService.Countries.Count Countries</strong></p>
+    <div class="hero-stats">
+        <div class="stat-pill">
+            <span class="stat-icon">🇺🇸</span>
+            <span class="stat-value">@StateService.States.Count</span>
+            <span class="stat-label">States</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-icon">🌐</span>
+            <span class="stat-value">@CountryService.Countries.Count</span>
+            <span class="stat-label">Countries</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-icon">📊</span>
+            <span class="stat-value">@(StateService.Questions.Count + CountryService.AvailableQuestions.Count)</span>
+            <span class="stat-label">Quiz Types</span>
+        </div>
+    </div>
+</div>
 
-Welcome to your new app.
+<div class="quick-links">
+    <a href="/counter" class="quick-link-card">
+        <span class="card-icon">🎲</span>
+        <span class="card-title">Counter Game</span>
+        <span class="card-desc">Test your luck with fair tosses</span>
+    </a>
+    <a href="/statecompare" class="quick-link-card">
+        <span class="card-icon">🗺️</span>
+        <span class="card-title">State Quiz</span>
+        <span class="card-desc">Compare U.S. states</span>
+    </a>
+    <a href="/countrycompare" class="quick-link-card">
+        <span class="card-icon">🌍</span>
+        <span class="card-title">Country Quiz</span>
+        <span class="card-desc">Compare world nations</span>
+    </a>
+</div>
+
+<section class="data-section">
+    <h2>🇺🇸 United States Data</h2>
+    <p class="section-desc">All @StateService.States.Count states with population, area, and congressional representation</p>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>State</th>
+                    <th class="text-end">Population</th>
+                    <th class="text-end">Area (sq mi)</th>
+                    <th class="text-end">Representatives</th>
+                    <th class="text-end">Pop. Density</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var state in StateService.States.OrderByDescending(s => s.Population))
+                {
+                    <tr>
+                        <td><strong>@state.Name</strong> <span class="text-muted">(@state.Abbreviation)</span></td>
+                        <td class="text-end">@state.Population.ToString("N0")</td>
+                        <td class="text-end">@state.AreaSquareMiles.ToString("N0")</td>
+                        <td class="text-end">@state.HouseRepresentatives</td>
+                        <td class="text-end">@((state.Population / (double)state.AreaSquareMiles).ToString("N1"))/mi²</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td><strong>Total</strong></td>
+                    <td class="text-end"><strong>@StateService.States.Sum(s => s.Population).ToString("N0")</strong></td>
+                    <td class="text-end"><strong>@StateService.States.Sum(s => s.AreaSquareMiles).ToString("N0")</strong></td>
+                    <td class="text-end"><strong>@StateService.States.Sum(s => s.HouseRepresentatives)</strong></td>
+                    <td class="text-end">—</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</section>
+
+<section class="data-section">
+    <h2>🌍 World Countries Data</h2>
+    <p class="section-desc">@CountryService.Countries.Count countries across @CountryService.Countries.Select(c => c.Continent).Distinct().Count() continents</p>
+
+    <div class="continent-tabs">
+        @foreach (var continent in GetContinents())
+        {
+            <button class="continent-tab @(continent == _selectedContinent ? "active" : "")"
+                    @onclick="() => SelectContinent(continent)">
+                @GetContinentEmoji(continent) @continent
+                <span class="badge">@CountryService.Countries.Count(c => c.Continent == continent)</span>
+            </button>
+        }
+    </div>
+
+    <div class="table-container">
+        <table class="data-table country-table">
+            <thead>
+                <tr>
+                    <th>Country</th>
+                    <th class="text-end">Population</th>
+                    <th class="text-end">Area (km²)</th>
+                    <th class="text-end">GDP</th>
+                    <th class="text-end">GDP/Cap</th>
+                    <th class="text-end">Life Exp.</th>
+                    <th class="text-end">HDI</th>
+                    <th class="text-end">Literacy</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var country in GetFilteredCountries())
+                {
+                    <tr>
+                        <td>
+                            <span class="flag-emoji">@country.FlagEmoji</span>
+                            <strong>@country.Name</strong>
+                        </td>
+                        <td class="text-end">@FormatPopulation(country.Population)</td>
+                        <td class="text-end">@FormatArea(country.AreaSquareKm)</td>
+                        <td class="text-end">@FormatGdp(country.GdpMillionsUsd)</td>
+                        <td class="text-end">@FormatCurrency(country.GdpPerCapitaUsd)</td>
+                        <td class="text-end">@FormatDecimal(country.LifeExpectancy, "N1", "yrs")</td>
+                        <td class="text-end">@FormatHdi(country.Hdi)</td>
+                        <td class="text-end">@FormatPercent(country.LiteracyRate)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="continent-summary">
+        <h4>@GetContinentEmoji(_selectedContinent) @_selectedContinent Summary</h4>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">Countries</span>
+                <span class="summary-value">@GetFilteredCountries().Count()</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Total Population</span>
+                <span class="summary-value">@FormatPopulation(GetFilteredCountries().Sum(c => c.Population ?? 0))</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Total GDP</span>
+                <span class="summary-value">@FormatGdp(GetFilteredCountries().Sum(c => c.GdpMillionsUsd ?? 0))</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Avg. Life Expectancy</span>
+                <span class="summary-value">@GetFilteredCountries().Where(c => c.LifeExpectancy.HasValue).Average(c => c.LifeExpectancy!.Value).ToString("N1") yrs</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Avg. HDI</span>
+                <span class="summary-value">@GetFilteredCountries().Where(c => c.Hdi.HasValue).Average(c => c.Hdi!.Value).ToString("N3")</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="data-section">
+    <h2>📊 Global Rankings</h2>
+    <p class="section-desc">Top 10 countries by various metrics</p>
+
+    <div class="rankings-grid">
+        <div class="ranking-card">
+            <h4>🏆 Largest by Population</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.Population.HasValue).OrderByDescending(c => c.Population).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatPopulation(country.Population)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>🗺️ Largest by Area</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.AreaSquareKm.HasValue).OrderByDescending(c => c.AreaSquareKm).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatArea(country.AreaSquareKm)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>💰 Highest GDP</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.GdpMillionsUsd.HasValue).OrderByDescending(c => c.GdpMillionsUsd).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatGdp(country.GdpMillionsUsd)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>💵 Highest GDP per Capita</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.GdpPerCapitaUsd.HasValue).OrderByDescending(c => c.GdpPerCapitaUsd).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@FormatCurrency(country.GdpPerCapitaUsd)</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>❤️ Highest Life Expectancy</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.LifeExpectancy.HasValue).OrderByDescending(c => c.LifeExpectancy).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@country.LifeExpectancy?.ToString("N1") yrs</span></li>
+                }
+            </ol>
+        </div>
+
+        <div class="ranking-card">
+            <h4>📈 Highest HDI</h4>
+            <ol class="ranking-list">
+                @foreach (var country in CountryService.Countries.Where(c => c.Hdi.HasValue).OrderByDescending(c => c.Hdi).Take(10))
+                {
+                    <li><span class="flag-emoji">@country.FlagEmoji</span> @country.Name <span class="ranking-value">@country.Hdi?.ToString("N3")</span></li>
+                }
+            </ol>
+        </div>
+    </div>
+</section>
+
+<footer class="home-footer">
+    <p>Data sources: U.S. Census Bureau, World Bank, UN, IMF, UNDP (2023/2024 estimates)</p>
+    <p>Built with .NET 10 Blazor • <a href="https://github.com/collabskus/HelloAspDotnetTen" target="_blank">GitHub</a></p>
+</footer>
+
+@code {
+    private string _selectedContinent = "Africa";
+
+    private IEnumerable<string> GetContinents() =>
+        CountryService.Countries
+            .Where(c => !string.IsNullOrEmpty(c.Continent))
+            .Select(c => c.Continent!)
+            .Distinct()
+            .OrderBy(c => c);
+
+    private void SelectContinent(string continent) => _selectedContinent = continent;
+
+    private IEnumerable<CountryData> GetFilteredCountries() =>
+        CountryService.Countries
+            .Where(c => c.Continent == _selectedContinent)
+            .OrderByDescending(c => c.Population ?? 0);
+
+    private string GetContinentEmoji(string continent) => continent switch
+    {
+        "Africa" => "🌍",
+        "Asia" => "🌏",
+        "Europe" => "🌍",
+        "North America" => "🌎",
+        "South America" => "🌎",
+        "Oceania" => "🌏",
+        _ => "🌐"
+    };
+
+    private string FormatPopulation(long? value)
+    {
+        if (!value.HasValue) return "—";
+        if (value >= 1_000_000_000) return $"{value.Value / 1_000_000_000.0:N2}B";
+        if (value >= 1_000_000) return $"{value.Value / 1_000_000.0:N1}M";
+        if (value >= 1_000) return $"{value.Value / 1_000.0:N1}K";
+        return value.Value.ToString("N0");
+    }
+
+    private string FormatArea(long? value)
+    {
+        if (!value.HasValue) return "—";
+        if (value >= 1_000_000) return $"{value.Value / 1_000_000.0:N2}M km²";
+        return $"{value.Value:N0} km²";
+    }
+
+    private string FormatGdp(long? value)
+    {
+        if (!value.HasValue) return "—";
+        var billions = value.Value / 1000.0;
+        if (billions >= 1000) return $"${billions / 1000:N2}T";
+        if (billions >= 1) return $"${billions:N1}B";
+        return $"${value.Value:N0}M";
+    }
+
+    private string FormatCurrency(int? value) =>
+        value.HasValue ? $"${value.Value:N0}" : "—";
+
+    private string FormatDecimal(double? value, string format, string suffix) =>
+        value.HasValue ? $"{value.Value.ToString(format)} {suffix}" : "—";
+
+    private string FormatPercent(double? value) =>
+        value.HasValue ? $"{value.Value:N1}%" : "—";
+
+    private string FormatHdi(double? value) =>
+        value.HasValue ? value.Value.ToString("N3") : "—";
+}
+
+
+================================================================================
+FILE: :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor.css
+SIZE: 8.35 KB
+MODIFIED: 12/15/2025 07:27:02
+================================================================================
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME PAGE - BEAUTIFUL DATA SHOWCASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+    .hero-section h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .hero-section .lead {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        margin-bottom: 1.5rem;
+    }
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.25rem;
+    border-radius: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Quick Links */
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.quick-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 1rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+    .quick-link-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: #667eea;
+        text-decoration: none;
+        color: inherit;
+    }
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-desc {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Data Sections */
+.data-section {
+    margin-bottom: 3rem;
+}
+
+    .data-section h2 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+.section-desc {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* Tables */
+.table-container {
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: white;
+    margin-bottom: 1.5rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+    .data-table th {
+        background: #f8f9fa;
+        padding: 0.875rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #555;
+        border-bottom: 2px solid #e9ecef;
+        position: sticky;
+        top: 0;
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+
+    .data-table .text-end {
+        text-align: right;
+    }
+
+    .data-table .text-muted {
+        color: #888;
+        font-size: 0.85em;
+    }
+
+.total-row {
+    background: #f0f4ff !important;
+}
+
+    .total-row td {
+        border-top: 2px solid #667eea;
+    }
+
+.flag-emoji {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+/* Continent Tabs */
+.continent-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.continent-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+    .continent-tab:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .continent-tab.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+
+    .continent-tab .badge {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+    }
+
+    .continent-tab.active .badge {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+/* Continent Summary */
+.continent-summary {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+}
+
+    .continent-summary h4 {
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.summary-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Rankings Grid */
+.rankings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.ranking-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+    .ranking-card h4 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+        color: #333;
+    }
+
+.ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: ranking;
+}
+
+    .ranking-list li {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f5f5f5;
+        counter-increment: ranking;
+    }
+
+        .ranking-list li:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-list li::before {
+            content: counter(ranking);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.75rem;
+            color: #666;
+        }
+
+        .ranking-list li:nth-child(1)::before {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #8b6914;
+        }
+
+        .ranking-list li:nth-child(2)::before {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #666;
+        }
+
+        .ranking-list li:nth-child(3)::before {
+            background: linear-gradient(135deg, #cd7f32, #e8a855);
+            color: #5c3a1a;
+        }
+
+    .ranking-list .flag-emoji {
+        font-size: 1.1rem;
+        margin-right: 0.5rem;
+    }
+
+.ranking-value {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Footer */
+.home-footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+    .home-footer p {
+        margin-bottom: 0.5rem;
+    }
+
+    .home-footer a {
+        color: #667eea;
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+
+    .hero-stats {
+        gap: 0.75rem;
+    }
+
+    .stat-pill {
+        padding: 0.5rem 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .data-table {
+        font-size: 0.8rem;
+    }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.5rem;
+        }
+
+    .rankings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .continent-tabs {
+        justify-content: center;
+    }
+}
+
+/* Country Table Specific */
+.country-table {
+    min-width: 900px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .quick-link-card,
+    .data-table,
+    .table-container,
+    .ranking-card,
+    .summary-item {
+        background: #1e1e1e;
+        color: #e0e0e0;
+    }
+
+        .data-table th {
+            background: #2d2d2d;
+            color: #ccc;
+        }
+
+        .data-table tbody tr:hover {
+            background: #2a2a2a;
+        }
+
+    .continent-summary {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+    }
+
+    .card-desc,
+    .summary-label,
+    .ranking-value {
+        color: #999;
+    }
+}
 
 
 
@@ -65846,7 +66563,7 @@ MODIFIED: 12/08/2025 11:40:44
 
 
 ===============================================================================
-EXPORT COMPLETED: 12/15/2025 07:08:43
-Total Files Exported: 72
+EXPORT COMPLETED: 12/15/2025 07:28:12
+Total Files Exported: 73
 Output File: .\docs\llm\dump.txt
 ===============================================================================
