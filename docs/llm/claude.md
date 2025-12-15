@@ -5498,3 +5498,23 @@ The key point is that **all data comes from the same services** (`StateCompariso
 
 
 
+what is supposed to happen when I click on asia or another continent? right now, nothing happens when I do that. 
+
+The continent tabs should filter the country table to show only countries from that continent. The issue is that the page is using `@rendermode InteractiveServer` is missing - without it, Blazor doesn't handle the click events.
+
+Let me fix the Home.razor:That's the fix - adding `@rendermode InteractiveServer` at the top. Without this directive, the page renders as static HTML and the `@onclick` handlers don't work.
+
+When you click on a continent tab now, it should:
+1. Update `_selectedContinent` to the clicked continent
+2. Re-render the country table showing only countries from that continent
+3. Update the summary section with aggregated stats for that continent
+4. Highlight the active tab with the purple background
+
+
+
+
+
+
+
+
+
