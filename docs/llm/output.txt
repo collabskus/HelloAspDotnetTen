@@ -3108,3 +3108,460 @@ To https://github.com/collabskus/HelloAspDotnetTen.git
    e2f784a..73686c0  master -> master
 2025-12-15 07:08:46
 PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet outdated; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; .\export.ps1; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git add .; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git commit --message "update dump"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git remote show origin; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git status; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git pull origin master --strategy-option=ours; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git push origin --all; Get-Date -Format "yyyy-MM-dd HH:mm:ss";
+2025-12-15 07:27:59
+Restore complete (0.7s)
+  ClassLibrary1 net10.0 succeeded (1.9s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded with 1 warning(s) (2.6s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor(168,18): warning CS0414: The field 'Counter._isInitialized' is assigned but its value is never used
+
+Build succeeded with 1 warning(s) in 5.3s
+2025-12-15 07:28:04
+2025-12-15 07:28:04
+Restore complete (0.4s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded (0.4s) → bin\Debug\net10.0\BlazorApp.dll
+
+Build succeeded in 1.4s
+2025-12-15 07:28:06
+2025-12-15 07:28:06
+Restore complete (0.5s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded (0.5s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
+
+Build succeeded in 1.3s
+2025-12-15 07:28:08
+
+Build succeeded in 0.6s
+2025-12-15 07:28:08
+Discovering projects...
+Analyzing project(s)...
+Analyzing dependencies...
+No outdated dependencies were detected
+Elapsed: 00:00:01.8683459
+2025-12-15 07:28:11
+
+Build succeeded in 0.5s
+2025-12-15 07:28:11
+2025-12-15 07:28:11
+Starting project export...
+Project Path: .
+Output File: docs\llm\dump.txt
+Generating directory structure...
+Collecting files...
+Found 73 files to export
+Processing (1/73): :\Users\kushal\source\repos\HelloAspDotnetTen\.github\workflows\build.yml
+Processing (2/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.Development.json
+Processing (3/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.json
+Processing (4/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\BlazorApp.csproj
+Processing (5/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\_Imports.razor
+Processing (6/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\App.razor
+Processing (7/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor
+Processing (8/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor.css
+Processing (9/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor
+Processing (10/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor.css
+Processing (11/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor
+Processing (12/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.css
+Processing (13/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.js
+Processing (14/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
+Processing (15/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor.css
+Processing (16/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
+Processing (17/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
+Processing (18/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Error.razor
+Processing (19/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor
+Processing (20/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor.css
+Processing (21/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\NotFound.razor
+Processing (22/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
+Processing (23/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
+Processing (24/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Weather.razor
+Processing (25/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Routes.razor
+Processing (26/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Data\CountryDataRepository.cs
+Processing (27/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileActivityExporter.cs
+Processing (28/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterExtensions.cs
+Processing (29/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterOptions.cs
+Processing (30/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileLogExporter.cs
+Processing (31/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileMetricExporter.cs
+Processing (32/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\libman.json
+Processing (33/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\CountryData.cs
+Processing (34/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
+Processing (35/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
+Processing (36/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Properties\launchSettings.json
+Processing (37/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
+Processing (38/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
+Processing (39/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\app.css
+Processing (40/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.css
+Processing (41/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
+Processing (42/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css
+Processing (43/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css
+Processing (44/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
+Processing (45/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
+Processing (46/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css
+Processing (47/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css
+Processing (48/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css
+Processing (49/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css
+Processing (50/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
+Processing (51/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
+Processing (52/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
+Processing (53/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
+Processing (54/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css
+Processing (55/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
+Processing (56/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js
+Processing (57/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
+Processing (58/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js
+Processing (59/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js
+Processing (60/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.js
+Processing (61/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
+Processing (62/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1.cs
+Processing (63/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1Options.cs
+Processing (64/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2.cs
+Processing (65/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2Options.cs
+Processing (66/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1.csproj
+Processing (67/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1Settings.cs
+Processing (68/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass1.cs
+Processing (69/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass2.cs
+Processing (70/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ServiceCollectionExtensions.cs
+Processing (71/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Build.props
+Processing (72/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Packages.props
+Processing (73/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\HelloAspDotnetTen.slnx
+
+Export completed successfully!
+Output file: .\docs\llm\dump.txt
+Total files exported: 73
+Output file size: 2.59 MB
+2025-12-15 07:28:12
+warning: in the working copy of 'docs/llm/dump.txt', LF will be replaced by CRLF the next time Git touches it
+2025-12-15 07:28:12
+[master fc0b6fc] update dump
+ 2 files changed, 1345 insertions(+), 19218 deletions(-)
+2025-12-15 07:28:12
+* remote origin
+  Fetch URL: https://github.com/collabskus/HelloAspDotnetTen.git
+  Push  URL: https://github.com/collabskus/HelloAspDotnetTen.git
+  HEAD branch: master
+  Remote branch:
+    master tracked
+  Local ref configured for 'git push':
+    master pushes to master (fast-forwardable)
+2025-12-15 07:28:12
+On branch master
+nothing to commit, working tree clean
+2025-12-15 07:28:13
+From https://github.com/collabskus/HelloAspDotnetTen
+ * branch            master     -> FETCH_HEAD
+Current branch master is up to date.
+2025-12-15 07:28:13
+Enumerating objects: 42, done.
+Counting objects: 100% (42/42), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (24/24), done.
+Writing objects: 100% (29/29), 20.61 KiB | 570.00 KiB/s, done.
+Total 29 (delta 18), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (18/18), completed with 10 local objects.
+To https://github.com/collabskus/HelloAspDotnetTen.git
+   73686c0..fc0b6fc  master -> master
+2025-12-15 07:28:14
+PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet outdated; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; .\export.ps1; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git add .; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git commit --message "update dump"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git remote show origin; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git status; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git pull origin master --strategy-option=ours; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git push origin --all; Get-Date -Format "yyyy-MM-dd HH:mm:ss";
+2025-12-15 07:37:34
+Restore complete (0.7s)
+  ClassLibrary1 net10.0 succeeded (0.2s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded with 1 warning(s) (1.9s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor(168,18): warning CS0414: The field 'Counter._isInitialized' is assigned but its value is never used
+
+Build succeeded with 1 warning(s) in 3.0s
+2025-12-15 07:37:37
+2025-12-15 07:37:37
+Restore complete (0.4s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded (0.4s) → bin\Debug\net10.0\BlazorApp.dll
+
+Build succeeded in 1.5s
+2025-12-15 07:37:38
+2025-12-15 07:37:38
+Restore complete (0.6s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded (0.5s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
+
+Build succeeded in 1.3s
+2025-12-15 07:37:40
+
+Build succeeded in 0.4s
+2025-12-15 07:37:41
+Discovering projects...
+Analyzing project(s)...
+Analyzing dependencies...
+No outdated dependencies were detected
+Elapsed: 00:00:01.9887494
+2025-12-15 07:37:43
+
+Build succeeded in 0.5s
+2025-12-15 07:37:44
+2025-12-15 07:37:44
+Starting project export...
+Project Path: .
+Output File: docs\llm\dump.txt
+Generating directory structure...
+Collecting files...
+Found 73 files to export
+Processing (1/73): :\Users\kushal\source\repos\HelloAspDotnetTen\.github\workflows\build.yml
+Processing (2/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.Development.json
+Processing (3/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.json
+Processing (4/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\BlazorApp.csproj
+Processing (5/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\_Imports.razor
+Processing (6/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\App.razor
+Processing (7/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor
+Processing (8/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor.css
+Processing (9/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor
+Processing (10/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor.css
+Processing (11/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor
+Processing (12/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.css
+Processing (13/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.js
+Processing (14/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
+Processing (15/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor.css
+Processing (16/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
+Processing (17/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
+Processing (18/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Error.razor
+Processing (19/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor
+Processing (20/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor.css
+Processing (21/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\NotFound.razor
+Processing (22/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
+Processing (23/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
+Processing (24/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Weather.razor
+Processing (25/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Routes.razor
+Processing (26/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Data\CountryDataRepository.cs
+Processing (27/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileActivityExporter.cs
+Processing (28/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterExtensions.cs
+Processing (29/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterOptions.cs
+Processing (30/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileLogExporter.cs
+Processing (31/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileMetricExporter.cs
+Processing (32/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\libman.json
+Processing (33/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\CountryData.cs
+Processing (34/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
+Processing (35/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
+Processing (36/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Properties\launchSettings.json
+Processing (37/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
+Processing (38/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
+Processing (39/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\app.css
+Processing (40/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.css
+Processing (41/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
+Processing (42/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css
+Processing (43/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css
+Processing (44/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
+Processing (45/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
+Processing (46/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css
+Processing (47/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css
+Processing (48/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css
+Processing (49/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css
+Processing (50/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
+Processing (51/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
+Processing (52/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
+Processing (53/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
+Processing (54/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css
+Processing (55/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
+Processing (56/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js
+Processing (57/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
+Processing (58/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js
+Processing (59/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js
+Processing (60/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.js
+Processing (61/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
+Processing (62/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1.cs
+Processing (63/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1Options.cs
+Processing (64/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2.cs
+Processing (65/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2Options.cs
+Processing (66/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1.csproj
+Processing (67/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1Settings.cs
+Processing (68/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass1.cs
+Processing (69/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass2.cs
+Processing (70/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ServiceCollectionExtensions.cs
+Processing (71/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Build.props
+Processing (72/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Packages.props
+Processing (73/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\HelloAspDotnetTen.slnx
+
+Export completed successfully!
+Output file: .\docs\llm\dump.txt
+Total files exported: 73
+Output file size: 2.59 MB
+2025-12-15 07:37:44
+warning: in the working copy of 'docs/llm/dump.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'source/HelloAspDotnetTen/BlazorApp/Components/Pages/Home.razor', LF will be replaced by CRLF the next time Git touches it
+2025-12-15 07:37:44
+[master d72dd29] update dump
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+2025-12-15 07:37:45
+* remote origin
+  Fetch URL: https://github.com/collabskus/HelloAspDotnetTen.git
+  Push  URL: https://github.com/collabskus/HelloAspDotnetTen.git
+  HEAD branch: master
+  Remote branch:
+    master tracked
+  Local ref configured for 'git push':
+    master pushes to master (fast-forwardable)
+2025-12-15 07:37:45
+On branch master
+nothing to commit, working tree clean
+2025-12-15 07:37:45
+From https://github.com/collabskus/HelloAspDotnetTen
+ * branch            master     -> FETCH_HEAD
+Current branch master is up to date.
+2025-12-15 07:37:45
+Enumerating objects: 21, done.
+Counting objects: 100% (21/21), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (9/9), done.
+Writing objects: 100% (11/11), 897 bytes | 448.00 KiB/s, done.
+Total 11 (delta 8), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (8/8), completed with 8 local objects.
+To https://github.com/collabskus/HelloAspDotnetTen.git
+   fc0b6fc..d72dd29  master -> master
+2025-12-15 07:37:47
+PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet outdated; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; .\export.ps1; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git add .; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git commit --message "update dump"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git remote show origin; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git status; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git pull origin master --strategy-option=ours; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git push origin --all; Get-Date -Format "yyyy-MM-dd HH:mm:ss";
+2025-12-15 07:43:17
+Restore complete (0.8s)
+  ClassLibrary1 net10.0 succeeded (0.2s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded with 1 warning(s) (2.1s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
+    C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor(168,18): warning CS0414: The field 'Counter._isInitialized' is assigned but its value is never used
+
+Build succeeded with 1 warning(s) in 3.3s
+2025-12-15 07:43:21
+2025-12-15 07:43:21
+Restore complete (0.4s)
+  ClassLibrary1 net10.0 succeeded (0.2s) → C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded (0.4s) → bin\Debug\net10.0\BlazorApp.dll
+
+Build succeeded in 1.5s
+2025-12-15 07:43:23
+2025-12-15 07:43:23
+Restore complete (0.6s)
+  ClassLibrary1 net10.0 succeeded (0.1s) → ClassLibrary1\bin\Debug\net10.0\ClassLibrary1.dll
+  BlazorApp net10.0 succeeded (0.5s) → BlazorApp\bin\Debug\net10.0\BlazorApp.dll
+
+Build succeeded in 1.4s
+2025-12-15 07:43:24
+
+Build succeeded in 0.5s
+2025-12-15 07:43:25
+Discovering projects...
+Analyzing project(s)...
+Analyzing dependencies...
+No outdated dependencies were detected
+Elapsed: 00:00:02.0001449
+2025-12-15 07:43:27
+
+Build succeeded in 0.5s
+2025-12-15 07:43:28
+2025-12-15 07:43:28
+Starting project export...
+Project Path: .
+Output File: docs\llm\dump.txt
+Generating directory structure...
+Collecting files...
+Found 73 files to export
+Processing (1/73): :\Users\kushal\source\repos\HelloAspDotnetTen\.github\workflows\build.yml
+Processing (2/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.Development.json
+Processing (3/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\appsettings.json
+Processing (4/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\BlazorApp.csproj
+Processing (5/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\_Imports.razor
+Processing (6/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\App.razor
+Processing (7/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor
+Processing (8/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\MainLayout.razor.css
+Processing (9/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor
+Processing (10/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\NavMenu.razor.css
+Processing (11/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor
+Processing (12/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.css
+Processing (13/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Layout\ReconnectModal.razor.js
+Processing (14/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor
+Processing (15/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Counter.razor.css
+Processing (16/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor
+Processing (17/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\CountryCompare.razor.css
+Processing (18/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Error.razor
+Processing (19/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor
+Processing (20/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Home.razor.css
+Processing (21/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\NotFound.razor
+Processing (22/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor
+Processing (23/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\StateCompare.razor.css
+Processing (24/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Pages\Weather.razor
+Processing (25/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Components\Routes.razor
+Processing (26/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Data\CountryDataRepository.cs
+Processing (27/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileActivityExporter.cs
+Processing (28/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterExtensions.cs
+Processing (29/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileExporterOptions.cs
+Processing (30/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileLogExporter.cs
+Processing (31/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Exporters\FileMetricExporter.cs
+Processing (32/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\libman.json
+Processing (33/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\CountryData.cs
+Processing (34/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Models\StateData.cs
+Processing (35/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Program.cs
+Processing (36/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Properties\launchSettings.json
+Processing (37/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\CountryComparisonService.cs
+Processing (38/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\Services\StateComparisonService.cs
+Processing (39/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\app.css
+Processing (40/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.css
+Processing (41/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
+Processing (42/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css
+Processing (43/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css
+Processing (44/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
+Processing (45/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
+Processing (46/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css
+Processing (47/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css
+Processing (48/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css
+Processing (49/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css
+Processing (50/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
+Processing (51/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
+Processing (52/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
+Processing (53/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
+Processing (54/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css
+Processing (55/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
+Processing (56/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js
+Processing (57/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
+Processing (58/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js
+Processing (59/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js
+Processing (60/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.js
+Processing (61/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
+Processing (62/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1.cs
+Processing (63/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class1Options.cs
+Processing (64/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2.cs
+Processing (65/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\Class2Options.cs
+Processing (66/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1.csproj
+Processing (67/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ClassLibrary1Settings.cs
+Processing (68/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass1.cs
+Processing (69/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\IClass2.cs
+Processing (70/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\ClassLibrary1\ServiceCollectionExtensions.cs
+Processing (71/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Build.props
+Processing (72/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\Directory.Packages.props
+Processing (73/73): :\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\HelloAspDotnetTen.slnx
+
+Export completed successfully!
+Output file: .\docs\llm\dump.txt
+Total files exported: 73
+Output file size: 2.59 MB
+2025-12-15 07:43:28
+warning: in the working copy of 'docs/llm/dump.txt', LF will be replaced by CRLF the next time Git touches it
+2025-12-15 07:43:29
+[master 268fb74] update dump
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+2025-12-15 07:43:29
+* remote origin
+  Fetch URL: https://github.com/collabskus/HelloAspDotnetTen.git
+  Push  URL: https://github.com/collabskus/HelloAspDotnetTen.git
+  HEAD branch: master
+  Remote branch:
+    master tracked
+  Local ref configured for 'git push':
+    master pushes to master (fast-forwardable)
+2025-12-15 07:43:29
+On branch master
+nothing to commit, working tree clean
+2025-12-15 07:43:29
+From https://github.com/collabskus/HelloAspDotnetTen
+ * branch            master     -> FETCH_HEAD
+Current branch master is up to date.
+2025-12-15 07:43:29
+Enumerating objects: 27, done.
+Counting objects: 100% (27/27), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (13/13), done.
+Writing objects: 100% (16/16), 1.73 KiB | 885.00 KiB/s, done.
+Total 16 (delta 10), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (10/10), completed with 8 local objects.
+To https://github.com/collabskus/HelloAspDotnetTen.git
+   d72dd29..268fb74  master -> master
+2025-12-15 07:43:31
+PS C:\Users\kushal\source\repos\HelloAspDotnetTen> Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen\BlazorApp\"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen\source\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet build; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet outdated; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; dotnet clean; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; Set-Location "C:\Users\kushal\source\repos\HelloAspDotnetTen"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; .\export.ps1; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git add .; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git commit --message "update dump"; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git remote show origin; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git status; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git pull origin master --strategy-option=ours; Get-Date -Format "yyyy-MM-dd HH:mm:ss"; git push origin --all; Get-Date -Format "yyyy-MM-dd HH:mm:ss";
